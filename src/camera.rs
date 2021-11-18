@@ -1,6 +1,6 @@
 use macroquad::prelude::{
-    is_key_down, is_key_pressed, is_mouse_button_pressed, mouse_position_local,
-    set_camera, Camera2D, KeyCode, MouseButton, Rect, Vec2,
+    is_key_down, is_key_pressed, is_mouse_button_pressed, mouse_position_local, set_camera,
+    Camera2D, KeyCode, MouseButton, Rect, Vec2,
 };
 
 pub struct CameraManger {
@@ -28,10 +28,10 @@ impl CameraManger {
             let inverse_zoom_factor = 1. - 1. / self.zoom_factor;
             let mouse_pos = mouse_position_local();
             let positiv_mouse_pos = 0.5 * (mouse_pos + Vec2::new(1., 1.));
-            let new_x = self.camera_rect.x
-                + self.camera_rect.w * inverse_zoom_factor * positiv_mouse_pos.x;
-            let new_y = self.camera_rect.y
-                + self.camera_rect.h * inverse_zoom_factor * positiv_mouse_pos.y;
+            let new_x =
+                self.camera_rect.x + self.camera_rect.w * inverse_zoom_factor * positiv_mouse_pos.x;
+            let new_y =
+                self.camera_rect.y + self.camera_rect.h * inverse_zoom_factor * positiv_mouse_pos.y;
             let new_h = inverse_zoom_factor * self.camera_rect.h;
             let new_w = inverse_zoom_factor * self.camera_rect.w;
             self.camera_rect = Rect::new(new_x, new_y, new_w, new_h);
@@ -45,9 +45,7 @@ impl CameraManger {
             self.line_width = self.starting_line_width / self.zoom;
             set_camera(&Camera2D::from_display_rect(self.camera_rect));
         }
-        if is_key_down(KeyCode::U) {
-        }
-        if is_key_down(KeyCode::I) {
-        }
+        if is_key_down(KeyCode::U) {}
+        if is_key_down(KeyCode::I) {}
     }
 }
