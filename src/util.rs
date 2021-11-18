@@ -25,6 +25,15 @@ pub fn draw_line(p1: &Vec2, p2: &Vec2, color: Color, line_width: f32) {
         color,
     );
 }
+pub fn draw_square(center: Vec2, side_length: f64, color: Color) {
+    macroquad::prelude::draw_rectangle(
+        (center.x - side_length / 2.0) as f32,
+        (center.y - side_length / 2.0) as f32,
+        side_length as f32,
+        side_length as f32,
+        color,
+    )
+}
 // https://en.wikipedia.org/wiki/Triangle#Using_coordinates
 pub fn triangle_area(p1: Vec2, p2: Vec2, p3: Vec2) -> f64 {
     0.5 * ((p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y)).abs()
@@ -47,6 +56,13 @@ pub fn gen_point_in_triangle(p1: Vec2, p2: Vec2, p3: Vec2, rng: &mut ThreadRng) 
     point
 }
 
+pub fn gen_point_in_square(center: Vec2, side_length: f64, rng: &mut ThreadRng) -> Vec2 {
+    let offset = vec2(
+        rng.gen_range((-side_length / 2.)..(side_length / 2.)),
+        rng.gen_range((-side_length / 2.)..(side_length / 2.)),
+    );
+    center + offset
+}
 struct MandelIterator {
     z: Vec2,
     z_squared: Vec2,
@@ -119,7 +135,6 @@ pub fn cycle_detection(point: Vec2, cycle_iter_limit: usize) -> Option<usize> {
     }
     return None;
 }
-
 pub fn is_any_cycle(point: Vec2) -> bool {
     let mut mandel_iter = MandelIterator::new(point);
     let mut derivativ = Vec2::ONE;
