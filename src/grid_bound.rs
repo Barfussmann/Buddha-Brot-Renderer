@@ -2,7 +2,7 @@ use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
 use std::collections::HashSet;
-use coz::*;
+// use coz::*;
 
 const GRID_SIZE: usize = 1000;
 const SIDE_LENGTH: f64 = 4. / GRID_SIZE as f64;
@@ -56,7 +56,7 @@ impl Grid {
             neighbors: HashSet::new(),
             limit,
         };
-        let start = Cell::new(IVec2::new(((GRID_SIZE / 16) as i32), 0));
+        let start = Cell::new(IVec2::new((GRID_SIZE / 16) as i32, 0));
         grid.inside_cells.insert(start);
         grid.neighbors.extend(start.get_neighbors());
         grid
