@@ -4,7 +4,7 @@ use glam::IVec2;
 use std::collections::HashSet;
 // use coz::*;
 
-const GRID_SIZE: usize = 1000;
+const GRID_SIZE: usize = 100000;
 const SIDE_LENGTH: f64 = 4. / GRID_SIZE as f64;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
@@ -23,7 +23,8 @@ impl Cell {
         gen_point_in_square(self.get_center(), SIDE_LENGTH, rng)
     }
     // true allway right. False can have false negatives
-    fn test_if_in_set(&self, limit: usize, rng: &mut ThreadRng) -> bool {
+    fn in_set(&self, limit: usize, rng: &mut ThreadRng) -> bool {
+        // is_inside(&self.gen_point_inside(rng), limit)
         let point = self.gen_point_inside(rng);
         is_inside(&point, limit) && !is_any_cycle(point)
     }
@@ -36,7 +37,7 @@ impl Cell {
         ]
     }
     fn draw(&self, color: Color) {
-        draw_square(self.get_center(), SIDE_LENGTH, color);
+        draw_square(self.get_center(), SIDE_LENGTH * 1., color);
     }
     fn area() -> f64 {
         SIDE_LENGTH * SIDE_LENGTH
@@ -46,6 +47,8 @@ impl Cell {
 pub struct Grid {
     inside_cells: HashSet<Cell>,
     neighbors: HashSet<Cell>,
+    all_cells: HashSet<Cell>,
+    new_neighbors: HashSet<Cell>,
     limit: usize,
 }
 
@@ -54,47 +57,66 @@ impl Grid {
         let mut grid = Grid {
             inside_cells: HashSet::new(),
             neighbors: HashSet::new(),
+            all_cells: HashSet::new(),
+            new_neighbors: HashSet::new(),
             limit,
         };
         let start = Cell::new(IVec2::new((GRID_SIZE / 16) as i32, 0));
         grid.inside_cells.insert(start);
         grid.neighbors.extend(start.get_neighbors());
+        grid.all_cells.insert(start);
+        grid.all_cells.extend(grid.neighbors.iter().cloned());
+        grid.new_neighbors.extend(grid.neighbors.iter().cloned());
         grid
     }
-    pub fn update_neighbors(&mut self, sample_per_cell: usize, rng: &mut ThreadRng) {
-        let mut new_neighbors = HashSet::new();
-        for cell in self.neighbors.iter() {
+    pub fn sample_neighbors(&mut self, sample_per_cell: usize, rng: &mut ThreadRng) {
+        self.new_neighbors.clear();
+        for cell in self.neighbors.clone() {
             for _ in 0..sample_per_cell {
-                // progress!();
-                if cell.test_if_in_set(self.limit, rng) {
-                    self.inside_cells.insert(*cell);
-                    new_neighbors.extend(cell.get_neighbors());
+                if cell.in_set(self.limit, rng) {
+                    self.add_inside_cell(cell);
                     break;
                 }
             }
         }
-        self.neighbors.extend(new_neighbors);
-        self.remove_inside_neighbors();
+        self.neighbors.extend(self.new_neighbors.iter().cloned());
     }
-    fn remove_inside_neighbors(&mut self) {
-        self.neighbors = self
-            .neighbors
-            .difference(&self.inside_cells)
-            .copied()
-            .collect();
+    pub fn sample_new_neighbors(&mut self, rng: &mut ThreadRng) {
+        let new_neighbors_copy = self.new_neighbors.clone();
+        self.new_neighbors.clear();
+        for cell in new_neighbors_copy {
+            if cell.in_set(self.limit, rng) {
+                self.add_inside_cell(cell);
+                continue;
+            }
+        }
+        self.neighbors.extend(self.new_neighbors.iter().cloned());
+    }
+    fn add_inside_cell(&mut self, cell: Cell) {
+        self.inside_cells.insert(cell);
+        self.neighbors.remove(&cell);
+        for neighbor in cell.get_neighbors() {
+            if !self.all_cells.contains(&neighbor) {
+                self.new_neighbors.insert(neighbor);
+                self.all_cells.insert(neighbor);
+            }
+        }
     }
     pub fn draw(&self) {
-        for cell in self.inside_cells.iter() {
-            cell.draw(GREEN);
-        }
-        for cell in self.neighbors.iter() {
-            cell.draw(RED);
+        // for inside in self.inside_cells.iter() {
+        //     inside.draw(GREEN);
+        // }
+        // for neighbors in self.neighbors.iter() {
+        //     neighbors.draw(RED);
+        // }
+        for new_neighbors in self.new_neighbors.iter() {
+            new_neighbors.draw(RED);
         }
     }
     pub fn area(&self) -> f64 {
         self.inside_cells.len() as f64 * Cell::area()
     }
-    pub fn neighbor_len(&self) -> usize {
-        self.neighbors.len()
+    pub fn new_neighbor_len(&self) -> usize {
+        self.new_neighbors.len()
     }
 }
