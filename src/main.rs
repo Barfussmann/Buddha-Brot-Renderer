@@ -7,11 +7,13 @@
 mod camera;
 mod grid_bound;
 mod util;
+mod range_encoder;
+mod range;
 // use crate::bulb_gen::*;
 // use crate::util::*;
 use rand::thread_rng;
 
-use macroquad::prelude::{next_frame, Conf};
+use macroquad::prelude::{is_key_down, next_frame, Conf, KeyCode};
 
 fn window_conf() -> Conf {
     Conf {
@@ -28,15 +30,25 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
 
-    let mut grid = grid_bound::Grid::new(50);
+    let mut grid = grid_bound::Grid::new(25);
 
     loop {
+        if is_key_down(KeyCode::U) {
+            grid.sample_neighbors(100, &mut thread_rng());
+        }
+        if is_key_down(KeyCode::I) {}
+
         camera_manager.update();
 
-        grid.draw();
-        dbg!(grid.neighbor_len());
-        for _ in 0..1 {
-            grid.update_neighbors(100, &mut thread_rng());
+        dbg!(grid.new_neighbor_len());
+        if grid.new_neighbor_len() == 0 {
+            grid.sample_neighbors(10, &mut thread_rng());
+            grid.draw();
+        } else {
+            for _ in 0..100 {
+                grid.sample_new_neighbors(&mut thread_rng());
+                grid.draw();
+            }
         }
 
         next_frame().await;
