@@ -29,7 +29,7 @@
             "cargo": {
                 "args": [
                     "test",
-                    "--no-run",
+                    // "--no-run",
                     "--bin=mandelbrot",
                     "--package=mandelbrot"
                 ],
