@@ -123,6 +123,7 @@ mod tests {
         let intersection = range_encoder.intersect(&range_encoder2);
         assert!(intersection.is_empty());
     }
+    #[test]
     fn itersection_of_empty_and_non_empty_range_encoder_is_empty() {
         let mut range_encoder = RangeEncoder::new();
         range_encoder.insert(5);
@@ -130,6 +131,7 @@ mod tests {
         let intersection = range_encoder.intersect(&range_encoder2);
         assert!(intersection.is_empty());
     }
+    #[test]
     fn itersection_of_equal_range_encoder_is_equal() {
         let mut range_encoder = RangeEncoder::new();
         range_encoder.insert(5);
@@ -138,6 +140,7 @@ mod tests {
         let intersection = range_encoder.intersect(&range_encoder);
         assert_eq!(range_encoder, intersection);
     }
+    #[test]
     fn intrsection_of_ranges_are_all_itersections() {
         let mut range_encoder1 = RangeEncoder::new();
         for index in [5,6,7,12,13,22,] {
