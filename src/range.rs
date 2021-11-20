@@ -102,28 +102,18 @@ mod tests {
         assert!(!range.is_inside(6));
     }
     #[test]
-    fn relation_before() {
+    fn relation_before_or_after() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(15, 20);
         assert_eq!(range1.relation_to(range2), Relation::Before);
+        assert_eq!(range2.relation_to(range1), Relation::After);
     }
     #[test]
-    fn relation_adjacent_before() {
+    fn relation_adjacent_before_or_after() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(10, 20);
         assert_eq!(range1.relation_to(range2), Relation::AdjacentBefore);
-    }
-    #[test]
-    fn relation_adjacent_after() {
-        let range1 = Range::new(10, 15);
-        let range2 = Range::new(5, 10);
-        assert_eq!(range1.relation_to(range2), Relation::AdjacentAfter);
-    }
-    #[test]
-    fn relation_after() {
-        let range1 = Range::new(15, 20);
-        let range2 = Range::new(5, 10);
-        assert_eq!(range1.relation_to(range2), Relation::After);
+        assert_eq!(range2.relation_to(range1), Relation::AdjacentAfter);
     }
     #[test]
     fn relation_overlapping_half() {
@@ -140,28 +130,18 @@ mod tests {
         assert_eq!(range2.relation_to(range1), Relation::Overlapping);
     }
     #[test]
-    fn merge_adjacent_before() {
+    fn merge_adjacent_before_or_after() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(10, 20);
         assert_eq!(range1.merge(range2), Some(Range::new(5, 20)));
+        assert_eq!(range2.merge(range1), Some(Range::new(5, 20)));
     }
     #[test]
-    fn merge_adjacent_after() {
-        let range1 = Range::new(10, 15);
-        let range2 = Range::new(5, 10);
-        assert_eq!(range1.merge(range2), Some(Range::new(5, 15)));
-    }
-    #[test]
-    fn merge_not_adjacent_before() {
+    fn merge_not_adjacent_before_or_after() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(15, 20);
         assert_eq!(range1.merge(range2), None);
-    }
-    #[test]
-    fn merge_not_adjacent_after() {
-        let range1 = Range::new(15, 20);
-        let range2 = Range::new(5, 10);
-        assert_eq!(range1.merge(range2), None);
+        assert_eq!(range2.merge(range1), None);
     }
     #[test]
     fn merge_overlapping_half() {
