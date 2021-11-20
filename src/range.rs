@@ -1,7 +1,7 @@
 extern crate test;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Relation {
+pub enum Relation {
     Before,
     AdjacentBefore,
     Overlapping,
@@ -67,6 +67,9 @@ impl Range {
             Relation::After => None,
             
         }
+    }
+    pub fn len(&self) -> usize {
+        self.end - self.start
     }
 }
 
@@ -189,5 +192,15 @@ mod tests {
         let range2 = Range:: new(7,12);
         assert_eq!(range1.intersect(range2), Some(Range::new(7, 12)));
         assert_eq!(range2.intersect(range1), Some(Range::new(7, 12)));
+    }
+    #[test]
+    fn len_of_range_is_end_minus_start() {
+        let range = Range::new(5, 10);
+        assert_eq!(range.len(), 5);
+    }
+    #[test]
+    fn len_of_from_index_is_1() {
+        let range = Range::from_index(5);
+        assert_eq!(range.len(), 1);
     }
 }
