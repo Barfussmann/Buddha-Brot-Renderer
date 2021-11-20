@@ -42,26 +42,17 @@ impl Range {
         }
         return Relation::Overlapping;
     }
-    fn merge_adjacent(&self, other: Self) -> Self {
-        assert!(self.relation_to(other) == Relation::AdjacentBefore || self.relation_to(other) == Relation::AdjacentAfter);
-        let new_start = self.start.min(other.start);
-        let new_end = self.end.max(other.end);
-        Self::new(new_start, new_end)
-    }
-    fn merge_overlapping(&self, other: Self) -> Self {
-        assert!(self.relation_to(other) == Relation::Overlapping);
-        let new_start = self.start.min(other.start);
-        let new_end = self.end.max(other.end);
-        Self::new(new_start, new_end)
-    }
     pub fn merge(&self, other: Self) -> Option<Self> {
         match self.relation_to(other) {
-            Relation::Before => None,
-            Relation::AdjacentBefore => Some(self.merge_adjacent(other)),
-            Relation::Overlapping => Some(self.merge_overlapping(other)),
-            Relation::AdjacentAfter => Some(self.merge_adjacent(other)),
-            Relation::After => None,
+            Relation::Before => return None,
+            Relation::AdjacentBefore => {},
+            Relation::Overlapping => {},
+            Relation::AdjacentAfter => {},
+            Relation::After => return None,
         }
+        let new_start = self.start.min(other.start);
+        let new_end = self.end.max(other.end);
+        Some(Self::new(new_start, new_end))
     }
     pub fn intersect(&self, other: Self) -> Option<Self> {
         match self.relation_to(other) {
