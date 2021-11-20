@@ -9,25 +9,25 @@ enum Relation {
     After,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Range {
+pub struct Range {
     start: usize,
     end: usize,
 }
 impl Range {
-    fn new(start: usize, end: usize) -> Self {
+    pub fn new(start: usize, end: usize) -> Self {
         assert!(start < end);
         Self { start, end }
     }
-    fn from_index(index: usize) -> Self {
+    pub fn from_index(index: usize) -> Self {
         Self {
             start: index,
             end: index + 1,
         }
     }
-    fn is_inside(&self, index: usize) -> bool {
+    pub fn is_inside(&self, index: usize) -> bool {
         self.start <= index && index < self.end
     }
-    fn relation_to(&self, other: Self) -> Relation {
+    pub fn relation_to(&self, other: Self) -> Relation {
         if self.end < other.start {
             return Relation::Before;
         }
