@@ -63,6 +63,20 @@ impl Range {
             Relation::After => None,
         }
     }
+    pub fn intersect(&self, other: Self) -> Option<Self> {
+        match self.relation_to(other) {
+            Relation::Before => None,
+            Relation::AdjacentBefore => None,
+            Relation::Overlapping => {
+                let new_start = self.start.max(other.start);
+                let new_end = self.end.min(other.end);
+                Some(Self::new(new_start, new_end))
+            },
+            Relation::AdjacentAfter => None,
+            Relation::After => None,
+            
+        }
+    }
 }
 
 #[cfg(test)]
@@ -156,5 +170,33 @@ mod tests {
         let range2 = Range:: new(7,12);
         assert_eq!(range1.merge(range2), Some(Range::new(5, 15)));
         assert_eq!(range2.merge(range1), Some(Range::new(5, 15)));
+    }
+    #[test]
+    fn intersect_non_overlapping_empty() {
+        let range1 = Range::new(5, 10);
+        let range2 = Range::new(15, 20);
+        assert_eq!(range1.intersect(range2), None);
+        assert_eq!(range2.intersect(range1), None);
+    }
+    #[test]
+    fn intersect_adjacent_before_or_after() {
+        let range1 = Range::new(5, 10);
+        let range2 = Range::new(10, 20);
+        assert_eq!(range1.intersect(range2), None);
+        assert_eq!(range2.intersect(range1), None);
+    }
+    #[test]
+    fn intersect_overlapping_half() {
+        let range1 = Range::new(5, 10);
+        let range2 = Range::new(7, 20);
+        assert_eq!(range1.intersect(range2), Some(Range::new(7, 10)));
+        assert_eq!(range2.intersect(range1), Some(Range::new(7, 10)));
+    }
+    #[test]
+    fn intersect_overlapping_one_inside_other() {
+        let range1 = Range::new(5, 15);
+        let range2 = Range:: new(7,12);
+        assert_eq!(range1.intersect(range2), Some(Range::new(7, 12)));
+        assert_eq!(range2.intersect(range1), Some(Range::new(7, 12)));
     }
 }
