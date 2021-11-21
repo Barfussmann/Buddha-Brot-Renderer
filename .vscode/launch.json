@@ -7,11 +7,10 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'mandelbrot'",
+            "name": "Debug executable 'mandelbrot'",
             "cargo": {
                 "args": [
-                    "test",
-                    "--no-run",
+                    "build",
                     "--bin=mandelbrot",
                     "--package=mandelbrot"
                 ],
@@ -22,6 +21,6 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        }
+        },
     ]
 }
