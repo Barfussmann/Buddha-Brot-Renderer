@@ -30,7 +30,7 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30);
+    let mut grid = grid_bound::CovarageGrid::new(50);
 
     loop {
         if is_key_down(KeyCode::U) {
@@ -45,10 +45,11 @@ async fn main() -> std::io::Result<()> {
         if grid.new_neighbor_len() == 0 {
             grid.sample_neighbors(10, &mut thread_rng());
         } else {
-            for _ in 0..10 {
+            for _ in 0..10000 {
                 grid.sample_new_neighbors(&mut thread_rng());
             }
         }
+        println!("Area: {}", grid.area());
 
         next_frame().await;
     }
