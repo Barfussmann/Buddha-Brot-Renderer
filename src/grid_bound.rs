@@ -5,7 +5,7 @@ use glam::IVec2;
 use std::collections::HashSet;
 // use coz::*;
 
-pub const GRID_SIZE: usize = 500;
+pub const GRID_SIZE: usize = 100000;
 pub const SIDE_LENGTH: f64 = 4. / GRID_SIZE as f64;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
@@ -93,7 +93,7 @@ impl CovarageGrid {
         let new_neighbors_copy = self.new_neighbors.clone();
         self.new_neighbors.clear();
         for cell in new_neighbors_copy {
-            for _ in 0..100 {
+            for _ in 0..4 {
                 if cell.in_set(self.limit, rng) {
                     self.add_inside_cell(cell);
                     break;
