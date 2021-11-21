@@ -52,7 +52,7 @@ impl Cell {
 
 pub struct CovarageGrid {
     inside_cells: Grid,
-    neighbors: HashSet<Cell>,
+    neighbors: Vec<Cell>,
     all_cells: Grid,
     new_neighbors: HashSet<Cell>,
     limit: usize,
@@ -62,7 +62,7 @@ impl CovarageGrid {
     pub fn new(limit: usize) -> Self {
         let mut grid = CovarageGrid {
             inside_cells: Grid::new(),
-            neighbors: HashSet::new(),
+            neighbors: Vec::new(),
             all_cells: Grid::new(),
             new_neighbors: HashSet::new(),
             limit,
@@ -79,13 +79,16 @@ impl CovarageGrid {
     }
     pub fn sample_neighbors(&mut self, sample_per_cell: usize, rng: &mut ThreadRng) {
         self.new_neighbors.clear();
-        for cell in self.neighbors.clone() {
+        let new_neighbors_clone = self.neighbors.clone();
+        self.neighbors.clear();
+        'outer: for cell in new_neighbors_clone {
             for _ in 0..sample_per_cell {
                 if cell.in_set(self.limit, rng) {
                     self.add_inside_cell(cell);
-                    break;
+                    continue 'outer;
                 }
             }
+            self.neighbors.push(cell);
         }
         self.neighbors.extend(self.new_neighbors.iter().cloned());
     }
@@ -101,7 +104,6 @@ impl CovarageGrid {
     }
     fn add_inside_cell(&mut self, cell: Cell) {
         self.inside_cells.insert(cell);
-        self.neighbors.remove(&cell);
         for neighbor in cell.get_neighbors() {
             if !self.all_cells.is_activ(neighbor) {
                 self.new_neighbors.insert(neighbor);
