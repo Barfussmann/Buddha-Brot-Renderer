@@ -5,7 +5,7 @@ use glam::IVec2;
 use std::collections::HashSet;
 // use coz::*;
 
-pub const GRID_SIZE: usize = 100000;
+pub const GRID_SIZE: usize = 50000;
 pub const SIDE_LENGTH: f64 = 4. / GRID_SIZE as f64;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
@@ -20,7 +20,7 @@ impl Cell {
     fn get_center(&self) -> Vec2 {
         self.center.as_dvec2() * SIDE_LENGTH
     }
-    fn gen_point_inside(&self, rng: &mut ThreadRng) -> Vec2 {
+    pub fn gen_point_inside(&self, rng: &mut ThreadRng) -> Vec2 {
         gen_point_in_square(self.get_center(), SIDE_LENGTH, rng)
     }
     // true allway right. False can have false negatives
@@ -93,11 +93,8 @@ impl CovarageGrid {
         let new_neighbors_copy = self.new_neighbors.clone();
         self.new_neighbors.clear();
         for cell in new_neighbors_copy {
-            for _ in 0..4 {
-                if cell.in_set(self.limit, rng) {
-                    self.add_inside_cell(cell);
-                    break;
-                }
+            if quad_inside_test(cell, self.limit, rng) {
+                self.add_inside_cell(cell);
             }
         }
         self.neighbors.extend(self.new_neighbors.iter().cloned());
