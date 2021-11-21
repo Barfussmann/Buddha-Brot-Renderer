@@ -16,7 +16,9 @@ impl RangeEncoder {
     }
     pub fn insert(&mut self, index: usize) {
         let (is_activ, insert_index) = self.binary_search_for_index(index);
-        assert!(!is_activ);
+        if is_activ {
+            return;
+        }
         let range = Range::from_index(index);
 
         if self.activ_ranges.is_empty() {
