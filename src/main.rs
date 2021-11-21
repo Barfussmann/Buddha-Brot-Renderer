@@ -3,6 +3,7 @@
 #![allow(unused_variables)]
 #![feature(array_windows)]
 #![feature(test)]
+#![feature(portable_simd)]
 
 mod camera;
 mod grid;
@@ -30,7 +31,7 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(50);
+    let mut grid = grid_bound::CovarageGrid::new(30);
 
     loop {
         if is_key_down(KeyCode::U) {
@@ -45,7 +46,7 @@ async fn main() -> std::io::Result<()> {
         if grid.new_neighbor_len() == 0 {
             grid.sample_neighbors(10, &mut thread_rng());
         } else {
-            for _ in 0..10000 {
+            for _ in 0..100 {
                 grid.sample_new_neighbors(&mut thread_rng());
             }
         }
