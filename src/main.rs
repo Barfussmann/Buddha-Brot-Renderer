@@ -5,11 +5,11 @@
 #![feature(test)]
 
 mod camera;
+mod grid;
 mod grid_bound;
-mod util;
-mod range_encoder;
 mod range;
-// use crate::bulb_gen::*;
+mod range_encoder;
+mod util;
 // use crate::util::*;
 use rand::thread_rng;
 
@@ -30,7 +30,7 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
 
-    let mut grid = grid_bound::Grid::new(25);
+    let mut grid = grid_bound::CovarageGrid::new(30);
 
     loop {
         if is_key_down(KeyCode::U) {
@@ -40,14 +40,13 @@ async fn main() -> std::io::Result<()> {
 
         camera_manager.update();
 
-        dbg!(grid.new_neighbor_len());
+        // dbg!(grid.new_neighbor_len());
+        grid.draw();
         if grid.new_neighbor_len() == 0 {
             grid.sample_neighbors(10, &mut thread_rng());
-            grid.draw();
         } else {
-            for _ in 0..100 {
+            for _ in 0..10 {
                 grid.sample_new_neighbors(&mut thread_rng());
-                grid.draw();
             }
         }
 
