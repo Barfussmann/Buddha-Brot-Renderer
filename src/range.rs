@@ -1,4 +1,8 @@
 extern crate test;
+use super::grid_bound::{GRID_SIZE, SIDE_LENGTH};
+use glam::Vec2;
+use macroquad::prelude::draw_rectangle;
+use macroquad::color::GREEN;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Relation {
@@ -42,7 +46,7 @@ impl Range {
         }
         return Relation::Overlapping;
     }
-    pub fn merge(&self, other: Self) -> Option<Self> {
+    pub fn merge_with(&self, other: Self) -> Option<Self> {
         match self.relation_to(other) {
             Relation::Before => return None,
             Relation::AdjacentBefore => {},
@@ -70,6 +74,13 @@ impl Range {
     }
     pub fn len(&self) -> usize {
         self.end - self.start
+    }
+    pub fn draw(&self, x: usize) {
+        let index = Vec2::new(x as f32, self.start as f32);
+        let center = (index - Vec2::splat((GRID_SIZE / 2) as f32)) * SIDE_LENGTH as f32;
+        let corner_pos = center - Vec2::splat(SIDE_LENGTH as f32 / 2.0);
+        let delta_y = (self.end - self.start) as f32 * SIDE_LENGTH as f32;
+        draw_rectangle(corner_pos.x, corner_pos.y, SIDE_LENGTH as f32, delta_y, GREEN);
     }
 }
 
@@ -141,29 +152,29 @@ mod tests {
     fn merge_adjacent_before_or_after() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(10, 20);
-        assert_eq!(range1.merge(range2), Some(Range::new(5, 20)));
-        assert_eq!(range2.merge(range1), Some(Range::new(5, 20)));
+        assert_eq!(range1.merge_with(range2), Some(Range::new(5, 20)));
+        assert_eq!(range2.merge_with(range1), Some(Range::new(5, 20)));
     }
     #[test]
     fn merge_not_adjacent_before_or_after() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(15, 20);
-        assert_eq!(range1.merge(range2), None);
-        assert_eq!(range2.merge(range1), None);
+        assert_eq!(range1.merge_with(range2), None);
+        assert_eq!(range2.merge_with(range1), None);
     }
     #[test]
     fn merge_overlapping_half() {
         let range1 = Range::new(5, 10);
         let range2 = Range::new(7, 20);
-        assert_eq!(range1.merge(range2), Some(Range::new(5, 20)));
-        assert_eq!(range2.merge(range1), Some(Range::new(5, 20)));
+        assert_eq!(range1.merge_with(range2), Some(Range::new(5, 20)));
+        assert_eq!(range2.merge_with(range1), Some(Range::new(5, 20)));
     }
     #[test]
     fn merge_overlapping_one_inside_other() {
         let range1 = Range::new(5, 15);
         let range2 = Range:: new(7,12);
-        assert_eq!(range1.merge(range2), Some(Range::new(5, 15)));
-        assert_eq!(range2.merge(range1), Some(Range::new(5, 15)));
+        assert_eq!(range1.merge_with(range2), Some(Range::new(5, 15)));
+        assert_eq!(range2.merge_with(range1), Some(Range::new(5, 15)));
     }
     #[test]
     fn intersect_non_overlapping_empty() {
