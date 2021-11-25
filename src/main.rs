@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
             grid.sample_neighbors(1, &mut thread_rng());
         } else {
             let mut count = 0;
-            for _ in 0..1000 {
+            for _ in 0..10 {
                 count += grid.new_neighbors.len();
                 grid.sample_new_neighbors(&mut thread_rng());
             }
