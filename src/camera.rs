@@ -7,7 +7,6 @@ pub struct CameraManger {
     starting_line_width: f32,
     line_width: f32,
     zoom_factor: f32,
-    zoom: f32,
     camera_rect: Rect,
 }
 
@@ -16,9 +15,8 @@ impl CameraManger {
         let manger = Self {
             camera_rect: Rect::new(-2.01, -1.26, 3.02, 2.52),
             starting_line_width: 0.002,
-            zoom_factor: 2.,
-            zoom: 1.,
             line_width: 0.002,
+            zoom_factor: 2.,
         };
         set_camera(&Camera2D::from_display_rect(manger.camera_rect));
         manger
@@ -38,8 +36,7 @@ impl CameraManger {
         let new_h = self.camera_rect.h / zoom;
         let new_w = self.camera_rect.w / zoom;
         self.camera_rect = Rect::new(new_camera_corner.x, new_camera_corner.y, new_w, new_h);
-        self.zoom *= zoom;
-        self.line_width = self.starting_line_width / self.zoom;
+        self.line_width /= zoom;
         set_camera(&Camera2D::from_display_rect(self.camera_rect));
     }
     pub fn update(&mut self) {
@@ -51,8 +48,7 @@ impl CameraManger {
         }
         if is_key_pressed(KeyCode::Space) {
             self.camera_rect = Rect::new(-2.01, -1.26, 3.02, 2.52);
-            self.zoom = 1.;
-            self.line_width = self.starting_line_width / self.zoom;
+            self.line_width = self.starting_line_width;
             set_camera(&Camera2D::from_display_rect(self.camera_rect));
         }
         if is_key_down(KeyCode::U) {}
