@@ -34,17 +34,15 @@ impl Range {
     pub fn relation_to(&self, other: Self) -> Relation {
         if self.end < other.start {
             return Relation::Before;
-        }
-        if self.start > other.end {
+        } else if self.start > other.end {
             return Relation::After;
-        }
-        if self.end == other.start {
+        } else if self.end == other.start {
             return Relation::AdjacentBefore;
-        }
-        if self.start == other.end {
+        } else if self.start == other.end {
             return Relation::AdjacentAfter;
+        } else {
+            return Relation::Overlapping;
         }
-        return Relation::Overlapping;
     }
     pub fn merge_with(&self, other: Self) -> Option<Self> {
         match self.relation_to(other) {
