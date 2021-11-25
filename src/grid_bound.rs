@@ -3,7 +3,6 @@ use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
 use std::collections::HashSet;
-// use coz::*;
 
 pub const GRID_SIZE: usize = 10000;
 pub const SIDE_LENGTH: f64 = 4. / GRID_SIZE as f64;
@@ -25,9 +24,7 @@ impl Cell {
     }
     // true allway right. False can have false negatives
     fn in_set(&self, limit: usize, rng: &mut ThreadRng) -> bool {
-        // is_inside(&self.gen_point_inside(rng), limit)
         let point = self.gen_point_inside(rng);
-        // is_inside(&point, limit) && !is_any_cycle(point)
         is_inside(&point, limit) && !is_inside(&point, limit * 10)
     }
     fn get_neighbors(&self) -> Vec<Cell> {
@@ -52,9 +49,9 @@ impl Cell {
 
 pub struct CovarageGrid {
     inside_cells: Grid,
-    neighbors: Vec<Cell>,
+    pub neighbors: Vec<Cell>,
     all_cells: Grid,
-    new_neighbors: HashSet<Cell>,
+    pub new_neighbors: HashSet<Cell>,
     limit: usize,
 }
 
@@ -82,6 +79,9 @@ impl CovarageGrid {
         let new_neighbors_clone = self.neighbors.clone();
         self.neighbors.clear();
         'outer: for cell in new_neighbors_clone {
+            if self.inside_cells.is_activ(cell) {
+                continue;
+            }
             for _ in 0..sample_per_cell {
                 if quad_inside_test(cell, self.limit, rng) {
                     self.add_inside_cell(cell);
@@ -112,13 +112,13 @@ impl CovarageGrid {
         }
     }
     pub fn draw(&self) {
-        self.inside_cells.draw();
-        // for neighbors in self.neighbors.iter() {
-        //     neighbors.draw(RED);
+        // self.inside_cells.draw();
+        for neighbors in self.neighbors.iter() {
+            neighbors.draw(RED);
+        }    
+        // for new_neighbors in self.new_neighbors.iter() {
+        //     new_neighbors.draw(BLUE);
         // }
-        for new_neighbors in self.new_neighbors.iter() {
-            new_neighbors.draw(BLUE);
-        }
     }
     pub fn area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area()
