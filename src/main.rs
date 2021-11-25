@@ -8,10 +8,10 @@
 mod camera;
 mod grid;
 mod grid_bound;
+mod mandel_iter;
 mod range;
 mod range_encoder;
 mod util;
-mod mandel_iter;
 // use crate::util::*;
 use rand::thread_rng;
 
@@ -45,17 +45,17 @@ async fn main() -> std::io::Result<()> {
         // dbg!(grid.new_neighbor_len());
         grid.draw();
         if grid.new_neighbor_len() == 0 {
-            dbg!(grid.neighbors.len());
+            // dbg!(grid.neighbors.len());
             grid.sample_neighbors(1, &mut thread_rng());
         } else {
             let mut count = 0;
-            for _ in 0..10 {
+            for _ in 0..1000 {
                 count += grid.new_neighbors.len();
                 grid.sample_new_neighbors(&mut thread_rng());
             }
-            dbg!(count);
+            // dbg!(count);
         }
-        println!("Area: {}", grid.area());
+        // println!("Area: {}", grid.area());
 
         next_frame().await;
     }
