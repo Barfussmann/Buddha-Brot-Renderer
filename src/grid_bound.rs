@@ -2,6 +2,8 @@ use super::grid::*;
 use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
+use rand::thread_rng;
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 pub const GRID_SIZE: usize = 10000;
@@ -78,19 +80,46 @@ impl CovarageGrid {
         self.new_neighbors.clear();
         let new_neighbors_clone = self.neighbors.clone();
         self.neighbors.clear();
-        'outer: for cell in new_neighbors_clone {
-            if self.inside_cells.is_activ(cell) {
-                continue;
-            }
-            for _ in 0..sample_per_cell {
-                if quad_inside_test(cell, self.limit, rng) {
-                    self.add_inside_cell(cell);
-                    continue 'outer;
-                }
-            }
-            self.neighbors.push(cell);
+
+        let filtered_neighbors = new_neighbors_clone
+            .par_iter()
+            .copied()
+            .filter(|cell| !self.inside_cells.is_activ(*cell))
+            .collect::<Vec<_>>();
+        let new_inside_cells = filtered_neighbors
+            .par_iter()
+            .map_init(
+                || thread_rng(),
+                |rng, cell| {
+                    for _ in 0..sample_per_cell {
+                        if quad_inside_test(*cell, self.limit, rng) {
+                            return Some(*cell)
+                        }
+                    }
+                    None
+                },
+            )
+            .filter_map(|cell| cell)
+            .collect::<Vec<_>>();
+        for new_inside_cell in new_inside_cells {
+            self.add_inside_cell(new_inside_cell);
         }
+        self.neighbors = filtered_neighbors;
         self.neighbors.extend(self.new_neighbors.iter().cloned());
+
+        // 'outer: for cell in new_neighbors_clone {
+        //     if self.inside_cells.is_activ(cell) {
+        //         continue;
+        //     }
+        //     for _ in 0..sample_per_cell {
+        //         if quad_inside_test(cell, self.limit, rng) {
+        //             self.add_inside_cell(cell);
+        //             continue 'outer;
+        //         }
+        //     }
+        //     self.neighbors.push(cell);
+        // }
+        // self.neighbors.extend(self.new_neighbors.iter().cloned());
     }
     pub fn sample_new_neighbors(&mut self, rng: &mut ThreadRng) {
         let new_neighbors_copy = self.new_neighbors.clone();
@@ -112,10 +141,10 @@ impl CovarageGrid {
         }
     }
     pub fn draw(&self) {
-        // self.inside_cells.draw();
-        for neighbors in self.neighbors.iter() {
-            neighbors.draw(RED);
-        }    
+        self.inside_cells.draw();
+        // for neighbors in self.neighbors.iter() {
+        //     neighbors.draw(RED);
+        // }
         // for new_neighbors in self.new_neighbors.iter() {
         //     new_neighbors.draw(BLUE);
         // }
