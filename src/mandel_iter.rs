@@ -52,6 +52,7 @@ impl MultiMandelIterator {
             iteration: 1,
         }
     }
+    #[inline(always)]
     pub fn next_iteration(&mut self) {
 
         self.z_y = 2. * self.z_x * self.z_y + self.c_y;
