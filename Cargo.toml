@@ -12,6 +12,9 @@ glam = "0.20.0"
 rayon = "1.5.1"
 core_simd = { git = "https://github.com/rust-lang/portable-simd" }
 
+[buid]
+rustflags = ["-C", "target-cpu=nativ"]
+
 [profile.dev]
 opt-level = 3
 debug = 2
