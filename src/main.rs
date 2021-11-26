@@ -45,8 +45,9 @@ async fn main() -> std::io::Result<()> {
         // dbg!(grid.new_neighbor_len());
         grid.draw();
         if grid.new_neighbor_len() == 0 {
-            // dbg!(grid.neighbors.len());
-            grid.sample_neighbors(1, &mut thread_rng());
+            dbg!(grid.neighbors.len());
+            dbg!(grid.total_sample_count);
+            grid.sample_neighbors(100, &mut thread_rng());
         } else {
             let mut count = 0;
             for _ in 0..1000 {
