@@ -9,7 +9,6 @@ use rayon::prelude::*;
 pub struct CovarageGrid {
     inside_cells: Grid,
     pub neighbors: Vec<Cell>,
-    neighbors_clone: Vec<Cell>,
     all_visited_cells: Grid,
     pub new_neighbors: Grid,
     limit: usize,
@@ -23,7 +22,6 @@ impl CovarageGrid {
         let mut grid = CovarageGrid {
             inside_cells: Grid::new(grid_size),
             neighbors: Vec::new(),
-            neighbors_clone: Vec::new(),
             all_visited_cells: Grid::new(grid_size),
             new_neighbors: Grid::new(grid_size),
             limit,
@@ -44,7 +42,7 @@ impl CovarageGrid {
         if self.new_neighbors.is_empty() {
             self.sample_neighbors();
         } else {
-            for _ in 0..1 {
+            for _ in 0..1000 {
                 self.sample_new_neighbors();
             }
         }
@@ -53,14 +51,12 @@ impl CovarageGrid {
         self.current_sample_count += self.sample_per_iter;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
         let max_sample_count = self.current_sample_count.saturating_sub(100);
-        std::mem::swap(&mut self.neighbors, &mut self.neighbors_clone);
-        self.neighbors.clear();
 
         self.neighbors
-            .par_extend(self.neighbors_clone.par_iter().copied().filter(|cell| {
+            .retain(|cell| {
                 !self.inside_cells.is_activ(*cell)
                     && cell.get_starting_sample_count() >= max_sample_count
-            }));
+            });
         let new_inside_cells = self
             .neighbors
             .par_iter()
