@@ -31,19 +31,15 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 1, 100);
+    let mut grid = grid_bound::CovarageGrid::new(50, 1, 1_000);
 
     loop {
         camera_manager.update();
         draw_manager.update();
 
-        // dbg!(grid.new_neighbor_len());
         grid.draw(&draw_manager);
         grid.sample();
-        if grid.new_neighbors.len() == 0 {
-            dbg!(grid.neighbors.len());
-            dbg!(grid.total_sample_count);
-        }
+        println!("area: {}, sample: {}", grid.area(), grid.total_sample_count);
         next_frame().await;
     }
 }
