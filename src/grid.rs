@@ -1,8 +1,8 @@
 use super::cell::*;
 use super::range_encoder::*;
-use glam::ivec2;
 use macroquad::color::Color;
 
+#[derive(Clone)]
 pub struct Grid {
     collums: Vec<RangeEncoder>,
     grid_size: usize,
@@ -30,16 +30,24 @@ impl Grid {
             collum.draw(x, color, self.grid_size);
         }
     }
-    pub fn iter(&self) -> impl Iterator<Item = Cell> + '_ {
+    pub fn iter(&self, current_sample_count: usize) -> impl Iterator<Item = Cell> + '_ {
         self.collums
             .iter()
             .enumerate()
             .map(move |(x, collum)| {
                 collum
                     .iter()
-                    .map(move |y| Cell::from_index(x, y, self.grid_size))
+                    .map(move |y| Cell::from_index(x, y, current_sample_count, self.grid_size))
             })
             .flatten()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.collums.iter().all(|c| c.is_empty())
+    }
+    pub fn clear(&mut self) {
+        for collum in self.collums.iter_mut() {
+            collum.clear();
+        }
     }
 }
 #[cfg(test)]
@@ -86,5 +94,17 @@ mod tests {
         let mut grid = Grid::new(GRID_SIZE);
         grid.insert(Cell::new(ivec2(10, 5), 0));
         assert!(grid.is_activ(Cell::new(ivec2(10, 5), 0)));
+    }
+    #[test]
+    fn new_range_encoder_is_empty() {
+        let grid = Grid::new(GRID_SIZE);
+        assert!(grid.is_empty());
+    }
+    #[test]
+    fn grid_after_clear_empty() {
+        let mut grid = Grid::new(GRID_SIZE);
+        grid.insert(Cell::new(ivec2(10, 5), 0));
+        grid.clear();
+        assert!(grid.is_empty());
     }
 }

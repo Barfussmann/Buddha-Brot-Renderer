@@ -134,8 +134,11 @@ impl RangeEncoder {
             range.draw(x, color, grid_size);
         }
     }
-    pub fn iter(& self) -> impl Iterator<Item = usize> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
         self.activ_ranges.iter().map(|range| range.iter()).flatten()
+    }
+    pub fn clear(&mut self) {
+        self.activ_ranges.clear();
     }
 }
 #[cfg(test)]
@@ -272,5 +275,14 @@ mod tests {
         for index in [0, 1, 3, 40, 200, 1000] {
             assert!(!range_encoder.is_activ(index));
         }
+    }
+    #[test]
+    fn is_empty_after_clear() {
+        let mut range_encoder = RangeEncoder::new();
+        for index in [12, 17, 22, 54, 61, 143] {
+            range_encoder.insert(index);
+        }
+        range_encoder.clear();
+        assert!(range_encoder.is_empty());
     }
 }

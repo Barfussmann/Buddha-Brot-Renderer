@@ -35,12 +35,12 @@ impl Cell {
     pub fn area(grid_size: usize) -> f64 {
         Cell::side_length(grid_size) * Cell::side_length(grid_size)
     }
-    pub fn from_index(x: usize, y: usize, grid_size: usize) -> Self {
+    pub fn from_index(x: usize, y: usize, starting_sample_count: usize, grid_size: usize) -> Self {
         let offset = IVec2::splat(grid_size as i32 / 2);
         let center = IVec2::new(x as i32, y as i32) - offset;
         Cell {
             center,
-            starting_sample_count: 0
+            starting_sample_count,
         }
     }
     pub fn index(&self, grid_size: usize) -> (usize, usize) {
