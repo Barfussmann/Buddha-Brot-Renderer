@@ -13,9 +13,8 @@ mod range;
 mod range_encoder;
 mod util;
 // use crate::util::*;
-use rand::thread_rng;
 
-use macroquad::prelude::{is_key_down, next_frame, Conf, KeyCode};
+use macroquad::prelude::{next_frame, Conf};
 
 fn window_conf() -> Conf {
     Conf {
@@ -32,32 +31,18 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30);
+    let mut grid = grid_bound::CovarageGrid::new(30, 2);
 
     loop {
-        if is_key_down(KeyCode::U) {
-            grid.sample_neighbors(100, &mut thread_rng());
-        }
-        if is_key_down(KeyCode::I) {}
-
         camera_manager.update();
 
         // dbg!(grid.new_neighbor_len());
+        grid.sample();
         grid.draw();
-        if grid.new_neighbor_len() == 0 {
+        if grid.new_neighbors.len() == 0 {
             dbg!(grid.neighbors.len());
             dbg!(grid.total_sample_count);
-            grid.sample_neighbors(100, &mut thread_rng());
-        } else {
-            let mut count = 0;
-            for _ in 0..1000 {
-                count += grid.new_neighbors.len();
-                grid.sample_new_neighbors(&mut thread_rng());
-            }
-            // dbg!(count);
         }
-        // println!("Area: {}", grid.area());
-
         next_frame().await;
     }
 }
