@@ -79,7 +79,8 @@ impl CovarageGrid {
         for new_inside_cell in new_inside_cells {
             self.add_inside_cell(new_inside_cell);
         }
-        self.neighbors.extend(self.new_neighbors.iter(self.current_sample_count));
+        self.neighbors
+            .extend(self.new_neighbors.iter(self.current_sample_count));
     }
     pub fn sample_new_neighbors(&mut self) {
         let rng = &mut thread_rng();
@@ -90,7 +91,8 @@ impl CovarageGrid {
                 self.add_inside_cell(cell);
             }
         }
-        self.neighbors.extend(self.new_neighbors.iter(self.current_sample_count));
+        self.neighbors
+            .extend(self.new_neighbors.iter(self.current_sample_count));
     }
     #[inline(always)]
     fn sample_cell(&self, cell: Cell, count: usize, rng: &mut ThreadRng) -> bool {
