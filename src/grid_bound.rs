@@ -4,6 +4,7 @@ use glam::DVec2 as Vec2;
 use glam::IVec2;
 use rand::thread_rng;
 use rayon::prelude::*;
+use super::draw_manager::DrawManager;
 
 pub const GRID_SIZE: usize = 10000;
 pub const SIDE_LENGTH: f64 = 4. / GRID_SIZE as f64;
@@ -147,14 +148,23 @@ impl CovarageGrid {
             }
         }
     }
-    pub fn draw(&self) {
-        // self.inside_cells.draw();
-        for neighbors in self.neighbors.iter() {
-            neighbors.draw(RED);
+    pub fn draw(&self, draw_manager: &DrawManager) {
+        if draw_manager.get_draw_all_visited_cells() {
+            self.all_visited_cells.draw(PINK);
         }
-        // for new_neighbors in self.new_neighbors.iter() {
-        //     new_neighbors.draw(BLUE);
-        // }
+        if draw_manager.get_draw_inside_cells() {
+            self.inside_cells.draw(GREEN);
+        }
+        if draw_manager.get_draw_neighbors() {
+            for cell in self.neighbors.iter() {
+                cell.draw(RED);
+            }
+        }
+        if draw_manager.get_draw_new_neighbors() {
+            for cell in self.new_neighbors.iter() {
+                cell.draw(BLUE);
+            }
+        }
     }
     pub fn area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area()
