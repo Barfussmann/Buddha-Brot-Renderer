@@ -1,7 +1,4 @@
 #![allow(dead_code)]
-#![feature(exclusive_range_pattern)]
-#![allow(unused_variables)]
-#![feature(array_windows)]
 #![feature(test)]
 #![feature(portable_simd)]
 

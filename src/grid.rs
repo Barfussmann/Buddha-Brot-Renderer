@@ -43,6 +43,7 @@ mod tests {
             assert!(collum.is_empty());
         }
     }
+    #[test]
     fn test_grid_insert() {
         let mut grid = Grid::new();
         grid.insert(Cell::new(ivec2(10, 5), 0));

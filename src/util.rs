@@ -4,7 +4,6 @@ pub use macroquad::color::*;
 pub use rand::prelude::{Rng, ThreadRng};
 use super::grid_bound::Cell;
 use super::mandel_iter::*;
-pub const MAX_ITERATIONS: usize = 100_000;
 
 pub fn draw_point(point: &Vec2, color: Color, line_width: f32) {
     macroquad::prelude::draw_line(
@@ -41,27 +40,6 @@ pub fn gen_point_in_square(center: Vec2, side_length: f64, rng: &mut ThreadRng) 
         rng.gen_range((-side_length / 2.)..(side_length / 2.)),
     );
     center + offset
-}
-
-/// returns number of iterations. None when bigger then limit
-pub fn iterate_point(point: &Vec2, limit: usize) -> Option<usize> {
-    let mut mandel_iterator = MandelIterator::new(point.clone());
-
-    while mandel_iterator.is_in_set() && mandel_iterator.iteration < limit {
-        mandel_iterator.next_iteration();
-    }
-    if mandel_iterator.iteration == limit {
-        None
-    } else {
-        Some(mandel_iterator.iteration)
-    }
-}
-pub fn is_inside(point: &Vec2, limit: usize) -> bool {
-    if let Some(iterations) = iterate_point(point, 10000) {
-        iterations >= limit
-    } else {
-        false
-    }
 }
 pub fn quad_inside_test(cell: Cell, limit: usize, rng: &mut ThreadRng) -> bool {
     let mut x = [0.; 4];

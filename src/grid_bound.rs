@@ -27,11 +27,6 @@ impl Cell {
     pub fn gen_point_inside(&self, rng: &mut ThreadRng) -> Vec2 {
         gen_point_in_square(self.get_center(), SIDE_LENGTH, rng)
     }
-    // true allway right. False can have false negatives
-    fn in_set(&self, limit: usize, rng: &mut ThreadRng) -> bool {
-        let point = self.gen_point_inside(rng);
-        is_inside(&point, limit) && !is_inside(&point, limit * 10)
-    }
     fn get_neighbors(&self, current_sample_count: usize) -> Vec<Cell> {
         vec![
             Cell::new(self.center + IVec2::new(1, 0), current_sample_count),

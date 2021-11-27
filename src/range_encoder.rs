@@ -239,8 +239,8 @@ mod tests {
         for index in [54, 61, 17, 12, 143, 22] {
             range_encoder.insert(index);
         }
-        for [before, after] in range_encoder.activ_ranges.array_windows::<2>() {
-            match before.relation_to(*after) {
+        for ranges in range_encoder.activ_ranges.windows(2) {
+            match ranges[0].relation_to(ranges[1]) {
                 crate::range::Relation::Before => {}
                 crate::range::Relation::AdjacentBefore => {}
                 crate::range::Relation::Overlapping => panic!("can't overlapp"),
