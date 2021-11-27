@@ -1,7 +1,7 @@
+use super::cell::*;
 use super::draw_manager::DrawManager;
 use super::grid::*;
 use super::util::*;
-use super::cell::*;
 use glam::IVec2;
 use rand::thread_rng;
 use rayon::prelude::*;
@@ -43,7 +43,7 @@ impl CovarageGrid {
         if self.new_neighbors.is_empty() {
             self.sample_neighbors();
         } else {
-            for _ in 0..10 {
+            for _ in 0..100 {
                 self.sample_new_neighbors();
             }
         }
@@ -51,13 +51,14 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         self.total_sample_count += self.sample_per_iter;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.total_sample_count.saturating_sub(1000);
+        let max_sample_count = self.total_sample_count.saturating_sub(100);
         std::mem::swap(&mut self.neighbors, &mut self.neighbors_clone);
         self.neighbors.clear();
 
         self.neighbors
             .par_extend(self.neighbors_clone.par_iter().copied().filter(|cell| {
-                !self.inside_cells.is_activ(*cell) && cell.get_starting_sample_count() >= max_sample_count
+                !self.inside_cells.is_activ(*cell)
+                    && cell.get_starting_sample_count() >= max_sample_count
             }));
         let new_inside_cells = self
             .neighbors

@@ -1,16 +1,17 @@
-use super::range_encoder::*;
 use super::cell::*;
+use super::range_encoder::*;
+use glam::ivec2;
 use macroquad::color::Color;
 
 pub struct Grid {
     collums: Vec<RangeEncoder>,
-    grid_size: usize
+    grid_size: usize,
 }
 impl Grid {
     pub fn new(grid_size: usize) -> Self {
         Self {
             collums: vec![RangeEncoder::new(); grid_size],
-            grid_size
+            grid_size,
         }
     }
     pub fn insert(&mut self, cell: Cell) {
@@ -28,6 +29,17 @@ impl Grid {
         for (x, collum) in self.collums.iter().enumerate() {
             collum.draw(x, color, self.grid_size);
         }
+    }
+    pub fn iter(&self) -> impl Iterator<Item = Cell> + '_ {
+        self.collums
+            .iter()
+            .enumerate()
+            .map(move |(x, collum)| {
+                collum
+                    .iter()
+                    .map(move |y| Cell::from_index(x, y, self.grid_size))
+            })
+            .flatten()
     }
 }
 #[cfg(test)]

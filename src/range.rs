@@ -79,6 +79,9 @@ impl Range {
         let delta_y = (self.end - self.start) as f32 * side_length as f32;
         draw_rectangle(corner_pos.x, corner_pos.y, side_length as f32, delta_y, color);
     }
+    pub fn iter(&self) -> std::ops::Range<usize> {
+        self.start..self.end
+    }
 }
 
 #[cfg(test)]
@@ -210,5 +213,21 @@ mod tests {
     fn len_of_from_index_is_1() {
         let range = Range::from_index(5);
         assert_eq!(range.len(), 1);
+    }
+    #[test]
+    fn all_iter_values_are_inside() {
+        let range = Range::new(5, 10);
+        for i in 5..10 {
+            assert!(range.is_inside(i));
+        }
+    }
+    #[test]
+    fn iter_has_all_values_from_range() {
+        let range = Range::new(5, 10);
+        let mut iter = range.iter();
+        for i in 5..10 {
+            assert_eq!(iter.next(), Some(i));
+        }
+        assert_eq!(iter.next(), None);
     }
 }

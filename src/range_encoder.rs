@@ -134,6 +134,9 @@ impl RangeEncoder {
             range.draw(x, color, grid_size);
         }
     }
+    pub fn iter(& self) -> impl Iterator<Item = usize> + '_ {
+        self.activ_ranges.iter().map(|range| range.iter()).flatten()
+    }
 }
 #[cfg(test)]
 mod tests {
@@ -170,6 +173,16 @@ mod tests {
             range_encoder.insert(*index);
         }
         assert_eq!(range_encoder.activ_count(), indecies.len());
+    }
+    #[test]
+    fn iter_is_equal_to_inserted_cells() {
+        let mut range_encoder = RangeEncoder::new();
+        let indecies = [0, 2, 3, 4, 45, 67, 89, 90, 91, 92, 93, 94, 95, 96, 99];
+
+        for index in indecies.iter() {
+            range_encoder.insert(*index);
+        }
+        assert_eq!(range_encoder.iter().collect::<Vec<_>>(), indecies.to_vec());
     }
     #[test]
     fn cell_is_activ_after_isertion() {
