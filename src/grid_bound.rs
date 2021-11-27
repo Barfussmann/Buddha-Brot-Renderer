@@ -55,45 +55,53 @@ impl Cell {
 pub struct CovarageGrid {
     inside_cells: Grid,
     pub neighbors: Vec<Cell>,
-    neighbors_parking: Vec<Cell>,
-    all_cells: Grid,
+    neighbors_clone: Vec<Cell>,
+    all_visited_cells: Grid,
     pub new_neighbors: Vec<Cell>,
     limit: usize,
     pub total_sample_count: usize,
+    sample_per_iter: usize,
 }
 
 impl CovarageGrid {
-    pub fn new(limit: usize) -> Self {
+    pub fn new(limit: usize, sample_per_iter: usize) -> Self {
         let mut grid = CovarageGrid {
             inside_cells: Grid::new(),
             neighbors: Vec::new(),
-            neighbors_parking: Vec::new(),
-            all_cells: Grid::new(),
+            neighbors_clone: Vec::new(),
+            all_visited_cells: Grid::new(),
             new_neighbors: Vec::new(),
             limit,
             total_sample_count: 0,
+            sample_per_iter,
         };
-        let start = Cell::new(IVec2::new((GRID_SIZE / 16) as i32, 0), 0);
-        grid.inside_cells.insert(start);
-        grid.neighbors.extend(start.get_neighbors(0));
-        grid.all_cells.insert(start);
-        for cell in grid.neighbors.iter() {
-            grid.all_cells.insert(*cell);
+        let starting_x = (GRID_SIZE / 16) as i32;
+        for x in starting_x..starting_x + (GRID_SIZE / 16) as i32 {
+            let start = Cell::new(IVec2::new(x, 0), 0);
+            grid.neighbors.push(start);
+            grid.all_visited_cells.insert(start);
         }
-        grid.new_neighbors.extend(grid.neighbors.clone());
         grid
     }
-    pub fn sample_neighbors(&mut self, sample_per_cell: usize, rng: &mut ThreadRng) {
-        self.total_sample_count += sample_per_cell;
-        self.new_neighbors.clear();
-        let max_sample_count = self.total_sample_count.saturating_sub(10_000);
-        std::mem::swap(&mut self.neighbors, &mut self.neighbors_parking);
+    pub fn sample(&mut self) {
+        if self.new_neighbors.is_empty() {
+            self.sample_neighbors();
+        } else {
+            for _ in 0..10 {
+                self.sample_new_neighbors();
+            }
+        }
+    }
+    pub fn sample_neighbors(&mut self) {
+        self.total_sample_count += self.sample_per_iter;
+        assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
+        let max_sample_count = self.total_sample_count.saturating_sub(1000);
+        std::mem::swap(&mut self.neighbors, &mut self.neighbors_clone);
         self.neighbors.clear();
 
         self.neighbors
-            .par_extend(self.neighbors_parking.par_iter().copied().filter(|cell| {
-                !self.inside_cells.is_activ(*cell)
-                    && cell.starting_sample_count >= max_sample_count
+            .par_extend(self.neighbors_clone.par_iter().copied().filter(|cell| {
+                !self.inside_cells.is_activ(*cell) && cell.starting_sample_count >= max_sample_count
             }));
         let new_inside_cells = self
             .neighbors
@@ -101,12 +109,11 @@ impl CovarageGrid {
             .map_init(
                 || thread_rng(),
                 |rng, cell| {
-                    for _ in 0..sample_per_cell {
-                        if quad_inside_test(*cell, self.limit, rng) {
-                            return Some(*cell);
-                        }
+                    if self.sample_cell(*cell, self.sample_per_iter, rng) {
+                        Some(*cell)
+                    } else {
+                        None
                     }
-                    None
                 },
             )
             .filter_map(|cell| cell)
@@ -115,9 +122,9 @@ impl CovarageGrid {
             self.add_inside_cell(new_inside_cell);
         }
         self.neighbors.extend(self.new_neighbors.iter().cloned());
-
     }
-    pub fn sample_new_neighbors(&mut self, rng: &mut ThreadRng) {
+    pub fn sample_new_neighbors(&mut self) {
+        let rng = &mut thread_rng();
         let new_neighbors_copy = self.new_neighbors.clone();
         self.new_neighbors.clear();
         for cell in new_neighbors_copy {
@@ -127,28 +134,34 @@ impl CovarageGrid {
         }
         self.neighbors.extend(self.new_neighbors.iter().cloned());
     }
+    #[inline(always)]
+    fn sample_cell(&self, cell: Cell, count: usize, rng: &mut ThreadRng) -> bool {
+        for _ in 0..count {
+            if quad_inside_test(cell, self.limit, rng) {
+                return true;
+            }
+        }
+        false
+    }
     fn add_inside_cell(&mut self, cell: Cell) {
         self.inside_cells.insert(cell);
         for neighbor in cell.get_neighbors(self.total_sample_count) {
-            if !self.all_cells.is_activ(neighbor) {
+            if !self.all_visited_cells.is_activ(neighbor) {
                 self.new_neighbors.push(neighbor);
-                self.all_cells.insert(neighbor);
+                self.all_visited_cells.insert(neighbor);
             }
         }
     }
     pub fn draw(&self) {
-        self.inside_cells.draw();
-        // for neighbors in self.neighbors.iter() {
-        //     neighbors.draw(RED);
-        // }
+        // self.inside_cells.draw();
+        for neighbors in self.neighbors.iter() {
+            neighbors.draw(RED);
+        }
         // for new_neighbors in self.new_neighbors.iter() {
         //     new_neighbors.draw(BLUE);
         // }
     }
     pub fn area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area()
-    }
-    pub fn new_neighbor_len(&self) -> usize {
-        self.new_neighbors.len()
     }
 }
