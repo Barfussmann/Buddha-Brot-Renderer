@@ -12,7 +12,7 @@ impl DrawManager {
         Self {
             draw_neighbors: false,
             draw_new_neighbors: false,
-            draw_inside_cells: false,
+            draw_inside_cells: true,
             draw_all_visited_cells: false,
         }
     }
