@@ -1,7 +1,6 @@
 use super::grid_bound::*;
 use super::range_encoder::*;
 use macroquad::color::Color;
-use glam::ivec2;
 
 pub struct Grid {
     collums: Vec<RangeEncoder>,
@@ -32,6 +31,7 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use glam::ivec2;
     #[test]
     fn test_grid_new() {
         let grid = Grid::new();

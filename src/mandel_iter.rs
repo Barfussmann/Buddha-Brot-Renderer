@@ -1,6 +1,5 @@
 use core_simd::*;
 use glam::DVec2 as Vec2;
-use glam::dvec2 as vec2;
 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
 
 pub struct MandelIterator {
@@ -70,6 +69,8 @@ impl MultiMandelIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use glam::dvec2 as vec2;
+
     #[test]
     fn multi_mandel_iterator_same_to_mandel_iterator() {
         let x = [0.3, 1.1, 1.0, 1.0];
