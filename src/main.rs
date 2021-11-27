@@ -3,13 +3,14 @@
 #![feature(portable_simd)]
 
 mod camera;
+mod cell;
+mod draw_manager;
 mod grid;
 mod grid_bound;
 mod mandel_iter;
 mod range;
 mod range_encoder;
 mod util;
-mod draw_manager;
 // use crate::util::*;
 
 use macroquad::prelude::{next_frame, Conf};
@@ -30,15 +31,15 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 2);
+    let mut grid = grid_bound::CovarageGrid::new(30, 1, 100);
 
     loop {
         camera_manager.update();
         draw_manager.update();
 
         // dbg!(grid.new_neighbor_len());
-        grid.sample();
         grid.draw(&draw_manager);
+        grid.sample();
         if grid.new_neighbors.len() == 0 {
             dbg!(grid.neighbors.len());
             dbg!(grid.total_sample_count);

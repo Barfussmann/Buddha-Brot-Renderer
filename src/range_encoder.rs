@@ -129,9 +129,9 @@ impl RangeEncoder {
 
         result
     }
-    pub fn draw(&self, x: usize, color: Color) {
+    pub fn draw(&self, x: usize, color: Color, grid_size: usize) {
         for range in self.activ_ranges.iter() {
-            range.draw(x, color);
+            range.draw(x, color, grid_size);
         }
     }
 }

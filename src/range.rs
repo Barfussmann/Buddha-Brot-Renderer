@@ -1,5 +1,4 @@
 extern crate test;
-use super::grid_bound::{GRID_SIZE, SIDE_LENGTH};
 use glam::Vec2;
 use macroquad::prelude::{draw_rectangle, Color};
 
@@ -72,12 +71,13 @@ impl Range {
     pub fn len(&self) -> usize {
         self.end - self.start
     }
-    pub fn draw(&self, x: usize, color: Color) {
+    pub fn draw(&self, x: usize, color: Color, grid_size: usize) {
+        let side_length = 4. / grid_size as f64;
         let index = Vec2::new(x as f32, self.start as f32);
-        let center = (index - Vec2::splat((GRID_SIZE / 2) as f32)) * SIDE_LENGTH as f32;
-        let corner_pos = center - Vec2::splat(SIDE_LENGTH as f32 / 2.0);
-        let delta_y = (self.end - self.start) as f32 * SIDE_LENGTH as f32;
-        draw_rectangle(corner_pos.x, corner_pos.y, SIDE_LENGTH as f32, delta_y, color);
+        let center = (index - Vec2::splat((grid_size / 2) as f32)) * side_length as f32;
+        let corner_pos = center - Vec2::splat(side_length as f32 / 2.0);
+        let delta_y = (self.end - self.start) as f32 * side_length as f32;
+        draw_rectangle(corner_pos.x, corner_pos.y, side_length as f32, delta_y, color);
     }
 }
 

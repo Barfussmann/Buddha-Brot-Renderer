@@ -2,7 +2,7 @@ pub use glam::dvec2 as vec2;
 pub use glam::DVec2 as Vec2;
 pub use macroquad::color::*;
 pub use rand::prelude::{Rng, ThreadRng};
-use super::grid_bound::Cell;
+use super::cell::*;
 use super::mandel_iter::*;
 
 pub fn draw_point(point: &Vec2, color: Color, line_width: f32) {
@@ -41,11 +41,11 @@ pub fn gen_point_in_square(center: Vec2, side_length: f64, rng: &mut ThreadRng) 
     );
     center + offset
 }
-pub fn quad_inside_test(cell: Cell, limit: usize, rng: &mut ThreadRng) -> bool {
+pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> bool {
     let mut x = [0.; 4];
     let mut y = [0.; 4];
     for i in 0..4 {
-        let point = cell.gen_point_inside(rng);
+        let point = cell.gen_point_inside(grid_size, rng);
         x[i] = point.x;
         y[i] = point.y;
     }
