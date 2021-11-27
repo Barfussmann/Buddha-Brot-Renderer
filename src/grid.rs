@@ -1,5 +1,6 @@
 use super::grid_bound::*;
 use super::range_encoder::*;
+use macroquad::color::Color;
 use glam::ivec2;
 
 pub struct Grid {
@@ -22,9 +23,9 @@ impl Grid {
         let (x, y) = cell.index();
         self.collums[x].is_activ(y)
     }
-    pub fn draw(&self) {
+    pub fn draw(&self, color: Color) {
         for (x, collum) in self.collums.iter().enumerate() {
-            collum.draw(x);
+            collum.draw(x, color);
         }
     }
 }

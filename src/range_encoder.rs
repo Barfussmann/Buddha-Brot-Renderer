@@ -1,4 +1,5 @@
 extern crate test;
+use macroquad::color::Color;
 
 use super::range::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -128,9 +129,9 @@ impl RangeEncoder {
 
         result
     }
-    pub fn draw(&self, x: usize) {
+    pub fn draw(&self, x: usize, color: Color) {
         for range in self.activ_ranges.iter() {
-            range.draw(x);
+            range.draw(x, color);
         }
     }
 }
