@@ -1,6 +1,6 @@
 extern crate test;
-use glam::Vec2;
-use macroquad::prelude::{draw_rectangle, Color};
+use super::util::*;
+use macroquad::prelude::Color;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Relation {
@@ -59,10 +59,21 @@ impl Range {
         Some(Self::new(new_start, new_end))
     }
     pub fn split_remove(&self, index: usize) -> (Self, Self) {
-        debug_assert!(self.is_inside(index), "index {} is not inside range {:?}", index, self);
-        debug_assert!(self.len() > 2, "Cannot split a range with less then 3 indices");
-        debug_assert!(index != self.start && index != self.end, "Cannot split at start or end");
-        let left = Self::new(self.start, index  - 1);
+        debug_assert!(
+            self.is_inside(index),
+            "index {} is not inside range {:?}",
+            index,
+            self
+        );
+        debug_assert!(
+            self.len() > 2,
+            "Cannot split a range with less then 3 indices"
+        );
+        debug_assert!(
+            index != self.start && index != self.end,
+            "Cannot split at start or end"
+        );
+        let left = Self::new(self.start, index - 1);
         let right = Self::new(index + 1, self.end);
         (left, right)
     }
@@ -84,17 +95,10 @@ impl Range {
     }
     pub fn draw(&self, x: usize, color: Color, grid_size: usize) {
         let side_length = 4. / grid_size as f64;
-        let index = Vec2::new(x as f32, self.start as f32);
-        let center = (index - Vec2::splat((grid_size / 2) as f32)) * side_length as f32;
-        let corner_pos = center - Vec2::splat(side_length as f32 / 2.0);
-        let delta_y = (self.end - self.start) as f32 * side_length as f32;
-        draw_rectangle(
-            corner_pos.x,
-            corner_pos.y,
-            side_length as f32,
-            delta_y,
-            color,
-        );
+        let index = Vec2::new(x as f64, self.start as f64);
+        let corner = (index - Vec2::splat((grid_size / 2) as f64)) * side_length;
+        let delta_y = self.len() as f64 * side_length;
+        draw_rect(corner, side_length, delta_y, color);
     }
     pub fn iter(&self) -> std::ops::Range<usize> {
         self.start..(self.end + 1)

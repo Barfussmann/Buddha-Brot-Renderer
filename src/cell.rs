@@ -1,6 +1,6 @@
+use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
-use super::util::*;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
@@ -15,11 +15,15 @@ impl Cell {
             starting_sample_count,
         }
     }
-    fn get_center(&self, grid_size: usize) -> Vec2 {
+    fn get_corner(&self, grid_size: usize) -> Vec2 {
         self.center.as_dvec2() * Cell::side_length(grid_size)
     }
     pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> Vec2 {
-        gen_point_in_square(self.get_center(grid_size), Cell::side_length(grid_size), rng)
+        gen_point_in_square(
+            self.get_corner(grid_size),
+            Cell::side_length(grid_size),
+            rng,
+        )
     }
     pub fn get_neighbors(&self, current_sample_count: usize) -> Vec<Cell> {
         vec![
@@ -30,7 +34,11 @@ impl Cell {
         ]
     }
     pub fn draw(&self, color: Color, grid_size: usize) {
-        draw_square(self.get_center(grid_size), Cell::side_length(grid_size), color);
+        draw_square(
+            self.get_corner(grid_size),
+            Cell::side_length(grid_size),
+            color,
+        );
     }
     pub fn area(grid_size: usize) -> f64 {
         Cell::side_length(grid_size) * Cell::side_length(grid_size)

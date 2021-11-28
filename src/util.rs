@@ -1,9 +1,10 @@
-pub use glam::dvec2 as vec2;
-pub use glam::DVec2 as Vec2;
-pub use macroquad::color::*;
-pub use rand::prelude::{Rng, ThreadRng};
 use super::cell::*;
 use super::mandel_iter::*;
+pub use glam::dvec2 as vec2;
+pub use glam::DVec2 as Vec2;
+pub use macroquad::color::Color;
+pub use macroquad::color::*;
+pub use rand::prelude::{Rng, ThreadRng};
 
 pub fn draw_point(point: &Vec2, color: Color, line_width: f32) {
     macroquad::prelude::draw_line(
@@ -25,21 +26,30 @@ pub fn draw_line(p1: &Vec2, p2: &Vec2, color: Color, line_width: f32) {
         color,
     );
 }
-pub fn draw_square(center: Vec2, side_length: f64, color: Color) {
+pub fn draw_square(corner: Vec2, side_length: f64, color: Color) {
     macroquad::prelude::draw_rectangle(
-        (center.x - side_length / 2.0) as f32,
-        (center.y - side_length / 2.0) as f32,
+        corner.x as f32,
+        corner.y as f32,
         side_length as f32,
         side_length as f32,
         color,
     )
 }
-pub fn gen_point_in_square(center: Vec2, side_length: f64, rng: &mut ThreadRng) -> Vec2 {
+pub fn draw_rect(corner: Vec2, width: f64, heigth: f64, color: Color) {
+    macroquad::prelude::draw_rectangle(
+        corner.x as f32,
+        corner.y as f32,
+        width as f32,
+        heigth as f32,
+        color,
+    )
+}
+pub fn gen_point_in_square(corner: Vec2, side_length: f64, rng: &mut ThreadRng) -> Vec2 {
     let offset = vec2(
-        rng.gen_range((-side_length / 2.)..(side_length / 2.)),
-        rng.gen_range((-side_length / 2.)..(side_length / 2.)),
+        rng.gen_range(0. ..side_length),
+        rng.gen_range(0. ..side_length),
     );
-    center + offset
+    corner - offset
 }
 pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> bool {
     let mut x = [0.; 4];
@@ -58,7 +68,9 @@ pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut Th
         multi_mandel_iterator.next_iteration();
     }
     let set_limit_is_inside = multi_mandel_iterator.is_in_set();
-    for (limit_is_inside, set_limit_is_inside) in limit_is_inside.iter().zip(set_limit_is_inside.iter()) {
+    for (limit_is_inside, set_limit_is_inside) in
+        limit_is_inside.iter().zip(set_limit_is_inside.iter())
+    {
         if *limit_is_inside && !set_limit_is_inside {
             return true;
         }
