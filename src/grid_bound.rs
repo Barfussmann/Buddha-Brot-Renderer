@@ -13,7 +13,7 @@ pub struct CovarageGrid {
     pub new_neighbors: Grid,
     limit: usize,
     pub current_sample_count: usize,
-    sample_per_iter: usize,
+    sample_per_update: usize,
     grid_size: usize,
 }
 
@@ -26,7 +26,7 @@ impl CovarageGrid {
             new_neighbors: Grid::new(grid_size),
             limit,
             current_sample_count: 0,
-            sample_per_iter,
+            sample_per_update: sample_per_iter,
             grid_size,
         };
         let starting_x = (grid_size / 16) as i32;
@@ -42,28 +42,27 @@ impl CovarageGrid {
         if self.new_neighbors.is_empty() {
             self.sample_neighbors();
         } else {
-            for _ in 0..1000 {
+            for _ in 0..10 {
                 self.sample_new_neighbors();
             }
         }
     }
     pub fn sample_neighbors(&mut self) {
-        self.current_sample_count += self.sample_per_iter;
+        self.current_sample_count += self.sample_per_update;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.current_sample_count.saturating_sub(100);
+        let max_sample_count = self.current_sample_count.saturating_sub(10000);
 
-        self.neighbors
-            .retain(|cell| {
-                !self.inside_cells.is_activ(*cell)
-                    && cell.get_starting_sample_count() >= max_sample_count
-            });
+        self.neighbors.retain(|cell| {
+            !self.inside_cells.is_activ(*cell)
+                && cell.get_starting_sample_count() >= max_sample_count
+        });
         let new_inside_cells = self
             .neighbors
             .par_iter()
             .map_init(
                 || thread_rng(),
                 |rng, cell| {
-                    if self.sample_cell(*cell, self.sample_per_iter, rng) {
+                    if self.sample_cell(*cell, self.sample_per_update, rng) {
                         Some(*cell)
                     } else {
                         None
@@ -79,13 +78,25 @@ impl CovarageGrid {
             .extend(self.new_neighbors.iter(self.current_sample_count));
     }
     pub fn sample_new_neighbors(&mut self) {
-        let rng = &mut thread_rng();
-        let new_neighbors_copy = self.new_neighbors.clone();
+        let new_inside_cells = self
+            .new_neighbors
+            .iter(self.current_sample_count)
+            .par_bridge()
+            .map_init(
+                || thread_rng(),
+                |rng, cell| {
+                    if self.sample_cell(cell, self.sample_per_update, rng) {
+                        Some(cell)
+                    } else {
+                        None
+                    }
+                },
+            )
+            .filter_map(|cell| cell)
+            .collect::<Vec<_>>();
         self.new_neighbors.clear();
-        for cell in new_neighbors_copy.iter(self.current_sample_count) {
-            if self.sample_cell(cell, 1, rng) {
-                self.add_inside_cell(cell);
-            }
+        for inside_cell in new_inside_cells {
+            self.add_inside_cell(inside_cell);
         }
         self.neighbors
             .extend(self.new_neighbors.iter(self.current_sample_count));
