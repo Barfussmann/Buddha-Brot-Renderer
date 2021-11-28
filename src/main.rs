@@ -11,8 +11,8 @@ mod grid_reducer;
 mod mandel_iter;
 mod range;
 mod range_encoder;
-mod util;
 mod rect;
+mod util;
 // use crate::util::*;
 
 use macroquad::prelude::{next_frame, Conf};
@@ -33,19 +33,21 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 5, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 5, 1_000);
 
     loop {
         camera_manager.update();
         draw_manager.update();
 
+        let grid_reducer = grid_reducer::GridReducer::new(grid.all_visited_cells.clone());
+        grid_reducer.biggest_rect();
         grid.draw(&draw_manager);
         grid.sample();
-        println!(
-            "area: {}, sample: {}",
-            grid.area(),
-            grid.current_sample_count
-        );
+        // println!(
+        //     "area: {}, sample: {}",
+        //     grid.area(),
+        //     grid.current_sample_count
+        // );
         next_frame().await;
     }
 }

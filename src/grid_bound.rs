@@ -7,10 +7,10 @@ use rand::thread_rng;
 use rayon::prelude::*;
 
 pub struct CovarageGrid {
-    inside_cells: Grid,
-    pub neighbors: Vec<Cell>,
-    all_visited_cells: Grid,
-    pub new_neighbors: Grid,
+    pub inside_cells: Grid,
+    neighbors: Vec<Cell>,
+    pub all_visited_cells: Grid,
+    new_neighbors: Grid,
     limit: usize,
     pub current_sample_count: usize,
     sample_per_update: usize,
@@ -50,7 +50,7 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         self.current_sample_count += self.sample_per_update;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.current_sample_count.saturating_sub(10000);
+        let max_sample_count = self.current_sample_count.saturating_sub(100000);
 
         self.neighbors.retain(|cell| {
             !self.inside_cells.is_activ(*cell)
