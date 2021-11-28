@@ -15,7 +15,7 @@ impl RangeEncoder {
     pub fn is_empty(&self) -> bool {
         self.activ_ranges.is_empty()
     }
-    pub fn insert(&mut self, index: usize) {
+    pub fn insert_index(&mut self, index: usize) {
         let (is_activ, insert_index) = self.binary_search_for_index(index);
         if is_activ {
             return;
@@ -70,6 +70,25 @@ impl RangeEncoder {
                 self.activ_ranges.insert(insert_index, range);
             }
         }
+    }
+    pub fn remove_index(&mut self, index: usize) {
+        let (is_activ, range_index) = self.binary_search_for_index(index);
+        assert!(is_activ);
+        let range = &mut self.activ_ranges[range_index];
+        if range.len() == 1 {
+            self.activ_ranges.remove(range_index);
+            return;
+        }
+        if range.start == index {
+            range.start += 1;
+        } else if range.end - 1 == index {
+            range.end -= 1;
+        } else {
+            let (left, right) = range.split_remove(index);
+            *range = left;
+            self.activ_ranges.insert(range_index + 1, right);
+        }
+
     }
     pub fn activ_count(&self) -> usize {
         self.activ_ranges.iter().map(|range| range.len()).sum()
@@ -151,20 +170,20 @@ mod tests {
     #[test]
     fn after_insertion_isnt_empty() {
         let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert(5);
+        range_encoder.insert_index(5);
         assert!(!range_encoder.is_empty());
     }
     #[test]
     fn after_insertion_activ_cells_is_1() {
         let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert(5);
+        range_encoder.insert_index(5);
         assert_eq!(range_encoder.activ_count(), 1);
     }
     #[test]
     fn activ_cells_equal_to_inserted_cells() {
         let mut range_encoder = RangeEncoder::new();
         for i in 1..100 {
-            range_encoder.insert(i);
+            range_encoder.insert_index(i);
             assert_eq!(range_encoder.activ_count(), i);
         }
     }
@@ -173,7 +192,7 @@ mod tests {
         let indecies = [0, 2, 3, 4, 45, 67, 89, 90, 91, 92, 93, 94, 95, 96, 99];
         let mut range_encoder = RangeEncoder::new();
         for index in indecies.iter() {
-            range_encoder.insert(*index);
+            range_encoder.insert_index(*index);
         }
         assert_eq!(range_encoder.activ_count(), indecies.len());
     }
@@ -183,21 +202,21 @@ mod tests {
         let indecies = [0, 2, 3, 4, 45, 67, 89, 90, 91, 92, 93, 94, 95, 96, 99];
 
         for index in indecies.iter() {
-            range_encoder.insert(*index);
+            range_encoder.insert_index(*index);
         }
         assert_eq!(range_encoder.iter().collect::<Vec<_>>(), indecies.to_vec());
     }
     #[test]
     fn cell_is_activ_after_isertion() {
         let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert(5);
+        range_encoder.insert_index(5);
         range_encoder.is_activ(5);
     }
     #[test]
     fn all_cells_activ_afet_range_insertion() {
         let mut range_encoder = RangeEncoder::new();
         for i in 0..100 {
-            range_encoder.insert(i);
+            range_encoder.insert_index(i);
         }
         for i in 0..100 {
             assert!(range_encoder.is_activ(i));
@@ -206,8 +225,8 @@ mod tests {
     #[test]
     fn after_2_consecutive_insert_only_1_activ_range() {
         let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert(5);
-        range_encoder.insert(6);
+        range_encoder.insert_index(5);
+        range_encoder.insert_index(6);
         assert_eq!(range_encoder.activ_ranges.len(), 1)
     }
     #[test]
@@ -220,7 +239,7 @@ mod tests {
     #[test]
     fn itersection_of_empty_and_non_empty_range_encoder_is_empty() {
         let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert(5);
+        range_encoder.insert_index(5);
         let range_encoder2 = RangeEncoder::new();
         let intersection = range_encoder.intersect(&range_encoder2);
         assert!(intersection.is_empty());
@@ -228,9 +247,9 @@ mod tests {
     #[test]
     fn itersection_of_equal_range_encoder_is_equal() {
         let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert(5);
-        range_encoder.insert(6);
-        range_encoder.insert(8);
+        range_encoder.insert_index(5);
+        range_encoder.insert_index(6);
+        range_encoder.insert_index(8);
         let intersection = range_encoder.intersect(&range_encoder);
         assert_eq!(range_encoder, intersection);
     }
@@ -238,11 +257,11 @@ mod tests {
     fn intersection_of_ranges_are_all_itersections() {
         let mut range_encoder1 = RangeEncoder::new();
         for index in [5, 6, 7, 12, 13, 22] {
-            range_encoder1.insert(index);
+            range_encoder1.insert_index(index);
         }
         let mut range_encoder2 = RangeEncoder::new();
         for index in [4, 5, 7, 8, 11, 12, 13, 22] {
-            range_encoder2.insert(index);
+            range_encoder2.insert_index(index);
         }
         let intersection = range_encoder1.intersect(&range_encoder2);
         assert_eq!(intersection, range_encoder2.intersect(&range_encoder1));
@@ -254,7 +273,7 @@ mod tests {
     fn activ_ranges_are_sorted() {
         let mut range_encoder = RangeEncoder::new();
         for index in [54, 61, 17, 12, 143, 22] {
-            range_encoder.insert(index);
+            range_encoder.insert_index(index);
         }
         for ranges in range_encoder.activ_ranges.windows(2) {
             match ranges[0].relation_to(ranges[1]) {
@@ -270,7 +289,7 @@ mod tests {
     fn is_activ_of_non_activ_cells_is_false() {
         let mut range_encoder = RangeEncoder::new();
         for index in [12, 17, 22, 54, 61, 143] {
-            range_encoder.insert(index);
+            range_encoder.insert_index(index);
         }
         for index in [0, 1, 3, 40, 200, 1000] {
             assert!(!range_encoder.is_activ(index));
@@ -280,9 +299,33 @@ mod tests {
     fn is_empty_after_clear() {
         let mut range_encoder = RangeEncoder::new();
         for index in [12, 17, 22, 54, 61, 143] {
-            range_encoder.insert(index);
+            range_encoder.insert_index(index);
         }
         range_encoder.clear();
+        assert!(range_encoder.is_empty());
+    }
+    #[test]
+    fn empty_after_insert_and_then_remove_1() {
+        let mut range_encoder = RangeEncoder::new();
+        let indecies = [12, 17, 22, 54, 61, 143];
+        for index in indecies {
+            range_encoder.insert_index(index);
+        }
+        for index in indecies {
+            range_encoder.remove_index(index);
+        }
+        assert!(range_encoder.is_empty());
+    }
+    #[test]
+    fn empty_after_insert_and_then_remove_2() {
+        let mut range_encoder = RangeEncoder::new();
+        let indecies = [12, 13, 11, 20, 19, 18];
+        for index in indecies {
+            range_encoder.insert_index(index);
+        }
+        for index in indecies {
+            range_encoder.remove_index(index);
+        }
         assert!(range_encoder.is_empty());
     }
 }
