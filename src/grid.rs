@@ -2,7 +2,7 @@ use super::cell::*;
 use super::range_encoder::*;
 use macroquad::color::Color;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Grid {
     collums: Vec<RangeEncoder>,
     grid_size: usize,
