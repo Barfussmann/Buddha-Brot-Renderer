@@ -81,7 +81,7 @@ impl RangeEncoder {
         }
         if range.start == index {
             range.start += 1;
-        } else if range.end - 1 == index {
+        } else if range.end == index {
             range.end -= 1;
         } else {
             let (left, right) = range.split_remove(index);
