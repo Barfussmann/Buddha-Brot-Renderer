@@ -49,6 +49,12 @@ impl Grid {
             collum.clear();
         }
     }
+    pub fn get_collum(&self, index: usize) -> &RangeEncoder {
+        &self.collums[index]
+    }
+    pub fn get_grid_size(&self) -> usize {
+        self.grid_size
+    }
 }
 #[cfg(test)]
 mod tests {

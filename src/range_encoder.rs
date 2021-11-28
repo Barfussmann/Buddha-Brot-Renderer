@@ -159,6 +159,9 @@ impl RangeEncoder {
     pub fn clear(&mut self) {
         self.activ_ranges.clear();
     }
+    pub fn get_activ_ranges(&self) -> &Vec<Range> {
+        &self.activ_ranges
+    }
 }
 #[cfg(test)]
 mod tests {
