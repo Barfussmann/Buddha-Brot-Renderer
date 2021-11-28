@@ -1,9 +1,10 @@
 use super::grid::*;
 use super::range::*;
-use super::rect::*;
 use super::range_encoder::*;
+use super::rect::*;
+use macroquad::color::WHITE;
 
-struct GridReducer {
+pub struct GridReducer {
     grid: Grid,
     rects: Vec<Rect>,
 }
@@ -14,16 +15,33 @@ impl GridReducer {
             rects: Vec::new(),
         }
     }
-    fn biggest_rect(&self) {
-
+    pub fn biggest_rect(&self) -> Option<Rect> {
+        if self.grid.is_empty() {
+            return None;
+        }
+        let mut biggest_rect = Rect::new(0, 0, usize::MAX, usize::MAX);
+        let mut biggest_area = 0;
+        for i in 0..self.grid.get_grid_size() {
+            if let Some(new_biggest_rect) = self
+                .biggest_rect_starting_in_collum(i)
+                .filter(|rect| rect.area() > biggest_area)
+            {
+                biggest_area = new_biggest_rect.area();
+                biggest_rect = new_biggest_rect;
+            }
+        }
+        assert_ne!(biggest_rect, Rect::new(0, 0, usize::MAX, usize::MAX));
+        biggest_rect.draw(self.grid.get_grid_size(), WHITE);
+        dbg!(biggest_rect.clone());
+        Some(biggest_rect)
     }
     fn biggest_rect_starting_in_collum(&self, starting_collum_index: usize) -> Option<Rect> {
         fn get_longest_range(range_encoder: &RangeEncoder) -> Range {
             *range_encoder
-            .get_activ_ranges()
-            .iter()
-            .max_by_key(|range| range.len())
-            .unwrap()
+                .get_activ_ranges()
+                .iter()
+                .max_by_key(|range| range.len())
+                .unwrap()
         }
         let collum = self.grid.get_collum(starting_collum_index);
         if collum.is_empty() {
@@ -45,7 +63,13 @@ impl GridReducer {
             }
         }
         let h = biggest_range_rect.len();
-        Some(Rect::new(biggest_range_rect.start, starting_collum_index, biggest_area / h, h))
+        debug_assert_eq!(biggest_area.rem_euclid(h), 0);
+        Some(Rect::new(
+            biggest_range_rect.start,
+            starting_collum_index,
+            biggest_area / h,
+            h,
+        ))
     }
 }
 
