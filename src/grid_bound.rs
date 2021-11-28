@@ -42,7 +42,7 @@ impl CovarageGrid {
         if self.new_neighbors.is_empty() {
             self.sample_neighbors();
         } else {
-            for _ in 0..10 {
+            for _ in 0..100 {
                 self.sample_new_neighbors();
             }
         }
@@ -50,7 +50,7 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         self.current_sample_count += self.sample_per_update;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.current_sample_count.saturating_sub(100000);
+        let max_sample_count = self.current_sample_count.saturating_sub(1000);
 
         self.neighbors.retain(|cell| {
             !self.inside_cells.is_activ(*cell)
@@ -78,6 +78,9 @@ impl CovarageGrid {
             .extend(self.new_neighbors.iter(self.current_sample_count));
     }
     pub fn sample_new_neighbors(&mut self) {
+        if self.new_neighbors.is_empty() {
+            return;
+        }
         let new_inside_cells = self
             .new_neighbors
             .iter(self.current_sample_count)
@@ -137,5 +140,32 @@ impl CovarageGrid {
     }
     pub fn area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)
+    }
+    pub fn real_covered_area(&self) -> f64 {
+        let samples_per_cell = 1000;
+        let total_samples = self.inside_cells.activ_count() * samples_per_cell;
+
+        let inside_samples = self
+            .inside_cells
+            .iter(0)
+            .par_bridge()
+            .map_init(
+                || thread_rng(),
+                |rng, cell| {
+                    let mut inside_samples = 0;
+                    for _ in 0..samples_per_cell / 4 {
+                        let (inside_limit, inside_set) =
+                            raw_quad_inside_test(cell, self.limit, self.grid_size, rng);
+                        inside_samples += std::iter::zip(inside_limit, inside_set)
+                            .filter_map(|(in_limit, in_set)| (in_limit && !in_set).then(|| true))
+                            .count();
+                    }
+                    return inside_samples;
+                },
+            )
+            .sum::<usize>();
+        let total_area = self.area();
+        println!("sample: {} million", total_samples / 1_000_000);
+        total_area * (inside_samples as f64 / total_samples as f64)
     }
 }

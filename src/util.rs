@@ -51,7 +51,7 @@ pub fn gen_point_in_square(corner: Vec2, side_length: f64, rng: &mut ThreadRng) 
     );
     corner - offset
 }
-pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> bool {
+pub fn raw_quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> ([bool;4], [bool;4]) {
     let mut x = [0.; 4];
     let mut y = [0.; 4];
     for i in 0..4 {
@@ -68,8 +68,12 @@ pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut Th
         multi_mandel_iterator.next_iteration();
     }
     let set_limit_is_inside = multi_mandel_iterator.is_in_set();
+    (limit_is_inside, set_limit_is_inside)
+}
+pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> bool {
+    let (inside_limit, inside_set) = raw_quad_inside_test(cell, limit, grid_size, rng);
     for (limit_is_inside, set_limit_is_inside) in
-        limit_is_inside.iter().zip(set_limit_is_inside.iter())
+        inside_limit.iter().zip(inside_set.iter())
     {
         if *limit_is_inside && !set_limit_is_inside {
             return true;
