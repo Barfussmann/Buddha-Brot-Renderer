@@ -16,7 +16,7 @@ impl Grid {
     }
     pub fn insert(&mut self, cell: Cell) {
         let (x, y) = cell.index(self.grid_size);
-        self.collums[x].insert(y);
+        self.collums[x].insert_index(y);
     }
     pub fn activ_count(&self) -> usize {
         self.collums.iter().map(|c| c.activ_count()).sum()
