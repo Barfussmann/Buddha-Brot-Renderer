@@ -7,10 +7,12 @@ mod cell;
 mod draw_manager;
 mod grid;
 mod grid_bound;
+mod grid_reducer;
 mod mandel_iter;
 mod range;
 mod range_encoder;
 mod util;
+mod rect;
 // use crate::util::*;
 
 use macroquad::prelude::{next_frame, Conf};
@@ -31,7 +33,7 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(20, 1, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 5, 10_000);
 
     loop {
         camera_manager.update();
