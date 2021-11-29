@@ -20,7 +20,7 @@ impl CameraManger {
             zoom_factor: 1.5,
             mouse_poss_at_middle_click: Vec2::new(0., 0.),
         };
-        set_camera(&Camera2D::from_display_rect(manger.camera_rect));
+        // set_camera(&Camera2D::from_display_rect(manger.camera_rect));
         manger
     }
     fn zoom(&mut self, zoom: f32) {
@@ -39,7 +39,7 @@ impl CameraManger {
         let new_w = self.camera_rect.w / zoom;
         self.camera_rect = Rect::new(new_camera_corner.x, new_camera_corner.y, new_w, new_h);
         self.line_width /= zoom;
-        set_camera(&Camera2D::from_display_rect(self.camera_rect));
+        // set_camera(&Camera2D::from_display_rect(self.camera_rect));
     }
     fn update_drag(&mut self) {
         if is_mouse_button_pressed(MouseButton::Left) || is_mouse_button_pressed(MouseButton::Middle) {
@@ -54,7 +54,7 @@ impl CameraManger {
         if is_key_pressed(KeyCode::Space) {
             self.camera_rect = Rect::new(-2.01, -1.26, 3.02, 2.52);
             self.line_width = self.starting_line_width;
-            set_camera(&Camera2D::from_display_rect(self.camera_rect));
+            // set_camera(&Camera2D::from_display_rect(self.camera_rect));
         }
         if mouse_wheel().1 == 1. {
             self.zoom(self.zoom_factor);
@@ -82,6 +82,9 @@ impl CameraManger {
             self.camera_rect.w,
             self.camera_rect.h,
         );
-        set_camera(&Camera2D::from_display_rect(self.camera_rect));
+        // set_camera(&Camera2D::from_display_rect(self.camera_rect));
+    }
+    pub fn get_camera_rect(&self) -> Rect {
+        self.camera_rect
     }
 }
