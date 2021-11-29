@@ -1,5 +1,5 @@
 use macroquad::prelude::{
-    is_key_down, is_key_pressed, is_mouse_button_down, is_mouse_button_pressed,
+    is_key_pressed, is_mouse_button_down, is_mouse_button_pressed,
     mouse_position_local, mouse_wheel, set_camera, Camera2D, KeyCode, MouseButton, Rect, Vec2,
 };
 
