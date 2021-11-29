@@ -24,12 +24,16 @@ use macroquad::prelude::{
     draw_texture, is_key_pressed, next_frame, Conf, Image, KeyCode, Texture2D, WHITE,
 };
 
+const SIZE: usize = 1024;
+const WIDTH: usize = SIZE;
+const HEIGHT: usize = (SIZE as f64 * (2.64 / 3.0)) as usize;
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "Mandelbrot".to_owned(),
         fullscreen: false,
-        window_width: 900,
-        window_height: 900,
+        window_width: WIDTH as i32,
+        window_height: HEIGHT as i32,
 
         ..Default::default()
     }
@@ -39,9 +43,9 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render =
-        mandel_brot_render::MandelbrotRender::new(900, 900, vec2(-2., -2.), vec2(2., 2.));
+        mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT, vec2(-2., -2.), vec2(2., 2.));
 
-    let mut image = Image::gen_image_color(900, 900, WHITE);
+    let mut image = Image::gen_image_color(WIDTH as u16, HEIGHT as u16, WHITE);
     let texture = Texture2D::from_image(&image);
 
     let mut draw_manager = draw_manager::DrawManager::new();
@@ -50,7 +54,7 @@ async fn main() -> std::io::Result<()> {
 
     loop {
         camera_manager.update();
-        mandel_brot_render.set_camera_rect(camera_manager.get_camera_rect());
+        mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
         image.update(mandel_brot_render.get_colors());
         texture.update(&image);
         draw_texture(texture, 0., 0., WHITE);
