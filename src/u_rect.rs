@@ -1,13 +1,13 @@
 use super::util::*;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
-pub struct Rect {
+pub struct URect {
     x: usize,
     y: usize,
     w: usize,
     h: usize,
 }
-impl Rect {
+impl URect {
     pub fn new(x: usize, y: usize, w: usize, h: usize) -> Self {
         assert!(w > 0);
         assert!(h > 0);
@@ -34,17 +34,17 @@ mod tests {
     use super::*;
     #[test]
     fn area_of_rect_is_width_times_height() {
-        let rect = Rect::new(0, 0, 10, 10);
+        let rect = URect::new(0, 0, 10, 10);
         assert_eq!(rect.area(), 100);
     }
     #[test]
     #[should_panic]
     fn rect_new_panics_if_width_is_zero() {
-        Rect::new(0, 0, 0, 10);
+        URect::new(0, 0, 0, 10);
     }
     #[test]
     #[should_panic]
     fn rect_new_panics_if_height_is_zero() {
-        Rect::new(0, 0, 10, 0);
+        URect::new(0, 0, 10, 0);
     }
 }

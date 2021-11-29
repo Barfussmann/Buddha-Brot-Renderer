@@ -1,12 +1,12 @@
 use super::grid::*;
 use super::range::*;
 use super::range_encoder::*;
-use super::rect::*;
+use super::u_rect::*;
 use macroquad::color::WHITE;
 
 pub struct GridReducer {
     grid: Grid,
-    rects: Vec<Rect>,
+    rects: Vec<URect>,
 }
 impl GridReducer {
     pub fn new(grid: Grid) -> Self {
@@ -15,11 +15,11 @@ impl GridReducer {
             rects: Vec::new(),
         }
     }
-    pub fn biggest_rect(&self) -> Option<Rect> {
+    pub fn biggest_rect(&self) -> Option<URect> {
         if self.grid.is_empty() {
             return None;
         }
-        let mut biggest_rect = Rect::new(0, 0, usize::MAX, usize::MAX);
+        let mut biggest_rect = URect::new(0, 0, usize::MAX, usize::MAX);
         let mut biggest_area = 0;
         for i in 0..self.grid.get_grid_size() {
             if let Some(new_biggest_rect) = self
@@ -30,12 +30,12 @@ impl GridReducer {
                 biggest_rect = new_biggest_rect;
             }
         }
-        assert_ne!(biggest_rect, Rect::new(0, 0, usize::MAX, usize::MAX));
+        assert_ne!(biggest_rect, URect::new(0, 0, usize::MAX, usize::MAX));
         biggest_rect.draw(self.grid.get_grid_size(), WHITE);
         dbg!(biggest_rect.clone());
         Some(biggest_rect)
     }
-    fn biggest_rect_starting_in_collum(&self, starting_collum_index: usize) -> Option<Rect> {
+    fn biggest_rect_starting_in_collum(&self, starting_collum_index: usize) -> Option<URect> {
         fn get_longest_range(range_encoder: &RangeEncoder) -> Range {
             *range_encoder
                 .get_activ_ranges()
@@ -64,7 +64,7 @@ impl GridReducer {
         }
         let h = biggest_range_rect.len();
         debug_assert_eq!(biggest_area.rem_euclid(h), 0);
-        Some(Rect::new(
+        Some(URect::new(
             biggest_range_rect.start,
             starting_collum_index,
             biggest_area / h,
