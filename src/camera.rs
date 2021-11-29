@@ -42,28 +42,20 @@ impl CameraManger {
         set_camera(&Camera2D::from_display_rect(self.camera_rect));
     }
     fn update_drag(&mut self) {
-        if is_mouse_button_pressed(MouseButton::Middle) {
+        if is_mouse_button_pressed(MouseButton::Left) || is_mouse_button_pressed(MouseButton::Middle) {
             self.mouse_poss_at_middle_click = self.get_mouse_pos()
         }
-        if is_mouse_button_down(MouseButton::Middle) {
+        if is_mouse_button_down(MouseButton::Left) || is_mouse_button_down(MouseButton::Middle) {
             let delta = self.mouse_poss_at_middle_click - self.get_mouse_pos();
             self.move_camera(delta);
         }
     }
     pub fn update(&mut self) {
-        if is_mouse_button_pressed(MouseButton::Left) {
-            self.zoom(self.zoom_factor);
-        }
-        if is_mouse_button_pressed(MouseButton::Right) {
-            self.zoom(1. / self.zoom_factor);
-        }
         if is_key_pressed(KeyCode::Space) {
             self.camera_rect = Rect::new(-2.01, -1.26, 3.02, 2.52);
             self.line_width = self.starting_line_width;
             set_camera(&Camera2D::from_display_rect(self.camera_rect));
         }
-        if is_key_down(KeyCode::U) {}
-        if is_key_down(KeyCode::I) {}
         if mouse_wheel().1 == 1. {
             self.zoom(self.zoom_factor);
         } else if mouse_wheel().1 == -1. {
