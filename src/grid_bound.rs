@@ -155,7 +155,7 @@ impl CovarageGrid {
                     let mut inside_samples = 0;
                     for _ in 0..samples_per_cell / 4 {
                         let (inside_limit, inside_set) =
-                            raw_quad_inside_test(cell, self.limit, self.grid_size, rng);
+                            unsafe{raw_quad_inside_test(cell, self.limit, self.grid_size, rng)};
                         inside_samples += std::iter::zip(inside_limit, inside_set)
                             .filter_map(|(in_limit, in_set)| (in_limit && !in_set).then(|| true))
                             .count();

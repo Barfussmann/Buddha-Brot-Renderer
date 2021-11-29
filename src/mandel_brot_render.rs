@@ -81,7 +81,9 @@ fn get_color(iterations: [i64; 4]) -> [Color; 4] {
 
 fn iterat_points(x: [f64; 4], y: [f64; 4]) -> [i64; 4] {
     let mut iterator = MultiMandelIterator::new(x, y);
-    iterator.iterate()
+    unsafe {
+        iterator.iterate()
+    }
 }
 
 pub struct MultiMandelIterator {
@@ -108,7 +110,8 @@ impl MultiMandelIterator {
         }
     }
     #[inline(always)]
-    fn next_iteration(&mut self) {
+    // #[target_feature(enable = "avx2")]
+    unsafe fn next_iteration(&mut self) {
         self.z_y = 2. * self.z_x * self.z_y + self.c_y;
         self.z_x = self.z_squared_x - self.z_squared_y + self.c_x;
         self.z_squared_x = self.z_x * self.z_x;
@@ -120,7 +123,9 @@ impl MultiMandelIterator {
     fn get_iterations(&self) -> [i64; 4] {
         self.iteration.to_array()
     }
-    fn iterate(&mut self) -> [i64; 4] {
+    #[target_feature(enable = "fma")]
+    #[target_feature(enable = "avx2")]
+    unsafe fn iterate(&mut self) -> [i64; 4] {
         for _ in 0..128 {
             self.next_iteration();
         }

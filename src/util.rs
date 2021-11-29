@@ -51,7 +51,9 @@ pub fn gen_point_in_square(corner: Vec2, side_length: f64, rng: &mut ThreadRng) 
     );
     corner - offset
 }
-pub fn raw_quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> ([bool;4], [bool;4]) {
+#[target_feature(enable = "avx2")]
+#[target_feature(enable = "fma")]
+pub unsafe fn raw_quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> ([bool;4], [bool;4]) {
     let mut x = [0.; 4];
     let mut y = [0.; 4];
     for i in 0..4 {
@@ -64,14 +66,14 @@ pub fn raw_quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mu
         multi_mandel_iterator.next_iteration();
     }
     let limit_is_inside = multi_mandel_iterator.is_in_set();
-    for _ in 0..128 {
+    for _ in 0..1024 {
         multi_mandel_iterator.next_iteration();
     }
     let set_limit_is_inside = multi_mandel_iterator.is_in_set();
     (limit_is_inside, set_limit_is_inside)
 }
 pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut ThreadRng) -> bool {
-    let (inside_limit, inside_set) = raw_quad_inside_test(cell, limit, grid_size, rng);
+    let (inside_limit, inside_set) = unsafe{raw_quad_inside_test(cell, limit, grid_size, rng)};
     for (limit_is_inside, set_limit_is_inside) in
         inside_limit.iter().zip(inside_set.iter())
     {
