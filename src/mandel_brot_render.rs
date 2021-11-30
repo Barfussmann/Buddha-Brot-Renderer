@@ -58,7 +58,6 @@ impl MandelbrotRender {
         self.top_left_corner = top_left_corner;
         self.view_size = view_size;
         if self.top_left_corner != old_top_left || self.view_size != old_width_heigth {
-            println!("recalculate");
             self.calculate_pixel_cords();
             self.update_pixels();
         }

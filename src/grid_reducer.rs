@@ -2,7 +2,6 @@ use super::grid::*;
 use super::range::*;
 use super::range_encoder::*;
 use super::u_rect::*;
-use macroquad::color::WHITE;
 
 pub struct GridReducer {
     grid: Grid,
@@ -31,8 +30,6 @@ impl GridReducer {
             }
         }
         assert_ne!(biggest_rect, URect::new(0, 0, usize::MAX, usize::MAX));
-        biggest_rect.draw(self.grid.get_grid_size(), WHITE);
-        dbg!(biggest_rect.clone());
         Some(biggest_rect)
     }
     fn biggest_rect_starting_in_collum(&self, starting_collum_index: usize) -> Option<URect> {
