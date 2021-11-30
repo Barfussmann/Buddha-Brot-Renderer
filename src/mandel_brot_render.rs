@@ -66,23 +66,15 @@ impl MandelbrotRender {
 fn get_color(iterations: [i64; 4]) -> [Color; 4] {
     let mut colors = [BLACK; 4];
     for i in 0..4 {
-        colors[i] = if iterations[i] != 129 {
-            let r = (iterations[i] as f32 * 0.5).sin() * 0.5 + 0.5;
-            let g = (iterations[i] as f32 * 0.5).cos() * 0.5 + 0.5;
-            let b = (iterations[i] as f32 * 0.5).tan() * 0.5 + 0.5;
-            Color::new(r, g, b, 1.)
-        } else {
-            Color::new(0.2, 0.2, 0.2, 1.)
-        };
+        let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u8;
+        colors[i] = Color::from_rgba(color_value, color_value, color_value, 255);
     }
     colors
 }
 
 fn iterat_points(x: [f64; 4], y: [f64; 4]) -> [i64; 4] {
     let mut iterator = MultiMandelIterator::new(x, y);
-    unsafe {
-        iterator.iterate()
-    }
+    unsafe { iterator.iterate() }
 }
 
 pub struct MultiMandelIterator {
@@ -125,7 +117,7 @@ impl MultiMandelIterator {
     #[target_feature(enable = "fma")]
     #[target_feature(enable = "avx2")]
     unsafe fn iterate(&mut self) -> [i64; 4] {
-        for _ in 0..128 {
+        for _ in 0..256 {
             self.next_iteration();
         }
         self.get_iterations()
