@@ -28,7 +28,7 @@ pub unsafe fn raw_quad_inside_test(cell: Cell, limit: usize, grid_size: usize, r
         multi_mandel_iterator.next_iteration();
     }
     let limit_is_inside = multi_mandel_iterator.is_in_set();
-    for _ in 0..1024 {
+    for _ in 0..128 {
         multi_mandel_iterator.next_iteration();
     }
     let set_limit_is_inside = multi_mandel_iterator.is_in_set();
