@@ -1,7 +1,8 @@
 use glam::{dvec2, DVec2};
 use macroquad::prelude::{
-    is_key_pressed, is_mouse_button_down, is_mouse_button_pressed, mouse_position_local,
-    mouse_wheel, KeyCode, MouseButton, Vec2,
+    draw_rectangle, is_key_pressed, is_mouse_button_down, is_mouse_button_pressed,
+    mouse_position_local, mouse_wheel, screen_height, screen_width, vec2, Color, KeyCode,
+    MouseButton, Vec2,
 };
 
 pub struct CameraManger {
@@ -67,5 +68,19 @@ impl CameraManger {
     }
     pub fn get_view_rect(&self) -> (DVec2, DVec2) {
         (self.top_left_corner, self.view_size)
+    }
+    pub fn draw_rect(&self, corner: DVec2, size: DVec2, color: Color) {
+        let corner = (corner - self.top_left_corner) / self.view_size;
+        let size = size / self.view_size;
+        let screen_mult = vec2(screen_width(), screen_height());
+        let screen_corner = vec2(corner.x as f32, corner.y as f32) * screen_mult;
+        let screen_size = vec2(size.x as f32, size.y as f32) * screen_mult;
+        draw_rectangle(
+            screen_corner.x as f32,
+            screen_corner.y as f32,
+            screen_size.x as f32,
+            screen_size.y as f32,
+            color,
+        );
     }
 }

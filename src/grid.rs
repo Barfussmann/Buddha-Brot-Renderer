@@ -1,3 +1,4 @@
+use super::camera::*;
 use super::cell::*;
 use super::range_encoder::*;
 use macroquad::color::Color;
@@ -25,9 +26,9 @@ impl Grid {
         let (x, y) = cell.index(self.grid_size);
         self.collums[x].is_activ(y)
     }
-    pub fn draw(&self, color: Color) {
+    pub fn draw(&self, color: Color, camera: &CameraManger) {
         for (x, collum) in self.collums.iter().enumerate() {
-            collum.draw(x, color, self.grid_size);
+            collum.draw(x, color, self.grid_size, camera);
         }
     }
     pub fn iter(&self, current_sample_count: usize) -> impl Iterator<Item = Cell> + '_ {

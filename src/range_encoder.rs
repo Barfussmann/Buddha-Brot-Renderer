@@ -1,4 +1,5 @@
 extern crate test;
+use super::camera::*;
 use macroquad::color::Color;
 
 use super::range::*;
@@ -45,7 +46,8 @@ impl RangeEncoder {
         let range_after = self.activ_ranges[insert_index];
 
         let is_adjacent_before = range_before.relation_to(range) == Relation::AdjacentBefore;
-        let is_adjacent_after = range_after.relation_to(range) == Relation::AdjacentAfter || range_after.relation_to(range) == Relation::AdjacentBefore;
+        let is_adjacent_after = range_after.relation_to(range) == Relation::AdjacentAfter
+            || range_after.relation_to(range) == Relation::AdjacentBefore;
         match (is_adjacent_before, is_adjacent_after) {
             (true, true) => {
                 let next_range = self.activ_ranges.remove(insert_index);
@@ -88,7 +90,6 @@ impl RangeEncoder {
             *range = left;
             self.activ_ranges.insert(range_index + 1, right);
         }
-
     }
     pub fn activ_count(&self) -> usize {
         self.activ_ranges.iter().map(|range| range.len()).sum()
@@ -132,8 +133,8 @@ impl RangeEncoder {
                 }
                 Relation::Overlapping => {
                     result.activ_ranges.push(this.intersect(*other).unwrap());
-                    if let Some(new_next_this_range) =
-                        this_range_iter.next_if(|next_this| next_this.relation_to(*other) == Relation::Overlapping)
+                    if let Some(new_next_this_range) = this_range_iter
+                        .next_if(|next_this| next_this.relation_to(*other) == Relation::Overlapping)
                     {
                         next_this_range = Some(new_next_this_range);
                     } else {
@@ -148,9 +149,9 @@ impl RangeEncoder {
 
         result
     }
-    pub fn draw(&self, x: usize, color: Color, grid_size: usize) {
+    pub fn draw(&self, x: usize, color: Color, grid_size: usize, camera: &CameraManger) {
         for range in self.activ_ranges.iter() {
-            range.draw(x, color, grid_size);
+            range.draw(x, color, grid_size, camera);
         }
     }
     pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {

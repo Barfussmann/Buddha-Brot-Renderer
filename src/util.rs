@@ -6,44 +6,6 @@ pub use macroquad::color::Color;
 pub use macroquad::color::*;
 pub use rand::prelude::{Rng, ThreadRng};
 
-pub fn draw_point(point: &Vec2, color: Color, line_width: f32) {
-    macroquad::prelude::draw_line(
-        point.x as f32,
-        point.y as f32,
-        point.x as f32 + line_width,
-        point.y as f32,
-        line_width,
-        color,
-    );
-}
-pub fn draw_line(p1: &Vec2, p2: &Vec2, color: Color, line_width: f32) {
-    macroquad::prelude::draw_line(
-        p1.x as f32,
-        p1.y as f32,
-        p2.x as f32,
-        p2.y as f32,
-        line_width,
-        color,
-    );
-}
-pub fn draw_square(corner: Vec2, side_length: f64, color: Color) {
-    macroquad::prelude::draw_rectangle(
-        corner.x as f32,
-        corner.y as f32,
-        side_length as f32,
-        side_length as f32,
-        color,
-    )
-}
-pub fn draw_rect(corner: Vec2, width: f64, heigth: f64, color: Color) {
-    macroquad::prelude::draw_rectangle(
-        corner.x as f32,
-        corner.y as f32,
-        width as f32,
-        heigth as f32,
-        color,
-    )
-}
 pub fn gen_point_in_square(corner: Vec2, side_length: f64, rng: &mut ThreadRng) -> Vec2 {
     let offset = vec2(
         rng.gen_range(0. ..side_length),

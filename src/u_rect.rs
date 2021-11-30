@@ -1,3 +1,4 @@
+use super::camera::*;
 use super::util::*;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
@@ -16,18 +17,15 @@ impl URect {
     pub fn area(&self) -> usize {
         self.w * self.h
     }
-    pub fn draw(&self, grid_size: usize, color: Color) {
+    pub fn draw(&self, grid_size: usize, color: Color, camera: &CameraManger) {
         let side_length = 4. / grid_size as f64;
         let pos = Vec2::new(self.y as f64, self.x as f64) * side_length;
         let offset = Vec2::splat(side_length * grid_size as f64 / 2.);
         let width = self.w as f64 * side_length;
         let heigth = self.h as f64 * side_length;
-        draw_rect(pos - offset, width, heigth, color);
+        camera.draw_rect(pos - offset, vec2(width, heigth), color);
     }
 }
-
-
-
 
 #[cfg(test)]
 mod tests {

@@ -1,3 +1,4 @@
+use super::camera::*;
 use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
@@ -33,10 +34,10 @@ impl Cell {
             Cell::new(self.center + IVec2::new(0, -1), current_sample_count),
         ]
     }
-    pub fn draw(&self, color: Color, grid_size: usize) {
-        draw_square(
+    pub fn draw(&self, color: Color, grid_size: usize, camera: &CameraManger) {
+        camera.draw_rect(
             self.get_corner(grid_size),
-            Cell::side_length(grid_size),
+            -Vec2::splat(Cell::side_length(grid_size)),
             color,
         );
     }

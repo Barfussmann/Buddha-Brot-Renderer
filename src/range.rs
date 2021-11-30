@@ -1,4 +1,5 @@
 extern crate test;
+use super::camera::*;
 use super::util::*;
 use macroquad::prelude::Color;
 
@@ -93,12 +94,12 @@ impl Range {
     pub fn len(&self) -> usize {
         self.end - self.start + 1
     }
-    pub fn draw(&self, x: usize, color: Color, grid_size: usize) {
+    pub fn draw(&self, x: usize, color: Color, grid_size: usize, camera: &CameraManger) {
         let side_length = 4. / grid_size as f64;
-        let index = Vec2::new(x as f64, self.start as f64);
+        let index = Vec2::new(x as f64, self.start as f64) - Vec2::ONE;
         let corner = (index - Vec2::splat((grid_size / 2) as f64)) * side_length;
         let delta_y = self.len() as f64 * side_length;
-        draw_rect(corner, side_length, delta_y, color);
+        camera.draw_rect(corner, vec2(side_length, delta_y), color);
     }
     pub fn iter(&self) -> std::ops::Range<usize> {
         self.start..(self.end + 1)

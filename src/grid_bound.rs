@@ -1,3 +1,4 @@
+use super::camera::*;
 use super::cell::*;
 use super::draw_manager::DrawManager;
 use super::grid::*;
@@ -50,7 +51,7 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         self.current_sample_count += self.sample_per_update;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.current_sample_count.saturating_sub(1000);
+        let max_sample_count = self.current_sample_count.saturating_sub(100000);
 
         self.neighbors.retain(|cell| {
             !self.inside_cells.is_activ(*cell)
@@ -122,22 +123,6 @@ impl CovarageGrid {
             }
         }
     }
-    pub fn draw(&self, draw_manager: &DrawManager) {
-        if draw_manager.get_draw_all_visited_cells() {
-            self.all_visited_cells.draw(PINK);
-        }
-        if draw_manager.get_draw_inside_cells() {
-            self.inside_cells.draw(GREEN);
-        }
-        if draw_manager.get_draw_neighbors() {
-            for cell in self.neighbors.iter() {
-                cell.draw(RED, self.grid_size);
-            }
-        }
-        if draw_manager.get_draw_new_neighbors() {
-            self.new_neighbors.draw(BLUE);
-        }
-    }
     pub fn area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)
     }
@@ -155,7 +140,7 @@ impl CovarageGrid {
                     let mut inside_samples = 0;
                     for _ in 0..samples_per_cell / 4 {
                         let (inside_limit, inside_set) =
-                            unsafe{raw_quad_inside_test(cell, self.limit, self.grid_size, rng)};
+                            unsafe { raw_quad_inside_test(cell, self.limit, self.grid_size, rng) };
                         inside_samples += std::iter::zip(inside_limit, inside_set)
                             .filter_map(|(in_limit, in_set)| (in_limit && !in_set).then(|| true))
                             .count();
@@ -167,5 +152,21 @@ impl CovarageGrid {
         let total_area = self.area();
         println!("sample: {} million", total_samples / 1_000_000);
         total_area * (inside_samples as f64 / total_samples as f64)
+    }
+    pub fn draw(&self, draw_manager: &DrawManager, camera: &CameraManger) {
+        if draw_manager.get_draw_all_visited_cells() {
+            self.all_visited_cells.draw(PINK, camera);
+        }
+        if draw_manager.get_draw_inside_cells() {
+            self.inside_cells.draw(GREEN, camera);
+        }
+        if draw_manager.get_draw_neighbors() {
+            for cell in self.neighbors.iter() {
+                cell.draw(RED, self.grid_size, camera);
+            }
+        }
+        if draw_manager.get_draw_new_neighbors() {
+            self.new_neighbors.draw(BLUE, camera);
+        }
     }
 }

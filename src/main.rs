@@ -21,7 +21,7 @@ use glam::dvec2 as vec2;
 
 // use macroquad::prelude::*;
 use macroquad::prelude::{
-    draw_texture, is_key_pressed, next_frame, Conf, Image, KeyCode, Texture2D, WHITE,
+    draw_texture, is_key_pressed, next_frame, Color, Conf, Image, KeyCode, Texture2D, WHITE,
 };
 
 const SIZE: usize = 1024;
@@ -50,35 +50,35 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 100, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 1, 1_000);
 
     loop {
         camera_manager.update();
+
         mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
+
         image.update(mandel_brot_render.get_colors());
         texture.update(&image);
-        draw_texture(texture, 0., 0., WHITE);
+
         draw_manager.update();
-        if is_key_pressed(KeyCode::U) {
-            let area = grid.area();
-            let reduced_area = grid.real_covered_area();
-            println!(
-                "area: {}, reduced area: {}, verhältin: {}",
-                area,
-                reduced_area,
-                reduced_area / area
-            )
-        }
 
         // let grid_reducer = grid_reducer::GridReducer::new(grid.all_visited_cells.clone());
         // grid_reducer.biggest_rect();
-        // grid.draw(&draw_manager);
-        // grid.sample();
-        // println!(
-        //     "area: {}, sample: {}",
-        //     grid.area(),
-        //     grid.current_sample_count
-        // );
+        grid.draw(&draw_manager, &camera_manager);
+        grid.sample();
+        draw_texture(texture, 0., 0., Color::new(1., 1., 1., 0.5));
+
+        // if is_key_pressed(KeyCode::U) {
+        //     let area = grid.area();
+        //     let reduced_area = grid.real_covered_area();
+        //     println!(
+        //         "area: {}, reduced area: {}, verhältin: {}",
+        //         area,
+        //         reduced_area,
+        //         reduced_area / area
+        //     )
+        // }
+
         next_frame().await;
     }
 }
