@@ -51,7 +51,7 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         self.current_sample_count += self.sample_per_update;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.current_sample_count.saturating_sub(100000);
+        let max_sample_count = self.current_sample_count.saturating_sub(10000);
 
         self.neighbors.retain(|cell| {
             !self.inside_cells.is_activ(*cell)

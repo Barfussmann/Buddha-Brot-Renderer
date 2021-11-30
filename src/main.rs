@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 1, 1_000);
+    let mut grid = grid_bound::CovarageGrid::new(20, 100, 10_000);
 
     loop {
         camera_manager.update();
