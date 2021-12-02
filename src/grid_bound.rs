@@ -9,32 +9,35 @@ use rayon::prelude::*;
 
 pub struct CovarageGrid {
     pub inside_cells: Grid,
-    neighbors: Vec<Cell>,
+    neighbors: Grid,
     pub all_visited_cells: Grid,
     new_neighbors: Grid,
     limit: usize,
     pub current_sample_count: usize,
     sample_per_update: usize,
     grid_size: usize,
+    neighbor_experation_times: Vec<(Cell, usize)>,
 }
 
 impl CovarageGrid {
     pub fn new(limit: usize, sample_per_iter: usize, grid_size: usize) -> Self {
         let mut grid = CovarageGrid {
             inside_cells: Grid::new(grid_size),
-            neighbors: Vec::new(),
+            neighbors: Grid::new(grid_size),
             all_visited_cells: Grid::new(grid_size),
             new_neighbors: Grid::new(grid_size),
             limit,
             current_sample_count: 0,
             sample_per_update: sample_per_iter,
             grid_size,
+            neighbor_experation_times: Vec::new(),
         };
         let starting_x = (grid_size / 16) as i32;
         for x in starting_x..starting_x + (grid_size / 16) as i32 {
-            let start = Cell::new(IVec2::new(x, 0), 0);
-            grid.neighbors.push(start);
+            let start = Cell::new(IVec2::new(x, 0));
+            grid.neighbors.insert(start);
             grid.all_visited_cells.insert(start);
+            grid.neighbor_experation_times.push((start, 0));
         }
         grid.sample_neighbors();
         grid
@@ -51,20 +54,20 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         self.current_sample_count += self.sample_per_update;
         assert!(self.new_neighbors.is_empty(), "new_neighbors isn't empty");
-        let max_sample_count = self.current_sample_count.saturating_sub(10000);
+        self.clear_old_neighbors();
+        // let max_sample_count = self.current_sample_count.saturating_sub(10000);
 
-        self.neighbors.retain(|cell| {
-            !self.inside_cells.is_activ(*cell)
-                && cell.get_starting_sample_count() >= max_sample_count
-        });
+        // self.neighbors
+        //     .retain(|cell| !self.inside_cells.is_activ(*cell));
         let new_inside_cells = self
             .neighbors
-            .par_iter()
+            .iter()
+            .par_bridge()
             .map_init(
                 || thread_rng(),
                 |rng, cell| {
-                    if self.sample_cell(*cell, self.sample_per_update, rng) {
-                        Some(*cell)
+                    if self.sample_cell(cell, self.sample_per_update, rng) {
+                        Some(cell)
                     } else {
                         None
                     }
@@ -75,8 +78,6 @@ impl CovarageGrid {
         for new_inside_cell in new_inside_cells {
             self.add_inside_cell(new_inside_cell);
         }
-        self.neighbors
-            .extend(self.new_neighbors.iter(self.current_sample_count));
     }
     pub fn sample_new_neighbors(&mut self) {
         if self.new_neighbors.is_empty() {
@@ -84,7 +85,7 @@ impl CovarageGrid {
         }
         let new_inside_cells = self
             .new_neighbors
-            .iter(self.current_sample_count)
+            .iter()
             .par_bridge()
             .map_init(
                 || thread_rng(),
@@ -102,8 +103,6 @@ impl CovarageGrid {
         for inside_cell in new_inside_cells {
             self.add_inside_cell(inside_cell);
         }
-        self.neighbors
-            .extend(self.new_neighbors.iter(self.current_sample_count));
     }
     #[inline(always)]
     fn sample_cell(&self, cell: Cell, count: usize, rng: &mut ThreadRng) -> bool {
@@ -116,10 +115,40 @@ impl CovarageGrid {
     }
     fn add_inside_cell(&mut self, cell: Cell) {
         self.inside_cells.insert(cell);
-        for neighbor in cell.get_neighbors(self.current_sample_count) {
+        if self.neighbors.is_activ(cell) {
+            self.neighbors.remove(cell);
+        }
+        for neighbor in cell.get_neighbors() {
             if !self.all_visited_cells.is_activ(neighbor) {
                 self.new_neighbors.insert(neighbor);
+                self.neighbors.insert(neighbor);
                 self.all_visited_cells.insert(neighbor);
+                self.neighbor_experation_times
+                    .push((neighbor, self.current_sample_count));
+            }
+        }
+    }
+    fn clear_old_neighbors(&mut self) {
+        if self.neighbor_experation_times.is_empty() {
+            return;
+        }
+        let lifetime = 1000;
+        if self.neighbor_experation_times.first().unwrap().1
+            >= self.current_sample_count.saturating_sub(lifetime)
+        {
+            return;
+        }
+        loop {
+            let (cell, _) = self.neighbor_experation_times.remove(0);
+            if self.neighbors.is_activ(cell) {
+                self.neighbors.remove(cell);
+            }
+
+            if self.neighbor_experation_times.is_empty()
+                || self.neighbor_experation_times.first().unwrap().1
+                    >= self.current_sample_count.saturating_sub(lifetime)
+            {
+                break;
             }
         }
     }
@@ -132,7 +161,7 @@ impl CovarageGrid {
 
         let inside_samples = self
             .inside_cells
-            .iter(0)
+            .iter()
             .par_bridge()
             .map_init(
                 || thread_rng(),

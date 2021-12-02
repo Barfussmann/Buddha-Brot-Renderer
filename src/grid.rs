@@ -19,6 +19,10 @@ impl Grid {
         let (x, y) = cell.index(self.grid_size);
         self.collums[x].insert_index(y);
     }
+    pub fn remove(&mut self, cell: Cell) {
+        let (x, y) = cell.index(self.grid_size);
+        self.collums[x].remove_index(y);
+    }
     pub fn activ_count(&self) -> usize {
         self.collums.iter().map(|c| c.activ_count()).sum()
     }
@@ -31,14 +35,14 @@ impl Grid {
             collum.draw(x, color, self.grid_size, camera);
         }
     }
-    pub fn iter(&self, current_sample_count: usize) -> impl Iterator<Item = Cell> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = Cell> + '_ {
         self.collums
             .iter()
             .enumerate()
             .map(move |(x, collum)| {
                 collum
                     .iter()
-                    .map(move |y| Cell::from_index(x, y, current_sample_count, self.grid_size))
+                    .map(move |y| Cell::from_index(x, y, self.grid_size))
             })
             .flatten()
     }
@@ -77,7 +81,7 @@ mod tests {
     #[test]
     fn test_grid_insert() {
         let mut grid = Grid::new(GRID_SIZE);
-        grid.insert(Cell::new(ivec2(10, 5), 0));
+        grid.insert(Cell::new(ivec2(10, 5)));
         assert!(grid.collums[GRID_SIZE / 2 + 10].is_activ(GRID_SIZE / 2 + 5));
     }
     #[test]
@@ -91,7 +95,7 @@ mod tests {
         let half_grid_size = (GRID_SIZE / 2) as i32;
         let mut counter = 0;
         for x in -half_grid_size..half_grid_size {
-            grid.insert(Cell::new(ivec2(x, x), 0));
+            grid.insert(Cell::new(ivec2(x, x)));
             counter += 1;
             assert!(grid.activ_count() == counter);
         }
@@ -99,8 +103,8 @@ mod tests {
     #[test]
     fn cell_activ_afte_insertion() {
         let mut grid = Grid::new(GRID_SIZE);
-        grid.insert(Cell::new(ivec2(10, 5), 0));
-        assert!(grid.is_activ(Cell::new(ivec2(10, 5), 0)));
+        grid.insert(Cell::new(ivec2(10, 5)));
+        assert!(grid.is_activ(Cell::new(ivec2(10, 5))));
     }
     #[test]
     fn new_range_encoder_is_empty() {
@@ -110,8 +114,24 @@ mod tests {
     #[test]
     fn grid_after_clear_empty() {
         let mut grid = Grid::new(GRID_SIZE);
-        grid.insert(Cell::new(ivec2(10, 5), 0));
+        grid.insert(Cell::new(ivec2(10, 5)));
         grid.clear();
+        assert!(grid.is_empty());
+    }
+    #[test]
+    fn grid_is_empty_after_insert_and_ther_remove() {
+        let mut grid = Grid::new(GRID_SIZE);
+        let cells = vec![
+            Cell::new(ivec2(10, 6)),
+            Cell::new(ivec2(10, 5)),
+            Cell::new(ivec2(10, 7)),
+        ];
+        for cell in cells.iter() {
+            grid.insert(*cell);
+        }
+        for cell in cells.iter() {
+            grid.remove(*cell);
+        }
         assert!(grid.is_empty());
     }
 }
