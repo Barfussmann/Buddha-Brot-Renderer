@@ -20,9 +20,7 @@ mod util;
 use glam::dvec2 as vec2;
 
 // use macroquad::prelude::*;
-use macroquad::prelude::{
-    draw_texture, is_key_pressed, next_frame, Color, Conf, Image, KeyCode, Texture2D, WHITE,
-};
+use macroquad::prelude::{draw_texture, next_frame, Color, Conf, Image, Texture2D, WHITE};
 
 const SIZE: usize = 1024;
 const WIDTH: usize = SIZE;
@@ -50,7 +48,7 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(20, 100, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 100, 10_000);
 
     loop {
         camera_manager.update();
@@ -64,6 +62,7 @@ async fn main() -> std::io::Result<()> {
 
         // let grid_reducer = grid_reducer::GridReducer::new(grid.all_visited_cells.clone());
         // grid_reducer.biggest_rect();
+        dbg!(grid.current_sample_count);
         grid.draw(&draw_manager, &camera_manager);
         grid.sample();
         draw_texture(texture, 0., 0., Color::new(1., 1., 1., 0.5));
