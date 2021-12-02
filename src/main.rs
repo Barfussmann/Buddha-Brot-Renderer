@@ -9,13 +9,13 @@ mod cell;
 mod draw_manager;
 mod grid;
 mod grid_bound;
-mod grid_reducer;
 mod mandel_brot_render;
 mod mandel_iter;
 mod range;
 mod range_encoder;
 mod u_rect;
 mod util;
+mod worker;
 // use crate::util::*;
 use glam::dvec2 as vec2;
 
@@ -63,9 +63,9 @@ async fn main() -> std::io::Result<()> {
         // let grid_reducer = grid_reducer::GridReducer::new(grid.all_visited_cells.clone());
         // grid_reducer.biggest_rect();
         dbg!(grid.current_sample_count);
-        grid.draw(&draw_manager, &camera_manager);
-        grid.sample();
-        draw_texture(texture, 0., 0., Color::new(1., 1., 1., 0.5));
+        // grid.draw(&draw_manager, &camera_manager);
+        // grid.sample();
+        draw_texture(texture, 0., 0., Color::new(1., 1., 1., 1.));
 
         // if is_key_pressed(KeyCode::U) {
         //     let area = grid.area();
