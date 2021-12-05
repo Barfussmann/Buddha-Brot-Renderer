@@ -3,7 +3,7 @@ use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub struct Cell {
     center: IVec2,
 }
