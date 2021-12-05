@@ -27,11 +27,11 @@ impl CovarageGrid {
         for _ in 0..16 {
             let receiver = cell_to_sample_receiver.clone();
             let sender = cell_that_are_inside_sender.clone();
-            thread::spawn(move || Worker::new(receiver, sender, limit,sample_per_cell, grid_size));
+            thread::spawn(move || Worker::new(receiver, sender, limit, sample_per_cell, grid_size));
         }
         let mut left_over_cells = Vec::with_capacity(4);
         let starting_x = (grid_size / 16) as i32;
-        for x in starting_x..starting_x + (grid_size / 16) as i32 {
+        for x in starting_x..=starting_x + (grid_size / 100) as i32 {
             left_over_cells.push(Cell::new(IVec2::new(x, 0)));
         }
         CovarageGrid {
@@ -45,15 +45,13 @@ impl CovarageGrid {
     }
     pub fn sample_neighbors(&mut self) {
         for _ in 0..1000 {
+            self.try_send_cell();
             let try_inside_cell = self.cell_that_are_inside.try_recv();
             if try_inside_cell.is_err() {
                 break;
             }
             let inside_cell = try_inside_cell.unwrap();
             self.add_inside_cell(inside_cell);
-        }
-        while self.left_over_cells.len() >= 4 {
-            self.try_send_cell();
         }
     }
     fn try_send_cell(&mut self) {
