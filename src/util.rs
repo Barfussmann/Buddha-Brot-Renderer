@@ -45,3 +45,38 @@ pub fn quad_inside_test(cell: Cell, limit: usize, grid_size: usize, rng: &mut Th
     }
     return false;
 }
+pub fn four_point_inside_tests(cells: [Cell; 4], limit: usize, grid_size: usize, rng: &mut ThreadRng) -> [bool; 4] {
+    let inside_points = [
+        cells[0].gen_point_inside(grid_size, rng),
+        cells[1].gen_point_inside(grid_size, rng),
+        cells[2].gen_point_inside(grid_size, rng),
+        cells[3].gen_point_inside(grid_size, rng),
+    ];
+    let x = [
+        inside_points[0].x,
+        inside_points[1].x,
+        inside_points[2].x,
+        inside_points[3].x,
+    ];
+    let y = [
+        inside_points[0].y,
+        inside_points[1].y,
+        inside_points[2].y,
+        inside_points[3].y,
+    ];
+    let mut mandel_iter = MultiMandelIterator::new(x, y);
+    for _ in 0..limit {
+        mandel_iter.next_iteration();
+    }
+    let limit_is_inside = mandel_iter.is_in_set();
+    for _ in 0..1024 {
+        mandel_iter.next_iteration();
+    }
+    let set_limit_is_inside = mandel_iter.is_in_set();
+    [
+        limit_is_inside[0] && ! set_limit_is_inside[0],
+        limit_is_inside[1] && ! set_limit_is_inside[1],
+        limit_is_inside[2] && ! set_limit_is_inside[2],
+        limit_is_inside[3] && ! set_limit_is_inside[3],
+    ]
+}
