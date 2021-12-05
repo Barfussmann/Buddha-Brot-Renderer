@@ -53,14 +53,10 @@ impl MandelbrotRender {
         &self.pixel_colors
     }
     pub fn set_camera_rect(&mut self, (top_left_corner, view_size): (Vec2, Vec2)) {
-        let old_top_left = self.top_left_corner;
-        let old_width_heigth = self.view_size;
         self.top_left_corner = top_left_corner;
         self.view_size = view_size;
-        if self.top_left_corner != old_top_left || self.view_size != old_width_heigth {
-            self.calculate_pixel_cords();
-            self.update_pixels();
-        }
+        self.calculate_pixel_cords();
+        self.update_pixels();
     }
 }
 fn get_color(iterations: [i64; 4]) -> [Color; 4] {

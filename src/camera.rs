@@ -10,6 +10,7 @@ pub struct CameraManger {
     view_size: DVec2,
     zoom_factor: f64,
     mouse_poss_at_middle_click: DVec2,
+    had_change: bool,
 }
 
 impl CameraManger {
@@ -19,8 +20,8 @@ impl CameraManger {
             view_size: dvec2(3.0, 2.64),
             zoom_factor: 1.5,
             mouse_poss_at_middle_click: dvec2(0., 0.),
+            had_change: true,
         };
-        // set_camera(&Camera2D::from_display_rect(manger.camera_rect));
         manger
     }
     fn zoom(&mut self, zoom: f64) {
@@ -33,6 +34,8 @@ impl CameraManger {
         let center_offset = self.view_size * camara_rect_shrinkage;
         self.top_left_corner += camera_offset * camara_rect_shrinkage + center_offset;
 
+        self.had_change = true;
+
         self.view_size /= zoom;
     }
     fn update_drag(&mut self) {
@@ -44,12 +47,15 @@ impl CameraManger {
         if is_mouse_button_down(MouseButton::Left) || is_mouse_button_down(MouseButton::Middle) {
             let delta = self.mouse_poss_at_middle_click - self.get_mouse_pos();
             self.top_left_corner += delta;
+            self.had_change = true;
         }
     }
     pub fn update(&mut self) {
+        self.had_change = false;
         if is_key_pressed(KeyCode::Space) {
             self.top_left_corner = dvec2(-2.0, -1.32);
             self.view_size = dvec2(3.0, 2.64);
+            self.had_change = true;
         }
         if mouse_wheel().1 == 1. {
             self.zoom(self.zoom_factor);
@@ -82,5 +88,8 @@ impl CameraManger {
             screen_size.y as f32,
             color,
         );
+    }
+    pub fn had_change(&self) -> bool {
+        self.had_change
     }
 }

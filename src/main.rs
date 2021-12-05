@@ -48,24 +48,23 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 100, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 10_000, 1_000);
 
     loop {
         camera_manager.update();
 
-        mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
+        if camera_manager.had_change() {
+            mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
+            image.update(mandel_brot_render.get_colors());
+            texture.update(&image);
+        }
 
-        image.update(mandel_brot_render.get_colors());
-        texture.update(&image);
 
         draw_manager.update();
 
-        // let grid_reducer = grid_reducer::GridReducer::new(grid.all_visited_cells.clone());
-        // grid_reducer.biggest_rect();
-        dbg!(grid.current_sample_count);
-        // grid.draw(&draw_manager, &camera_manager);
-        // grid.sample();
         draw_texture(texture, 0., 0., Color::new(1., 1., 1., 1.));
+        grid.draw(&draw_manager, &camera_manager);
+        grid.sample_neighbors();
 
         // if is_key_pressed(KeyCode::U) {
         //     let area = grid.area();
