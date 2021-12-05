@@ -1,6 +1,7 @@
 use core_simd::*;
 use glam::DVec2 as Vec2;
 use macroquad::color::*;
+use macroquad::prelude::{Image, Texture2D, draw_texture};
 use rayon::prelude::*;
 
 pub struct MandelbrotRender {
@@ -10,9 +11,13 @@ pub struct MandelbrotRender {
     view_size: Vec2,
     pixel_colors: Vec<Color>,
     pixel_cords: (Vec<f64>, Vec<f64>),
+    image: Image,
+    texture: Texture2D,
 }
 impl MandelbrotRender {
     pub fn new(width: usize, height: usize, top_left_corner: Vec2, width_heigth: Vec2) -> Self {
+        let image = Image::gen_image_color(width as u16, height as u16, WHITE);
+
         let mut render = Self {
             width,
             height,
@@ -20,6 +25,8 @@ impl MandelbrotRender {
             view_size: width_heigth,
             pixel_colors: vec![BLACK; width * height],
             pixel_cords: (vec![0.; width * height], vec![0.; width * height]),
+            texture: Texture2D::from_image(&image),
+            image,
         };
         render.calculate_pixel_cords();
         render
@@ -49,14 +56,17 @@ impl MandelbrotRender {
                 *pixel_colors = get_color(iterat_points(*x, *y));
             });
     }
-    pub fn get_colors(&self) -> &[Color] {
-        &self.pixel_colors
-    }
     pub fn set_camera_rect(&mut self, (top_left_corner, view_size): (Vec2, Vec2)) {
         self.top_left_corner = top_left_corner;
         self.view_size = view_size;
         self.calculate_pixel_cords();
         self.update_pixels();
+        self.image.update(&self.pixel_colors);
+        self.texture.update(&self.image);
+    }
+    pub fn draw(&self) {
+        draw_texture(self.texture, 0., 0., Color::new(1., 1., 1., 1.));
+
     }
 }
 fn get_color(iterations: [i64; 4]) -> [Color; 4] {

@@ -20,7 +20,7 @@ mod worker;
 use glam::dvec2 as vec2;
 
 // use macroquad::prelude::*;
-use macroquad::prelude::{draw_texture, next_frame, Color, Conf, Image, Texture2D, WHITE};
+use macroquad::prelude::{next_frame, Conf};
 
 const SIZE: usize = 1024;
 const WIDTH: usize = SIZE;
@@ -43,26 +43,22 @@ async fn main() -> std::io::Result<()> {
     let mut mandel_brot_render =
         mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT, vec2(-2., -2.), vec2(2., 2.));
 
-    let mut image = Image::gen_image_color(WIDTH as u16, HEIGHT as u16, WHITE);
-    let texture = Texture2D::from_image(&image);
-
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 10_000, 1_000);
+    let mut grid = grid_bound::CovarageGrid::new(10, 1000, 1_000);
+
+    mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
     loop {
         camera_manager.update();
 
         if camera_manager.had_change() {
             mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
-            image.update(mandel_brot_render.get_colors());
-            texture.update(&image);
         }
-
 
         draw_manager.update();
 
-        draw_texture(texture, 0., 0., Color::new(1., 1., 1., 1.));
+        mandel_brot_render.draw();
         grid.draw(&draw_manager, &camera_manager);
         grid.sample_neighbors();
 
