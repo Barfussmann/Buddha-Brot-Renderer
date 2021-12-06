@@ -14,6 +14,11 @@ impl Cell {
             center,
         }
     }
+    pub fn dummy() -> Self {
+        Cell {
+            center: IVec2::new(0, 0),
+        }
+    }
     fn get_corner(&self, grid_size: usize) -> Vec2 {
         self.center.as_dvec2() * Cell::side_length(grid_size)
     }
