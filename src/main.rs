@@ -16,11 +16,10 @@ mod range_encoder;
 mod u_rect;
 mod util;
 mod worker;
-// use crate::util::*;
-use glam::dvec2 as vec2;
 
-// use macroquad::prelude::*;
+use glam::dvec2 as vec2;
 use macroquad::prelude::{next_frame, Conf};
+use std::time::Instant;
 
 const SIZE: usize = 1024;
 const WIDTH: usize = SIZE;
@@ -45,10 +44,11 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(10, 1000, 1_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 10_000, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
+    let start_time = Instant::now();
     loop {
         camera_manager.update();
 
@@ -61,17 +61,11 @@ async fn main() -> std::io::Result<()> {
         mandel_brot_render.draw();
         grid.draw(&draw_manager, &camera_manager);
         grid.sample_neighbors();
-
-        // if is_key_pressed(KeyCode::U) {
-        //     let area = grid.area();
-        //     let reduced_area = grid.real_covered_area();
-        //     println!(
-        //         "area: {}, reduced area: {}, verhältin: {}",
-        //         area,
-        //         reduced_area,
-        //         reduced_area / area
-        //     )
-        // }
+        let run_time = Instant::now().duration_since(start_time).as_secs_f32();
+        // println!(
+        //     "Cells per Second: {}",
+        //     grid.get_processed_cells() as f32 / run_time
+        // );
 
         next_frame().await;
     }
