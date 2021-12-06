@@ -5,8 +5,10 @@ use spmc;
 use std::sync::mpsc;
 
 pub struct Worker {
-    cell_to_sample: spmc::Receiver<[Cell; 4]>,
+    cell_to_sample: spmc::Receiver<Cell>,
     cell_that_are_inside: mpsc::Sender<Cell>,
+    current_cells: [Cell; 4],
+    current_not_inside_count: [usize; 4],
     sampels: usize,
     grid_size: usize,
     limit: usize,
@@ -14,49 +16,64 @@ pub struct Worker {
 }
 impl Worker {
     pub fn new(
-        cell_to_work_on: spmc::Receiver<[Cell; 4]>,
+        cell_to_work_on: spmc::Receiver<Cell>,
         cell_that_are_inside: mpsc::Sender<Cell>,
         limit: usize,
         sampels: usize,
         grid_size: usize,
     ) {
-        Self {
+        let mut worker = Self {
             cell_to_sample: cell_to_work_on,
             cell_that_are_inside,
+            current_cells: [Cell::dummy(); 4],
+            current_not_inside_count: [0; 4],
             sampels,
             grid_size,
             limit,
             rng: thread_rng(),
+        };
+        worker.replace_current_cells([true; 4]);
+        worker.work()
+    }
+    fn send_current_cells(&mut self, cell_to_send: [bool; 4]) {
+        for i in 0..4 {
+            if cell_to_send[i] {
+                self.cell_that_are_inside.send(self.current_cells[i]).unwrap();
+            }
         }
-        .work()
+    }
+    fn replace_current_cells(&mut self, cell_to_replace: [bool; 4]) {
+        for i in 0..4 {
+            if cell_to_replace[i] {
+                self.replace_cell(i);
+            }
+        }
+    }
+    fn replace_old_cells(&mut self) {
+        for i in 0..4 {
+            if self.current_not_inside_count[i] > self.sampels {
+                self.replace_cell(i);
+            }
+        }
+    }
+    fn replace_cell(&mut self, index: usize) {
+        self.current_cells[index] = self.cell_to_sample.recv().unwrap();
+        self.current_not_inside_count[index] = 0;
     }
     pub fn work(&mut self) {
         loop {
-            let cells_result = self.cell_to_sample.recv();
-            let cells = cells_result.unwrap();
-            let mut are_any_inside = [false; 4];
-            for _ in 0..self.sampels {
-                let cell_is_inside = unsafe {
-                    four_point_inside_tests(cells, self.limit, self.grid_size, &mut self.rng)
-                };
-                let cell_is_inside = if cell_is_inside.is_none() {
-                    continue;
-                } else {
-                    cell_is_inside.unwrap()
-                };
-                for (is_any_inside, is_this_inside) in
-                    std::iter::zip(&mut are_any_inside, cell_is_inside)
-                {
-                    *is_any_inside |= is_this_inside;
-                }
-                if are_any_inside.iter().all(|a| *a) {
-                    break;
-                }
+            let cell_is_inside = unsafe {
+                four_point_inside_tests(self.current_cells, self.limit, self.grid_size, &mut self.rng)
+            };
+            for count in self.current_not_inside_count.iter_mut() {
+                *count += 1;
             }
-            for (cell, is_inside) in std::iter::zip(cells, are_any_inside) {
-                if is_inside {
-                    self.cell_that_are_inside.send(cell).unwrap();
-                }
+            self.replace_old_cells();
+            if cell_is_inside.is_none() {
+                continue;
+            } else {
+                self.send_current_cells(cell_is_inside.unwrap());
+                self.replace_current_cells(cell_is_inside.unwrap());
             }
         }
     }

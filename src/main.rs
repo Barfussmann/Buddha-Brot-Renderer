@@ -44,7 +44,7 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 10_000, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 100, 1_000_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
