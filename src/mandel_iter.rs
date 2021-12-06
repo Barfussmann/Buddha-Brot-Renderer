@@ -99,9 +99,7 @@ mod tests {
             mandel_iterators.push(MandelIterator::new(vec2(*x, *y)));
         }
         for _ in 0..1000 {
-            unsafe {
-                multi_mandel_iterator.next_iteration();
-            }
+            multi_mandel_iterator.next_iteration();
             for mandel_iterator in mandel_iterators.iter_mut() {
                 mandel_iterator.next_iteration();
             }
