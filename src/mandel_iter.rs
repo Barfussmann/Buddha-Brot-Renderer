@@ -35,7 +35,7 @@ pub struct MultiMandelIterator {
     z_squared_y: f64x4,
     c_x: f64x4,
     c_y: f64x4,
-    pub iteration: usize,
+    iteration: i64x4,
 }
 impl MultiMandelIterator {
     pub fn new(x: [f64; 4], y: [f64; 4]) -> Self {
@@ -48,21 +48,39 @@ impl MultiMandelIterator {
             z_squared_y: z_y * z_y,
             c_x: z_x,
             c_y: z_y,
-            iteration: 1,
+            iteration: i64x4::splat(1),
         }
     }
     #[inline(always)]
-    pub fn next_iteration(&mut self) {
-
+    fn next_iteration(&mut self) {
         self.z_y = 2. * self.z_x * self.z_y + self.c_y;
         self.z_x = self.z_squared_x - self.z_squared_y + self.c_x;
         self.z_squared_x = self.z_x * self.z_x;
         self.z_squared_y = self.z_y * self.z_y;
-        self.iteration += 1;
-    }
-    pub fn is_in_set(&self) -> [bool; 4] {
         let abs = self.z_squared_x + self.z_squared_y;
-        abs.lanes_le(f64x4::splat(4.)).to_array()
+        let new_iterations = abs.lanes_le(f64x4::splat(4.)).to_int();
+        self.iteration -= new_iterations; // lane is -1 when abs < 4
+    }
+    // returns none when no points is inside otherwise returns corresponding bools
+    pub fn is_inside(&self, limit: usize) -> Option<[bool; 4]> {
+        let over_limit = self.iteration.lanes_ge(i64x4::splat(limit as i64));
+        let under_set_limit = self.iteration.lanes_lt(i64x4::splat(1024));
+        let in_set = over_limit.to_int().lanes_eq(under_set_limit.to_int());
+        if in_set.any() {
+            Some(in_set.to_array())
+        } else {
+            None
+        }
+    }
+    pub fn get_iterations(&self) -> [i64; 4] {
+        self.iteration.to_array()
+    }
+    #[target_feature(enable = "fma")]
+    #[target_feature(enable = "avx2")]
+    pub unsafe fn iterate(&mut self) {
+        for _ in 0..1024 {
+            self.next_iteration();
+        }
     }
 }
 
@@ -81,7 +99,9 @@ mod tests {
             mandel_iterators.push(MandelIterator::new(vec2(*x, *y)));
         }
         for _ in 0..1000 {
-            multi_mandel_iterator.next_iteration();
+            unsafe {
+                multi_mandel_iterator.next_iteration();
+            }
             for mandel_iterator in mandel_iterators.iter_mut() {
                 mandel_iterator.next_iteration();
             }

@@ -36,15 +36,20 @@ impl Worker {
             let cells = cells_result.unwrap();
             let mut are_any_inside = [false; 4];
             for _ in 0..self.sampels {
-                let are_these_inside = unsafe {
+                let cell_is_inside = unsafe {
                     four_point_inside_tests(cells, self.limit, self.grid_size, &mut self.rng)
                 };
+                let cell_is_inside = if cell_is_inside.is_none() {
+                    continue;
+                } else {
+                    cell_is_inside.unwrap()
+                };
                 for (is_any_inside, is_this_inside) in
-                    std::iter::zip(&mut are_any_inside, are_these_inside)
+                    std::iter::zip(&mut are_any_inside, cell_is_inside)
                 {
                     *is_any_inside |= is_this_inside;
                 }
-                if are_any_inside.iter().all(|a|*a) {
+                if are_any_inside.iter().all(|a| *a) {
                     break;
                 }
             }
