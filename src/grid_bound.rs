@@ -5,11 +5,10 @@ use super::grid::*;
 use super::util::*;
 use super::worker::*;
 use glam::IVec2;
-use std::thread;
-// use rand::thread_rng;
-// use rayon::prelude::*;
 use spmc;
 use std::sync::mpsc;
+use std::thread;
+use std::time::Duration;
 
 pub struct CovarageGrid {
     pub inside_cells: Grid,
@@ -18,6 +17,7 @@ pub struct CovarageGrid {
     cell_to_sample: spmc::Sender<[Cell; 4]>,
     cell_that_are_inside: mpsc::Receiver<Cell>,
     left_over_cells: Vec<Cell>,
+    processed_cells: i64,
 }
 
 impl CovarageGrid {
@@ -40,24 +40,37 @@ impl CovarageGrid {
             grid_size,
             cell_to_sample: cell_to_sample_sender,
             cell_that_are_inside: cell_that_are_inside_receiver,
+            processed_cells: -(left_over_cells.len() as i64),
             left_over_cells,
         }
     }
     pub fn sample_neighbors(&mut self) {
-        for _ in 0..1000 {
-            self.try_send_cell();
-            let try_inside_cell = self.cell_that_are_inside.try_recv();
-            if try_inside_cell.is_err() {
-                break;
+        self.try_send_cell();
+        for _ in 0..10 {
+            match self
+                .cell_that_are_inside
+                .recv_timeout(Duration::from_millis(1))
+            {
+                Ok(inside_cell) => {
+                    self.add_inside_cell(inside_cell);
+                    for _ in 0..10_000 {
+                        match self.cell_that_are_inside.try_recv() {
+                            Ok(inside_cell) => {
+                                self.add_inside_cell(inside_cell);
+                            }
+                            Err(_) => break,
+                        }
+                    }
+                }
+                Err(_) => {}
             }
-            let inside_cell = try_inside_cell.unwrap();
-            self.add_inside_cell(inside_cell);
         }
     }
     fn try_send_cell(&mut self) {
         if self.left_over_cells.len() < 4 {
             return;
         }
+        self.processed_cells += 4;
         match self.cell_to_sample.send([
             self.left_over_cells.pop().unwrap(),
             self.left_over_cells.pop().unwrap(),
@@ -79,6 +92,7 @@ impl CovarageGrid {
             self.left_over_cells.push(neighbor);
         }
         self.inside_cells.insert(cell);
+        self.try_send_cell();
     }
     /// Has to be called before cell are inserted
     fn chech_if_neighbor_is_new(&self, cell: Cell) -> bool {
@@ -99,5 +113,11 @@ impl CovarageGrid {
         if draw_manager.get_draw_inside_cells() {
             self.inside_cells.draw(GREEN, camera);
         }
+    }
+    pub fn get_inside_cell_count(&self) -> usize {
+        self.inside_cells.activ_count()
+    }
+    pub fn get_processed_cells(&self) -> usize {
+        self.processed_cells as usize
     }
 }
