@@ -72,6 +72,9 @@ impl MultiMandelIterator {
             None
         }
     }
+    pub fn raw_get_iterations(&self) -> i64x4 {
+        self.iteration
+    }
     pub fn get_iterations(&self) -> [i64; 4] {
         self.iteration.to_array()
     }

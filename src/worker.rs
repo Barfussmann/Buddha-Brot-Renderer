@@ -1,16 +1,15 @@
 use super::cell::*;
+use super::save_cell::SaveCell;
 use super::util::four_point_inside_tests;
+use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
 use spmc;
 use std::sync::mpsc;
 
 pub struct Worker {
-    cell_to_sample: spmc::Receiver<Vec<Cell>>,
-    cell_that_are_inside: mpsc::Sender<Vec<Cell>>,
-    cells_to_work_on: Vec<Cell>,
-    cells_to_send: Vec<Cell>,
+    cell_to_sample: spmc::Receiver<Cell>,
+    cell_that_are_inside: mpsc::Sender<SaveCell>,
     current_cells: [Cell; 4],
-    current_not_inside_count: [usize; 4],
     sampels: usize,
     grid_size: usize,
     limit: usize,
@@ -18,19 +17,16 @@ pub struct Worker {
 }
 impl Worker {
     pub fn new(
-        cell_to_work_on: spmc::Receiver<Vec<Cell>>,
-        cell_that_are_inside: mpsc::Sender<Vec<Cell>>,
+        cell_to_work_on: spmc::Receiver<Cell>,
+        cell_that_are_inside: mpsc::Sender<SaveCell>,
         limit: usize,
         sampels: usize,
         grid_size: usize,
     ) {
         let mut worker = Self {
-            cells_to_work_on: cell_to_work_on.recv().unwrap(),
             cell_to_sample: cell_to_work_on,
             cell_that_are_inside,
-            cells_to_send: Vec::new(),
             current_cells: [Cell::dummy(); 4],
-            current_not_inside_count: [sampels, sampels - 1, sampels - 2, sampels - 3],
             sampels,
             grid_size,
             limit,
@@ -38,44 +34,26 @@ impl Worker {
         };
         worker.work()
     }
-    fn replace_current_cells(&mut self, cell_to_replace: [bool; 4]) {
-        for i in 0..4 {
-            if cell_to_replace[i] {
-                self.cells_to_send.push(self.current_cells[i]);
-                self.replace_cell(i);
+    fn replace_current_cells(&mut self) {
+        let new_cell_with_negativ_y = loop {
+            let new_cell = self.cell_to_sample.recv().unwrap();
+            if new_cell.is_y_negativ() {
+                break new_cell;
             }
-        }
+        };
+        self.current_cells = [new_cell_with_negativ_y; 4];
     }
-    fn replace_old_cells(&mut self) {
-        for i in 0..4 {
-            if self.current_not_inside_count[i] > self.sampels {
-                self.replace_cell(i);
-            }
-        }
-    }
-    fn replace_cell(&mut self, index: usize) {
-        if self.cells_to_work_on.is_empty() {
-            self.get_next_cells();
-        }
-        self.current_cells[index] = self.cells_to_work_on.pop().unwrap();
-        self.current_not_inside_count[index] = 0;
-    }
-    fn get_next_cells(&mut self) {
-        while self.cells_to_work_on.is_empty() {
-            self.cell_that_are_inside
-                .send(std::mem::replace(
-                    &mut self.cells_to_send,
-                    std::mem::replace(
-                        &mut self.cells_to_work_on,
-                        self.cell_to_sample.recv().unwrap(),
-                    ),
-                ))
-                .unwrap();
-        }
+    fn send_current_cells(&mut self, max_iteration: i64) {
+        self.cell_that_are_inside
+            .send(SaveCell::new(self.current_cells[0], max_iteration as u16))
+            .unwrap();
     }
     pub fn work(&mut self) {
+        let mut max_iterations = i64x4::splat(0);
+        let mut current_iterations = 0;
+        let mut any_inside = false;
         loop {
-            let cell_is_inside = unsafe {
+            let (iterations, is_inside) = unsafe {
                 four_point_inside_tests(
                     self.current_cells,
                     self.limit,
@@ -84,15 +62,17 @@ impl Worker {
                     &mut self.rng,
                 )
             };
-            for count in self.current_not_inside_count.iter_mut() {
-                *count += 1;
-            }
-            if cell_is_inside.is_none() {
-                self.replace_old_cells();
-                continue;
-            } else {
-                self.replace_current_cells(cell_is_inside.unwrap());
-                self.replace_old_cells();
+            max_iterations = max_iterations.max(iterations);
+            any_inside |= is_inside;
+            current_iterations += 1;
+            if current_iterations == self.sampels {
+                if any_inside {
+                    self.send_current_cells(max_iterations.horizontal_max());
+                }
+                self.replace_current_cells();
+                max_iterations = i64x4::splat(0);
+                current_iterations = 0;
+                any_inside = false;
             }
         }
     }
