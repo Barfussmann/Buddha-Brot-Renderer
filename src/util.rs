@@ -19,6 +19,7 @@ pub unsafe fn four_point_inside_tests(
     cells: [Cell; 4],
     limit: usize,
     grid_size: usize,
+    iteration_depth: usize,
     rng: &mut ThreadRng,
 ) -> Option<[bool; 4]> {
     let inside_points = [
@@ -40,6 +41,6 @@ pub unsafe fn four_point_inside_tests(
         inside_points[3].y,
     ];
     let mut mandel_iter = MultiMandelIterator::new(x, y);
-    mandel_iter.iterate();
-    mandel_iter.is_inside(limit)
+    mandel_iter.iterate(iteration_depth);
+    mandel_iter.is_inside(limit, iteration_depth)
 }

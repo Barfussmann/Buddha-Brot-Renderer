@@ -80,6 +80,7 @@ impl Worker {
                     self.current_cells,
                     self.limit,
                     self.grid_size,
+                    1024,
                     &mut self.rng,
                 )
             };

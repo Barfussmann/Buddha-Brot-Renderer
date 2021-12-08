@@ -62,9 +62,9 @@ impl MultiMandelIterator {
         self.iteration -= new_iterations; // lane is -1 when abs < 4
     }
     // returns none when no points is inside otherwise returns corresponding bools
-    pub fn is_inside(&self, limit: usize) -> Option<[bool; 4]> {
+    pub fn is_inside(&self, limit: usize, iteration_depth: usize) -> Option<[bool; 4]> {
         let over_limit = self.iteration.lanes_ge(i64x4::splat(limit as i64));
-        let under_set_limit = self.iteration.lanes_lt(i64x4::splat(1024));
+        let under_set_limit = self.iteration.lanes_lt(i64x4::splat(iteration_depth as i64));
         let in_set = over_limit.to_int().lanes_eq(under_set_limit.to_int());
         if in_set.any() {
             Some(in_set.to_array())
@@ -77,8 +77,8 @@ impl MultiMandelIterator {
     }
     #[target_feature(enable = "fma")]
     #[target_feature(enable = "avx2")]
-    pub unsafe fn iterate(&mut self) {
-        for _ in 0..1024 {
+    pub unsafe fn iterate(&mut self, iteration_depth: usize) {
+        for _ in 0..iteration_depth {
             self.next_iteration();
         }
     }
