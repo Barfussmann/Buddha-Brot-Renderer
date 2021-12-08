@@ -13,7 +13,6 @@ mod mandel_brot_render;
 mod mandel_iter;
 mod range;
 mod range_encoder;
-mod u_rect;
 mod util;
 mod worker;
 
@@ -44,11 +43,11 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(30, 100, 1_00_000);
+    let mut grid = grid_bound::CovarageGrid::new(30, 10_000, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let start_time = Instant::now();
+    // let start_time = Instant::now();
     loop {
         camera_manager.update();
 
@@ -61,7 +60,7 @@ async fn main() -> std::io::Result<()> {
         mandel_brot_render.draw();
         grid.draw(&draw_manager, &camera_manager);
         grid.sample_neighbors();
-        let run_time = Instant::now().duration_since(start_time).as_secs_f32();
+        // let run_time = Instant::now().duration_since(start_time).as_secs_f32();
         // println!(
         //     "Cells per Second: {}",
         //     grid.get_processed_cells() as f32 / run_time
