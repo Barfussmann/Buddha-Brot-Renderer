@@ -15,21 +15,19 @@ pub struct MandelbrotRender {
     texture: Texture2D,
 }
 impl MandelbrotRender {
-    pub fn new(width: usize, height: usize, top_left_corner: Vec2, width_heigth: Vec2) -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         let image = Image::gen_image_color(width as u16, height as u16, WHITE);
 
-        let mut render = Self {
+        Self {
             width,
             height,
-            top_left_corner,
-            view_size: width_heigth,
+            top_left_corner: Vec2::ZERO,
+            view_size: Vec2::ZERO,
             pixel_colors: vec![BLACK; width * height],
             pixel_cords: (vec![0.; width * height], vec![0.; width * height]),
             texture: Texture2D::from_image(&image),
             image,
-        };
-        render.calculate_pixel_cords();
-        render
+        }
     }
     fn calculate_pixel_cords(&mut self) {
         let delta_pixel = self.view_size / Vec2::new(self.width as f64, self.height as f64);

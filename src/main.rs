@@ -39,7 +39,7 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render =
-        mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT, vec2(-2., -2.), vec2(2., 2.));
+        mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
