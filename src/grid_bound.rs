@@ -77,7 +77,7 @@ impl CovarageGrid {
         }
         return true;
     }
-    pub fn area(&self) -> f64 {
+    pub fn get_area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)
     }
     pub fn draw(&self, camera: &CameraManger) {

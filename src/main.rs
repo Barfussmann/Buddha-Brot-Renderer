@@ -49,11 +49,11 @@ async fn main() -> std::io::Result<()> {
         if is_key_down(KeyCode::U) {
             limit -= 1;
             grid.rebuild_grid(limit);
-            println!("limit: {}", limit);
+            println!("limit: {}, area: {}", limit, grid.get_area());
         } else if is_key_down(KeyCode::I) {
             limit += 1;
             grid.rebuild_grid(limit);
-            println!("limit: {}", limit);
+            println!("limit: {}, area: {}", limit, grid.get_area());
         }
 
         camera_manager.update();
