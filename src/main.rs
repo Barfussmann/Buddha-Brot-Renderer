@@ -13,10 +13,10 @@ mod mandel_brot_render;
 mod mandel_iter;
 mod range;
 mod range_encoder;
+mod save_cell;
 mod util;
 mod worker;
 
-use glam::dvec2 as vec2;
 use macroquad::prelude::{next_frame, Conf};
 use std::time::Instant;
 
@@ -38,8 +38,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
-    let mut mandel_brot_render =
-        mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
+    let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
