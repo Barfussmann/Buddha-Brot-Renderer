@@ -5,8 +5,10 @@ use spmc;
 use std::sync::mpsc;
 
 pub struct Worker {
-    cell_to_sample: spmc::Receiver<Cell>,
-    cell_that_are_inside: mpsc::Sender<Cell>,
+    cell_to_sample: spmc::Receiver<Vec<Cell>>,
+    cell_that_are_inside: mpsc::Sender<Vec<Cell>>,
+    cells_to_work_on: Vec<Cell>,
+    cells_to_send: Vec<Cell>,
     current_cells: [Cell; 4],
     current_not_inside_count: [usize; 4],
     sampels: usize,
@@ -16,35 +18,30 @@ pub struct Worker {
 }
 impl Worker {
     pub fn new(
-        cell_to_work_on: spmc::Receiver<Cell>,
-        cell_that_are_inside: mpsc::Sender<Cell>,
+        cell_to_work_on: spmc::Receiver<Vec<Cell>>,
+        cell_that_are_inside: mpsc::Sender<Vec<Cell>>,
         limit: usize,
         sampels: usize,
         grid_size: usize,
     ) {
         let mut worker = Self {
+            cells_to_work_on: cell_to_work_on.recv().unwrap(),
             cell_to_sample: cell_to_work_on,
             cell_that_are_inside,
+            cells_to_send: Vec::new(),
             current_cells: [Cell::dummy(); 4],
-            current_not_inside_count: [0; 4],
+            current_not_inside_count: [sampels, sampels - 1, sampels - 2, sampels - 3],
             sampels,
             grid_size,
             limit,
             rng: thread_rng(),
         };
-        worker.replace_current_cells([true; 4]);
         worker.work()
-    }
-    fn send_current_cells(&mut self, cell_to_send: [bool; 4]) {
-        for i in 0..4 {
-            if cell_to_send[i] {
-                self.cell_that_are_inside.send(self.current_cells[i]).unwrap();
-            }
-        }
     }
     fn replace_current_cells(&mut self, cell_to_replace: [bool; 4]) {
         for i in 0..4 {
             if cell_to_replace[i] {
+                self.cells_to_send.push(self.current_cells[i]);
                 self.replace_cell(i);
             }
         }
@@ -57,23 +54,44 @@ impl Worker {
         }
     }
     fn replace_cell(&mut self, index: usize) {
-        self.current_cells[index] = self.cell_to_sample.recv().unwrap();
+        if self.cells_to_work_on.is_empty() {
+            self.get_next_cells();
+        }
+        self.current_cells[index] = self.cells_to_work_on.pop().unwrap();
         self.current_not_inside_count[index] = 0;
+    }
+    fn get_next_cells(&mut self) {
+        while self.cells_to_work_on.is_empty() {
+            self.cell_that_are_inside
+                .send(std::mem::replace(
+                    &mut self.cells_to_send,
+                    std::mem::replace(
+                        &mut self.cells_to_work_on,
+                        self.cell_to_sample.recv().unwrap(),
+                    ),
+                ))
+                .unwrap();
+        }
     }
     pub fn work(&mut self) {
         loop {
             let cell_is_inside = unsafe {
-                four_point_inside_tests(self.current_cells, self.limit, self.grid_size, &mut self.rng)
+                four_point_inside_tests(
+                    self.current_cells,
+                    self.limit,
+                    self.grid_size,
+                    &mut self.rng,
+                )
             };
             for count in self.current_not_inside_count.iter_mut() {
                 *count += 1;
             }
-            self.replace_old_cells();
             if cell_is_inside.is_none() {
+                self.replace_old_cells();
                 continue;
             } else {
-                self.send_current_cells(cell_is_inside.unwrap());
                 self.replace_current_cells(cell_is_inside.unwrap());
+                self.replace_old_cells();
             }
         }
     }

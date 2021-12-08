@@ -8,14 +8,15 @@ use glam::IVec2;
 use spmc;
 use std::sync::mpsc;
 use std::thread;
-use std::time::Duration;
+use std::time::Instant;
 
 pub struct CovarageGrid {
     pub inside_cells: Grid,
     limit: usize,
     grid_size: usize,
-    cell_to_sample: spmc::Sender<Cell>,
-    cell_that_are_inside: mpsc::Receiver<Cell>,
+    cell_to_sample: spmc::Sender<Vec<Cell>>,
+    cell_that_are_inside: mpsc::Receiver<Vec<Cell>>,
+    cells_to_send: Vec<Cell>,
     processed_cells: i64,
 }
 
@@ -31,7 +32,7 @@ impl CovarageGrid {
         let starting_x = (grid_size / 16) as i32;
         for x in starting_x..=starting_x + (grid_size / 100) as i32 {
             cell_to_sample_sender
-                .send(Cell::new(IVec2::new(x, 0)))
+                .send(vec![Cell::new(IVec2::new(x, 0))])
                 .unwrap();
         }
         CovarageGrid {
@@ -41,15 +42,21 @@ impl CovarageGrid {
             cell_to_sample: cell_to_sample_sender,
             cell_that_are_inside: cell_that_are_inside_receiver,
             processed_cells: 0,
+            cells_to_send: Vec::new(),
         }
     }
     pub fn sample_neighbors(&mut self) {
-        for _ in 0..10_000 {
-            match self.cell_that_are_inside.try_recv() {
-                Ok(inside_cell) => {
-                    self.add_inside_cell(inside_cell);
+        let start = Instant::now();
+        while Instant::now().duration_since(start).as_millis() < 50 {
+            self.send_cells_to_sample();
+            for _ in 0..100 {
+                if let Ok(cells_to_work_on) = self.cell_that_are_inside.try_recv() {
+                    for cell in cells_to_work_on {
+                        self.add_inside_cell(cell);
+                    }
+                } else {
+                    break;
                 }
-                Err(_) => break,
             }
         }
     }
@@ -60,9 +67,20 @@ impl CovarageGrid {
                 continue;
             }
             self.processed_cells += 1;
-            self.cell_to_sample.send(neighbor).unwrap();
+            self.cells_to_send.push(neighbor);
+            if self.cells_to_send.len() == 16 {
+                self.send_cells_to_sample();
+            }
         }
         self.inside_cells.insert(cell);
+    }
+    fn send_cells_to_sample(&mut self) {
+        self.cell_to_sample
+            .send(std::mem::replace(
+                &mut self.cells_to_send,
+                Vec::with_capacity(16),
+            ))
+            .unwrap();
     }
     /// Has to be called before cell are inserted
     fn chech_if_neighbor_is_new(&self, cell: Cell) -> bool {
