@@ -6,7 +6,6 @@
 
 mod camera;
 mod cell;
-mod draw_manager;
 mod grid;
 mod grid_bound;
 mod mandel_brot_render;
@@ -40,8 +39,6 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
-    let mut draw_manager = draw_manager::DrawManager::new();
-
     let mut grid = grid_bound::CovarageGrid::new(4, 1_00, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
@@ -65,10 +62,9 @@ async fn main() -> std::io::Result<()> {
             mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
         }
 
-        draw_manager.update();
 
         mandel_brot_render.draw();
-        grid.draw(&draw_manager, &camera_manager);
+        grid.draw(&camera_manager);
         grid.sample_neighbors();
 
         next_frame().await;

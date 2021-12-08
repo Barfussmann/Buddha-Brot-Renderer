@@ -1,6 +1,5 @@
 use super::camera::*;
 use super::cell::*;
-use super::draw_manager::DrawManager;
 use super::grid::*;
 use super::save_cell::*;
 use super::util::*;
@@ -13,11 +12,9 @@ use std::time::Instant;
 
 pub struct CovarageGrid {
     pub inside_cells: Grid,
-    limit: usize,
     grid_size: usize,
     cell_to_sample: spmc::Sender<Cell>,
     cell_that_are_inside: mpsc::Receiver<SaveCell>,
-    cells_to_send: Vec<Cell>,
     processed_cells_count: i64,
     saved_cells: Vec<SaveCell>,
 }
@@ -39,12 +36,10 @@ impl CovarageGrid {
         }
         CovarageGrid {
             inside_cells: Grid::new(grid_size),
-            limit,
             grid_size,
             cell_to_sample: cell_to_sample_sender,
             cell_that_are_inside: cell_that_are_inside_receiver,
             processed_cells_count: 0,
-            cells_to_send: Vec::new(),
             saved_cells: Vec::new(),
         }
     }
@@ -85,13 +80,8 @@ impl CovarageGrid {
     pub fn area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)
     }
-    pub fn real_covered_area(&self) -> f64 {
-        todo!()
-    }
-    pub fn draw(&self, draw_manager: &DrawManager, camera: &CameraManger) {
-        if draw_manager.get_draw_inside_cells() {
-            self.inside_cells.draw(GREEN, camera);
-        }
+    pub fn draw(&self, camera: &CameraManger) {
+        self.inside_cells.draw(GREEN, camera);
     }
     pub fn get_inside_cell_count(&self) -> usize {
         self.inside_cells.activ_count()
