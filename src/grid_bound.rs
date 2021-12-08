@@ -18,7 +18,8 @@ pub struct CovarageGrid {
     cell_to_sample: spmc::Sender<Cell>,
     cell_that_are_inside: mpsc::Receiver<SaveCell>,
     cells_to_send: Vec<Cell>,
-    processed_cells: i64,
+    processed_cells_count: i64,
+    saved_cells: Vec<SaveCell>,
 }
 
 impl CovarageGrid {
@@ -42,8 +43,9 @@ impl CovarageGrid {
             grid_size,
             cell_to_sample: cell_to_sample_sender,
             cell_that_are_inside: cell_that_are_inside_receiver,
-            processed_cells: 0,
+            processed_cells_count: 0,
             cells_to_send: Vec::new(),
+            saved_cells: Vec::new(),
         }
     }
     pub fn sample_neighbors(&mut self) {
@@ -54,11 +56,21 @@ impl CovarageGrid {
                     if !self.chech_if_neighbor_is_new(neighbor) {
                         continue;
                     }
-                    self.processed_cells += 1;
+                    self.processed_cells_count += 1;
                     self.cell_to_sample.send(neighbor).unwrap();
                 }
                 self.inside_cells.insert(save_cell.get_cell());
+                self.saved_cells.push(save_cell);
             }
+        }
+    }
+    pub fn rebuild_grid(&mut self, limit: usize) {
+        self.inside_cells.clear();
+        for save_cell in self.saved_cells.iter() {
+            if save_cell.get_highest_iteration() < limit as u16 {
+                continue;
+            }
+            self.inside_cells.insert(save_cell.get_cell());
         }
     }
     /// Has to be called before cell are inserted
@@ -84,7 +96,7 @@ impl CovarageGrid {
     pub fn get_inside_cell_count(&self) -> usize {
         self.inside_cells.activ_count()
     }
-    pub fn get_processed_cells(&self) -> usize {
-        self.processed_cells as usize
+    pub fn get_processed_cells_count(&self) -> usize {
+        self.processed_cells_count as usize
     }
 }

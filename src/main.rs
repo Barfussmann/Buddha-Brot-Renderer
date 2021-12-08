@@ -17,7 +17,7 @@ mod save_cell;
 mod util;
 mod worker;
 
-use macroquad::prelude::{next_frame, Conf};
+use macroquad::prelude::{is_key_down, next_frame, Conf, KeyCode};
 use std::time::Instant;
 
 const SIZE: usize = 1024;
@@ -42,12 +42,23 @@ async fn main() -> std::io::Result<()> {
 
     let mut draw_manager = draw_manager::DrawManager::new();
 
-    let mut grid = grid_bound::CovarageGrid::new(100, 10_000, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(4, 1_00, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let start_time = Instant::now();
+    let mut limit = 30;
+
     loop {
+        if is_key_down(KeyCode::U) {
+            limit -= 1;
+            grid.rebuild_grid(limit);
+            println!("limit: {}", limit);
+        } else if is_key_down(KeyCode::I) {
+            limit += 1;
+            grid.rebuild_grid(limit);
+            println!("limit: {}", limit);
+        }
+
         camera_manager.update();
 
         if camera_manager.had_change() {
@@ -59,11 +70,6 @@ async fn main() -> std::io::Result<()> {
         mandel_brot_render.draw();
         grid.draw(&draw_manager, &camera_manager);
         grid.sample_neighbors();
-        let run_time = Instant::now().duration_since(start_time).as_secs_f32();
-        println!(
-            "Cells per Second: {}",
-            grid.get_processed_cells() as f32 / run_time
-        );
 
         next_frame().await;
     }

@@ -1,4 +1,3 @@
-use super::camera::*;
 use super::util::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
@@ -35,24 +34,17 @@ impl Cell {
             Cell::new(self.center + IVec2::new(0, -1)),
         ]
     }
-    pub fn draw(&self, color: Color, grid_size: usize, camera: &CameraManger) {
-        camera.draw_rect(
-            self.get_corner(grid_size),
-            -Vec2::splat(Cell::side_length(grid_size)),
-            color,
-        );
-    }
     pub fn area(grid_size: usize) -> f64 {
         Cell::side_length(grid_size) * Cell::side_length(grid_size)
     }
     pub fn from_index(x: usize, y: usize, grid_size: usize) -> Self {
         let offset = IVec2::splat(grid_size as i32 / 2);
-        let center = IVec2::new(x as i32, y as i32) - offset;
+        let center = IVec2::new(x as i32 - 1, y as i32) - offset;
         Cell { center }
     }
     pub fn index(&self, grid_size: usize) -> (usize, usize) {
         let index = self.center + IVec2::splat((grid_size / 2) as i32);
-        (index.x as usize, index.y as usize)
+        ((index.x + 1) as usize, index.y as usize)
     }
     pub fn is_y_negativ(&self) -> bool {
         self.center.y <= 0

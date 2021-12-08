@@ -13,4 +13,7 @@ impl SaveCell {
     pub fn get_cell(&self) -> Cell {
         self.cell
     }
+    pub fn get_highest_iteration(&self) -> u16 {
+        self.highest_iteration
+    }
 }
