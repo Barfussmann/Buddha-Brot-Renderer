@@ -11,7 +11,7 @@
 mod camera;
 mod cell;
 mod grid;
-mod covarage_grid;
+mod covarage_grid_gen;
 mod mandel_brot_render;
 mod mandel_iter;
 mod range;
@@ -19,6 +19,7 @@ mod range_encoder;
 mod save_cell;
 mod util;
 mod worker;
+mod covarage_grid;
 
 use macroquad::prelude::{next_frame, Conf};
 
@@ -43,7 +44,7 @@ async fn main() -> std::io::Result<()> {
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let mut grid = covarage_grid::CovarageGrid::new(10, 1000, 10_000);
+    let mut grid = covarage_grid_gen::CovarageGridGen::new(10, 1000, 10_000);
 
 
     loop {

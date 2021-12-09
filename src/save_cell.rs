@@ -1,11 +1,11 @@
 use super::cell::Cell;
-pub struct SaveCell {
+pub struct SampledCell {
     cell: Cell,
     highest_iteration: u16,
 }
-impl SaveCell {
+impl SampledCell {
     pub fn new(cell: Cell, highest_iteration: u16) -> Self {
-        SaveCell {
+        SampledCell {
             cell,
             highest_iteration,
         }

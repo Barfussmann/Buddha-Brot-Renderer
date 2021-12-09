@@ -1,5 +1,5 @@
 use super::cell::*;
-use super::save_cell::SaveCell;
+use super::save_cell::SampledCell;
 use super::util::four_point_inside_tests;
 use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
@@ -7,7 +7,7 @@ use std::sync::mpsc;
 
 pub struct Worker {
     cell_to_sample: spmc::Receiver<Cell>,
-    cell_that_are_inside: mpsc::Sender<SaveCell>,
+    cell_that_are_inside: mpsc::Sender<SampledCell>,
     current_cells: [Cell; 4],
     sampels: usize,
     grid_size: usize,
@@ -17,7 +17,7 @@ pub struct Worker {
 impl Worker {
     pub fn start(
         cell_to_work_on: spmc::Receiver<Cell>,
-        cell_that_are_inside: mpsc::Sender<SaveCell>,
+        cell_that_are_inside: mpsc::Sender<SampledCell>,
         limit: usize,
         sampels: usize,
         grid_size: usize,
@@ -44,7 +44,7 @@ impl Worker {
     }
     fn send_current_cells(&mut self, max_iteration: i64) {
         self.cell_that_are_inside
-            .send(SaveCell::new(self.current_cells[0], max_iteration as u16))
+            .send(SampledCell::new(self.current_cells[0], max_iteration as u16))
             .unwrap();
     }
     pub fn work(&mut self) {
