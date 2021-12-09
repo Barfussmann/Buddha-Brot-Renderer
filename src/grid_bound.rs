@@ -46,7 +46,7 @@ impl CovarageGrid {
     pub fn sample_neighbors(&mut self) {
         let start = Instant::now();
         while Instant::now().duration_since(start).as_millis() < 50 {
-            for save_cell in self.cell_that_are_inside.try_iter() {
+            for save_cell in self.cell_that_are_inside.try_iter().take(10_000) {
                 for neighbor in save_cell.get_cell().get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
                         continue;

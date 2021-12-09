@@ -1,11 +1,11 @@
 use super::cell::*;
 use super::mandel_iter::*;
+use core_simd::i64x4;
 pub use glam::dvec2 as vec2;
 pub use glam::DVec2 as Vec2;
 pub use macroquad::color::Color;
 pub use macroquad::color::*;
 pub use rand::prelude::{Rng, ThreadRng};
-use core_simd::i64x4;
 
 pub fn gen_point_in_square(corner: Vec2, side_length: f64, rng: &mut ThreadRng) -> Vec2 {
     let offset = vec2(
@@ -43,6 +43,9 @@ pub unsafe fn four_point_inside_tests(
     ];
     let mut mandel_iter = MultiMandelIterator::new(x, y);
     mandel_iter.iterate(iteration_depth);
-    
-    (mandel_iter.raw_get_iterations(), mandel_iter.is_inside(limit, iteration_depth).is_some())
+
+    (
+        mandel_iter.raw_get_iterations(),
+        mandel_iter.is_inside(limit, iteration_depth).is_some(),
+    )
 }

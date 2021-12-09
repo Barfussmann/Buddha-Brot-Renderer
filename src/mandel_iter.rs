@@ -64,7 +64,9 @@ impl MultiMandelIterator {
     // returns none when no points is inside otherwise returns corresponding bools
     pub fn is_inside(&self, limit: usize, iteration_depth: usize) -> Option<[bool; 4]> {
         let over_limit = self.iteration.lanes_ge(i64x4::splat(limit as i64));
-        let under_set_limit = self.iteration.lanes_lt(i64x4::splat(iteration_depth as i64));
+        let under_set_limit = self
+            .iteration
+            .lanes_lt(i64x4::splat(iteration_depth as i64));
         let in_set = over_limit.to_int().lanes_eq(under_set_limit.to_int());
         if in_set.any() {
             Some(in_set.to_array())
@@ -109,12 +111,15 @@ mod tests {
             let x = multi_mandel_iterator.z_x.to_array();
             let y = multi_mandel_iterator.z_y.to_array();
             for ((x, y), mandel_iterator) in x.iter().zip(y.iter()).zip(mandel_iterators.iter()) {
-                let x_ordering = x.partial_cmp(&mandel_iterator.z.x).unwrap_or(std::cmp::Ordering::Equal);
-                let y_ordering = y.partial_cmp(&mandel_iterator.z.y).unwrap_or(std::cmp::Ordering::Equal);
+                let x_ordering = x
+                    .partial_cmp(&mandel_iterator.z.x)
+                    .unwrap_or(std::cmp::Ordering::Equal);
+                let y_ordering = y
+                    .partial_cmp(&mandel_iterator.z.y)
+                    .unwrap_or(std::cmp::Ordering::Equal);
                 assert_eq!(x_ordering, std::cmp::Ordering::Equal);
                 assert_eq!(y_ordering, std::cmp::Ordering::Equal);
             }
         }
-        
     }
 }
