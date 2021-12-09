@@ -1,9 +1,12 @@
 #![allow(dead_code)]
-#![warn(clippy::branches_sharing_code, clippy::cognitive_complexity)]
-#![feature(test)]
-#![feature(portable_simd)]
-#![feature(iter_zip)]
-#![feature(array_chunks)]
+#![warn(
+    clippy::branches_sharing_code,
+    clippy::cognitive_complexity,
+    clippy::option_if_let_else,
+    clippy::suspicious_operation_groupings,
+    clippy::useless_let_if_seq,
+)]
+#![feature(test, portable_simd, iter_zip, array_chunks)]
 
 mod camera;
 mod cell;
