@@ -36,15 +36,15 @@ impl Range {
         // // if end_start_delta
 
         if self.end + 1 < other.start {
-            return Relation::Before;
+            Relation::Before
         } else if self.start > other.end + 1 {
-            return Relation::After;
+            Relation::After
         } else if self.end + 1 == other.start {
-            return Relation::AdjacentBefore;
+            Relation::AdjacentBefore
         } else if self.start == other.end + 1 {
-            return Relation::AdjacentAfter;
+            Relation::AdjacentAfter
         } else {
-            return Relation::Overlapping;
+            Relation::Overlapping
         }
     }
     pub fn merge_with(&self, other: Self) -> Option<Self> {

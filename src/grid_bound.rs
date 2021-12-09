@@ -5,7 +5,6 @@ use super::save_cell::*;
 use super::util::*;
 use super::worker::*;
 use glam::IVec2;
-use spmc;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Instant;
@@ -26,7 +25,7 @@ impl CovarageGrid {
         for _ in 0..16 {
             let receiver = cell_to_sample_receiver.clone();
             let sender = cell_that_are_inside_sender.clone();
-            thread::spawn(move || Worker::new(receiver, sender, limit, sample_per_cell, grid_size));
+            thread::spawn(move || Worker::start(receiver, sender, limit, sample_per_cell, grid_size));
         }
         let starting_x = (grid_size / 16) as i32;
         for x in starting_x..=starting_x + (grid_size / 100) as i32 {
@@ -75,7 +74,7 @@ impl CovarageGrid {
                 return false;
             }
         }
-        return true;
+        true
     }
     pub fn get_area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)

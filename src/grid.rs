@@ -39,12 +39,11 @@ impl Grid {
         self.collums
             .iter()
             .enumerate()
-            .map(move |(x, collum)| {
+            .flat_map(move |(x, collum)| {
                 collum
                     .iter()
                     .map(move |y| Cell::from_index(x, y, self.grid_size))
             })
-            .flatten()
     }
     pub fn is_empty(&self) -> bool {
         self.collums.iter().all(|c| c.is_empty())

@@ -155,7 +155,7 @@ impl RangeEncoder {
         }
     }
     pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
-        self.activ_ranges.iter().map(|range| range.iter()).flatten()
+        self.activ_ranges.iter().flat_map(|range| range.iter())
     }
     pub fn clear(&mut self) {
         self.activ_ranges.clear();

@@ -15,14 +15,13 @@ pub struct CameraManger {
 
 impl CameraManger {
     pub fn new() -> Self {
-        let manger = Self {
+        Self {
             top_left_corner: dvec2(-2.0, -1.32),
             view_size: dvec2(3.0, 2.64),
             zoom_factor: 1.5,
             mouse_poss_at_middle_click: dvec2(0., 0.),
             had_change: true,
-        };
-        manger
+        }
     }
     fn zoom(&mut self, zoom: f64) {
         let mouse_screen_pos_f32 = mouse_position_local();

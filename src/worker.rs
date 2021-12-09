@@ -3,7 +3,6 @@ use super::save_cell::SaveCell;
 use super::util::four_point_inside_tests;
 use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
-use spmc;
 use std::sync::mpsc;
 
 pub struct Worker {
@@ -16,7 +15,7 @@ pub struct Worker {
     rng: ThreadRng,
 }
 impl Worker {
-    pub fn new(
+    pub fn start(
         cell_to_work_on: spmc::Receiver<Cell>,
         cell_that_are_inside: mpsc::Sender<SaveCell>,
         limit: usize,
