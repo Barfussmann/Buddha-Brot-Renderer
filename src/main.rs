@@ -41,10 +41,10 @@ fn window_conf() -> Conf {
 async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
+    mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
     let mut grid = grid_bound::CovarageGrid::new(10, 1000, 10_000);
 
-    mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
     loop {
         camera_manager.update();
