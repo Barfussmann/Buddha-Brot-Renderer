@@ -15,6 +15,7 @@ spmc = "0.3.0"
 
 
 [profile.dev]
+# lto = true
 opt-level = 3
 debug = 2
 

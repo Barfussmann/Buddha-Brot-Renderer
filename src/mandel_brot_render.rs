@@ -77,6 +77,6 @@ fn get_color(iterations: [i64; 4]) -> [Color; 4] {
 
 fn iterat_points(x: [f64; 4], y: [f64; 4]) -> [i64; 4] {
     let mut iterator = MultiMandelIterator::new(x, y);
-    unsafe { iterator.iterate(256) };
+    iterator.iterate(256);
     iterator.get_iterations()
 }

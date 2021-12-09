@@ -4,7 +4,7 @@
     clippy::cognitive_complexity,
     clippy::option_if_let_else,
     clippy::suspicious_operation_groupings,
-    clippy::useless_let_if_seq,
+    clippy::useless_let_if_seq
 )]
 #![feature(test, portable_simd, iter_zip, array_chunks)]
 
@@ -20,8 +20,8 @@ mod save_cell;
 mod util;
 mod worker;
 
-use macroquad::prelude::{is_key_down, next_frame, Conf, KeyCode};
-// use std::time::Instant;
+use macroquad::prelude::{next_frame, Conf};
+use std::time::Instant;
 
 const SIZE: usize = 1024;
 const WIDTH: usize = SIZE;
@@ -43,23 +43,12 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
-    let mut grid = grid_bound::CovarageGrid::new(10, 1, 100_000);
+    let mut grid = grid_bound::CovarageGrid::new(10, 1_000, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let mut limit = 30;
-
+    let start = Instant::now();
     loop {
-        if is_key_down(KeyCode::U) {
-            limit -= 1;
-            grid.rebuild_grid(limit);
-            println!("limit: {}, area: {}", limit, grid.get_area());
-        } else if is_key_down(KeyCode::I) {
-            limit += 1;
-            grid.rebuild_grid(limit);
-            println!("limit: {}, area: {}", limit, grid.get_area());
-        }
-
         camera_manager.update();
 
         if camera_manager.had_change() {
@@ -69,6 +58,13 @@ async fn main() -> std::io::Result<()> {
         mandel_brot_render.draw();
         grid.draw(&camera_manager);
         grid.sample_neighbors();
+
+        let processed_cells = grid.get_processed_cells_count();
+        let duration = start.elapsed();
+        println!(
+            "Cells per second: {}",
+            processed_cells as f64 / duration.as_secs_f64()
+        );
 
         next_frame().await;
     }

@@ -1,2 +1,0 @@
-[buid]
-rustflags = ["-C","target-cpu=native"]

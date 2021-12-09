@@ -14,9 +14,7 @@ pub fn gen_point_in_square(corner: Vec2, side_length: f64, rng: &mut ThreadRng) 
     );
     corner - offset
 }
-#[target_feature(enable = "avx2")]
-#[target_feature(enable = "fma")]
-pub unsafe fn four_point_inside_tests(
+pub fn four_point_inside_tests(
     cells: [Cell; 4],
     limit: usize,
     grid_size: usize,

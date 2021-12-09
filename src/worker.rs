@@ -52,15 +52,13 @@ impl Worker {
         let mut current_iterations = 0;
         let mut any_inside = false;
         loop {
-            let (iterations, is_inside) = unsafe {
-                four_point_inside_tests(
-                    self.current_cells,
-                    self.limit,
-                    self.grid_size,
-                    1024,
-                    &mut self.rng,
-                )
-            };
+            let (iterations, is_inside) = four_point_inside_tests(
+                self.current_cells,
+                self.limit,
+                self.grid_size,
+                1024,
+                &mut self.rng,
+            );
             max_iterations = max_iterations.max(iterations);
             any_inside |= is_inside;
             current_iterations += 1;

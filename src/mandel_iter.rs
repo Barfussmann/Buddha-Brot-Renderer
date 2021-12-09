@@ -80,9 +80,7 @@ impl MultiMandelIterator {
     pub fn get_iterations(&self) -> [i64; 4] {
         self.iteration.to_array()
     }
-    #[target_feature(enable = "fma")]
-    #[target_feature(enable = "avx2")]
-    pub unsafe fn iterate(&mut self, iteration_depth: usize) {
+    pub fn iterate(&mut self, iteration_depth: usize) {
         for _ in 0..iteration_depth {
             self.next_iteration();
         }
