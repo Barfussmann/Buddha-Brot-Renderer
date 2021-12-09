@@ -16,7 +16,7 @@ mod mandel_brot_render;
 mod mandel_iter;
 mod range;
 mod range_encoder;
-mod save_cell;
+mod sampled_cell;
 mod util;
 mod worker;
 mod covarage_grid;

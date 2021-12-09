@@ -1,7 +1,7 @@
 use super::camera::*;
 use super::cell::*;
 use super::grid::*;
-use super::save_cell::*;
+use super::sampled_cell::*;
 use super::util::*;
 use super::worker::*;
 use glam::IVec2;

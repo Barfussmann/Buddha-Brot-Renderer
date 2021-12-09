@@ -1,5 +1,5 @@
 use super::cell::*;
-use super::save_cell::SampledCell;
+use super::sampled_cell::SampledCell;
 use super::util::four_point_inside_tests;
 use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
