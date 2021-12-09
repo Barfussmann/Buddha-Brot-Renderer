@@ -16,6 +16,7 @@ pub struct CovarageGrid {
     cell_that_are_inside: mpsc::Receiver<SaveCell>,
     processed_cells_count: i64,
     saved_cells: Vec<SaveCell>,
+    start_time: Instant,
 }
 
 impl CovarageGrid {
@@ -42,6 +43,7 @@ impl CovarageGrid {
             cell_that_are_inside: cell_that_are_inside_receiver,
             processed_cells_count: 0,
             saved_cells: Vec::new(),
+            start_time: Instant::now(),
         }
     }
     pub fn sample_neighbors(&mut self) {
@@ -89,5 +91,8 @@ impl CovarageGrid {
     }
     pub fn get_processed_cells_count(&self) -> usize {
         self.processed_cells_count as usize
+    }
+    pub fn get_cells_per_second(&self) -> f64 {
+        self.processed_cells_count as f64 / self.start_time.elapsed().as_secs_f64()
     }
 }

@@ -21,7 +21,6 @@ mod util;
 mod worker;
 
 use macroquad::prelude::{next_frame, Conf};
-use std::time::Instant;
 
 const SIZE: usize = 1024;
 const WIDTH: usize = SIZE;
@@ -43,7 +42,7 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
-    let mut grid = grid_bound::CovarageGrid::new(10, 100, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(10, 1000, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
@@ -57,6 +56,7 @@ async fn main() -> std::io::Result<()> {
         mandel_brot_render.draw();
         grid.draw(&camera_manager);
         grid.sample_neighbors();
+        println!("cells per second: {}", grid.get_cells_per_second());
 
         next_frame().await;
     }

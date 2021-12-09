@@ -26,7 +26,7 @@ impl Worker {
             cell_to_sample: cell_to_work_on,
             cell_that_are_inside,
             current_cells: [Cell::dummy(); 4],
-            sampels,
+            sampels: sampels / 4,
             grid_size,
             limit,
             rng: thread_rng(),
