@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![warn(clippy::branches_sharing_code, clippy::cognitive_complexity)]
 #![feature(test)]
 #![feature(portable_simd)]
 #![feature(iter_zip)]
@@ -17,7 +18,7 @@ mod util;
 mod worker;
 
 use macroquad::prelude::{is_key_down, next_frame, Conf, KeyCode};
-use std::time::Instant;
+// use std::time::Instant;
 
 const SIZE: usize = 1024;
 const WIDTH: usize = SIZE;
@@ -39,7 +40,7 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
-    let mut grid = grid_bound::CovarageGrid::new(4, 1_00, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(10, 1, 100_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
@@ -61,7 +62,6 @@ async fn main() -> std::io::Result<()> {
         if camera_manager.had_change() {
             mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
         }
-
 
         mandel_brot_render.draw();
         grid.draw(&camera_manager);
