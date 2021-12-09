@@ -13,6 +13,7 @@ pub struct Worker {
     grid_size: usize,
     limit: usize,
     rng: ThreadRng,
+    finished: bool,
 }
 impl Worker {
     pub fn start(
@@ -30,28 +31,41 @@ impl Worker {
             grid_size,
             limit,
             rng: thread_rng(),
+            finished: false,
         };
         worker.work()
     }
     fn replace_current_cells(&mut self) {
         let new_cell_with_negativ_y = loop {
-            let new_cell = self.cell_to_sample.recv().unwrap();
-            if new_cell.is_y_negativ() {
-                break new_cell;
+            if let Ok(new_cell) = self.cell_to_sample.recv() {
+                if new_cell.is_y_negativ() {
+                    break new_cell;
+                }
+            } else {
+                self.finished = true;
+                return;
             }
         };
         self.current_cells = [new_cell_with_negativ_y; 4];
     }
     fn send_current_cells(&mut self, max_iteration: i64) {
-        self.cell_that_are_inside
-            .send(SampledCell::new(self.current_cells[0], max_iteration as u16))
-            .unwrap();
+        if self
+            .cell_that_are_inside
+            .send(SampledCell::new(
+                self.current_cells[0],
+                max_iteration as u16,
+                self.grid_size,
+            ))
+            .is_err()
+        {
+            self.finished = true;
+        }
     }
     pub fn work(&mut self) {
         let mut max_iterations = i64x4::splat(0);
         let mut current_iterations = 0;
         let mut any_inside = false;
-        loop {
+        while !self.finished {
             let (iterations, is_inside) = four_point_inside_tests(
                 self.current_cells,
                 self.limit,

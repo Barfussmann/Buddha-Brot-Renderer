@@ -1,5 +1,6 @@
 use super::camera::*;
 use super::cell::*;
+use super::complet_sampled_cells::*;
 use super::grid::*;
 use super::sampled_cell::*;
 use super::util::*;
@@ -10,7 +11,7 @@ use std::thread;
 use std::time::Instant;
 
 pub struct CovarageGridGen {
-    pub inside_cells: Grid,
+    inside_cells: Grid,
     grid_size: usize,
     cell_to_sample: spmc::Sender<Cell>,
     cell_that_are_inside: mpsc::Receiver<SampledCell>,
@@ -50,14 +51,14 @@ impl CovarageGridGen {
         let start = Instant::now();
         while Instant::now().duration_since(start).as_millis() < 50 {
             for save_cell in self.cell_that_are_inside.try_iter().take(10_000) {
-                for neighbor in save_cell.get_cell().get_neighbors() {
+                for neighbor in save_cell.get_cell(self.grid_size).get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
                         continue;
                     }
                     self.processed_cells_count += 1;
                     self.cell_to_sample.send(neighbor).unwrap();
                 }
-                self.inside_cells.insert(save_cell.get_cell());
+                self.inside_cells.insert(save_cell.get_cell(self.grid_size));
                 self.saved_cells.push(save_cell);
             }
         }
@@ -68,7 +69,7 @@ impl CovarageGridGen {
             if save_cell.get_highest_iteration() < limit as u16 {
                 continue;
             }
-            self.inside_cells.insert(save_cell.get_cell());
+            self.inside_cells.insert(save_cell.get_cell(self.grid_size));
         }
     }
     /// Has to be called before cell are inserted
@@ -79,6 +80,16 @@ impl CovarageGridGen {
             }
         }
         true
+    }
+    pub fn is_finished(&self) -> bool {
+        self.inside_cells
+            .is_activ(Cell::new(IVec2::new(-((self.grid_size / 2) as i32) + 1, 0)))
+    }
+    pub fn to_complet_sampled_cells(&mut self) -> CompletSampledCells {
+        assert!(self.is_finished(), "CovarageGridGen is not finished");
+        self.saved_cells
+            .sort_unstable_by(|a, b| b.get_highest_iteration().cmp(&a.get_highest_iteration()));
+        CompletSampledCells::new(self.saved_cells.clone(), self.grid_size)
     }
     pub fn get_area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)

@@ -37,12 +37,21 @@ impl Cell {
     pub fn area(grid_size: usize) -> f64 {
         Cell::side_length(grid_size) * Cell::side_length(grid_size)
     }
-    pub fn from_index(x: usize, y: usize, grid_size: usize) -> Self {
+    pub fn from_index(index: usize, grid_size: usize) -> Cell {
+        let x = index % grid_size;
+        let y = index / grid_size;
+        Cell::from_index_2d(x, y, grid_size)
+    }
+    pub fn from_index_2d(x: usize, y: usize, grid_size: usize) -> Self {
         let offset = IVec2::splat(grid_size as i32 / 2);
         let center = IVec2::new(x as i32 - 1, y as i32) - offset;
         Cell { center }
     }
-    pub fn index(&self, grid_size: usize) -> (usize, usize) {
+    pub fn index(&self, grid_size: usize) -> usize {
+        let (x, y) = self.index_2d(grid_size);
+        (y * grid_size) + x
+    }
+    pub fn index_2d(&self, grid_size: usize) -> (usize, usize) {
         let index = self.center + IVec2::splat((grid_size / 2) as i32);
         ((index.x + 1) as usize, index.y as usize)
     }

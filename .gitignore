@@ -11,3 +11,4 @@ Cargo.lock
 profile.coz
 flamegraph.svg
 perf.data
+sampeld_cells

@@ -16,18 +16,18 @@ impl Grid {
         }
     }
     pub fn insert(&mut self, cell: Cell) {
-        let (x, y) = cell.index(self.grid_size);
+        let (x, y) = cell.index_2d(self.grid_size);
         self.collums[x].insert_index(y);
     }
     pub fn remove(&mut self, cell: Cell) {
-        let (x, y) = cell.index(self.grid_size);
+        let (x, y) = cell.index_2d(self.grid_size);
         self.collums[x].remove_index(y);
     }
     pub fn activ_count(&self) -> usize {
         self.collums.iter().map(|c| c.activ_count()).sum()
     }
     pub fn is_activ(&self, cell: Cell) -> bool {
-        let (x, y) = cell.index(self.grid_size);
+        let (x, y) = cell.index_2d(self.grid_size);
         self.collums[x].is_activ(y)
     }
     pub fn draw(&self, color: Color, camera: &CameraManger) {
@@ -42,7 +42,7 @@ impl Grid {
             .flat_map(move |(x, collum)| {
                 collum
                     .iter()
-                    .map(move |y| Cell::from_index(x, y, self.grid_size))
+                    .map(move |y| Cell::from_index_2d(x, y, self.grid_size))
             })
     }
     pub fn is_empty(&self) -> bool {
