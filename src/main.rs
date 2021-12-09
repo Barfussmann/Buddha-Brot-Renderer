@@ -43,11 +43,10 @@ async fn main() -> std::io::Result<()> {
     let mut camera_manager = camera::CameraManger::new();
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
 
-    let mut grid = grid_bound::CovarageGrid::new(10, 1_000, 10_000);
+    let mut grid = grid_bound::CovarageGrid::new(10, 100, 10_000);
 
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let start = Instant::now();
     loop {
         camera_manager.update();
 
@@ -58,13 +57,6 @@ async fn main() -> std::io::Result<()> {
         mandel_brot_render.draw();
         grid.draw(&camera_manager);
         grid.sample_neighbors();
-
-        let processed_cells = grid.get_processed_cells_count();
-        let duration = start.elapsed();
-        println!(
-            "Cells per second: {}",
-            processed_cells as f64 / duration.as_secs_f64()
-        );
 
         next_frame().await;
     }
