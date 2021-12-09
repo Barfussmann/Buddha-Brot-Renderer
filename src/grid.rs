@@ -81,7 +81,7 @@ mod tests {
     fn test_grid_insert() {
         let mut grid = Grid::new(GRID_SIZE);
         grid.insert(Cell::new(ivec2(10, 5)));
-        assert!(grid.collums[GRID_SIZE / 2 + 10].is_activ(GRID_SIZE / 2 + 5));
+        assert!(grid.collums[GRID_SIZE / 2 + 11].is_activ(GRID_SIZE / 2 + 5));
     }
     #[test]
     fn activ_count_is_0_after_new() {
@@ -93,7 +93,7 @@ mod tests {
         let mut grid = Grid::new(GRID_SIZE);
         let half_grid_size = (GRID_SIZE / 2) as i32;
         let mut counter = 0;
-        for x in -half_grid_size..half_grid_size {
+        for x in -half_grid_size..half_grid_size - 1 {
             grid.insert(Cell::new(ivec2(x, x)));
             counter += 1;
             assert!(grid.activ_count() == counter);
