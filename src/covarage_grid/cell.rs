@@ -5,20 +5,20 @@ use rand::{rngs::ThreadRng, Rng};
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub struct Cell {
-    center: IVec2,
+    corner: IVec2,
 }
 
 impl Cell {
-    pub fn new(center: IVec2) -> Self {
-        Cell { center }
+    pub fn new(corner: IVec2) -> Self {
+        Cell { corner }
     }
     pub fn dummy() -> Self {
         Cell {
-            center: IVec2::new(0, 0),
+            corner: IVec2::new(0, 0),
         }
     }
-    fn get_corner(&self, grid_size: usize) -> DVec2 {
-        self.center.as_dvec2() * Cell::side_length(grid_size)
+    pub fn get_corner(&self, grid_size: usize) -> DVec2 {
+        self.corner.as_dvec2() * Cell::side_length(grid_size)
     }
     pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> DVec2 {
         let side_length = Cell::side_length(grid_size);
@@ -27,14 +27,14 @@ impl Cell {
             rng.gen_range(0. ..side_length),
             rng.gen_range(0. ..side_length),
         );
-        corner - offset
+        corner + offset
     }
     pub fn get_neighbors(&self) -> Vec<Cell> {
         vec![
-            Cell::new(self.center + IVec2::new(1, 0)),
-            Cell::new(self.center + IVec2::new(0, 1)),
-            Cell::new(self.center + IVec2::new(-1, 0)),
-            Cell::new(self.center + IVec2::new(0, -1)),
+            Cell::new(self.corner + IVec2::new(1, 0)),
+            Cell::new(self.corner + IVec2::new(0, 1)),
+            Cell::new(self.corner + IVec2::new(-1, 0)),
+            Cell::new(self.corner + IVec2::new(0, -1)),
         ]
     }
     pub fn from_index(index: usize, grid_size: usize) -> Cell {
@@ -45,24 +45,24 @@ impl Cell {
     pub fn from_index_2d(x: usize, y: usize, grid_size: usize) -> Self {
         let offset = IVec2::splat(grid_size as i32 / 2);
         let center = IVec2::new(x as i32 - 1, y as i32) - offset;
-        Cell { center }
+        Cell { corner: center }
     }
     pub fn index(&self, grid_size: usize) -> usize {
         let (x, y) = self.index_2d(grid_size);
         (y * grid_size) + x
     }
     pub fn index_2d(&self, grid_size: usize) -> (usize, usize) {
-        let index = self.center + IVec2::splat((grid_size / 2) as i32);
+        let index = self.corner + IVec2::splat((grid_size / 2) as i32);
         ((index.x + 1) as usize, index.y as usize)
     }
     pub fn is_y_negativ(&self) -> bool {
-        self.center.y <= 0
+        self.corner.y < 0
     }
-    fn side_length(grid_size: usize) -> f64 {
+    pub fn side_length(grid_size: usize) -> f64 {
         4. / grid_size as f64
     }
     pub fn draw(&self, grid_size: usize, camera: &CameraManger) {
-        let mut size = DVec2::splat(-Cell::side_length(grid_size));
+        let mut size = DVec2::splat(Cell::side_length(grid_size));
         let mut corner = self.get_corner(grid_size);
         camera.draw_rect(corner, size, GREEN);
         corner.y *= -1.;

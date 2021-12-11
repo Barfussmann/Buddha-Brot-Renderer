@@ -26,7 +26,7 @@ impl CovarageGridGen {
         let starting_x = (grid_size / 16) as i32;
         for x in starting_x..=starting_x + (grid_size / 100) as i32 {
             cell_to_sample_sender
-                .send(Cell::new(IVec2::new(x, 0)))
+                .send(Cell::new(IVec2::new(x, -1)))
                 .unwrap();
         }
         CovarageGridGen {
@@ -74,7 +74,7 @@ impl CovarageGridGen {
         sorterd_saved_cells.sort_unstable_by_key(|b| std::cmp::Reverse(b.get_highest_iteration()));
         SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
-    pub fn draw(&self, camera: &CameraManger) {
+    pub fn draw(&mut self, camera: &CameraManger) {
         self.inside_cells.draw(camera);
     }
     pub fn get_processed_cells_count(&self) -> usize {
