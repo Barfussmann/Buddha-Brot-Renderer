@@ -1,6 +1,4 @@
-use super::cell::*;
-use super::mandel_iter::MultiMandelIterator;
-use super::sampled_cell::SampledCell;
+use super::{cell::*, mandel_iter::MultiMandelIterator, sampled_cell::SampledCell};
 use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
 use std::sync::mpsc;

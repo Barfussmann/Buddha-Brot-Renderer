@@ -1,6 +1,4 @@
-use super::camera::*;
-use super::cell::*;
-use super::range_encoder::*;
+use super::{camera::*, cell::*, range_encoder::*};
 use macroquad::color::Color;
 
 #[derive(Clone, Debug)]

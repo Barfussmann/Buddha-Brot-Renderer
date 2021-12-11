@@ -38,7 +38,6 @@ async fn main() -> std::io::Result<()> {
 
     let mut grid = covarage_grid::covarage_grid_gen::CovarageGridGen::new(6, 400, 1_000);
 
-    // let covarage_grid = grid.to_complet_sampled_cells().to_covarage_grid(5);
 
     loop {
         camera_manager.update();
@@ -49,7 +48,6 @@ async fn main() -> std::io::Result<()> {
 
         grid.sample_neighbors();
         mandel_brot_render.draw();
-        // covarage_grid.draw(&camera_manager);
 
         grid.draw(&camera_manager);
         next_frame().await;

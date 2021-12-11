@@ -1,14 +1,7 @@
-use super::camera::*;
-use super::cell::*;
-use super::grid::*;
-use super::sample_cells::*;
-use super::sampled_cell::*;
-use super::worker::*;
-use super::*;
+use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
+use glam::IVec2;
 use macroquad::color::GREEN;
-use std::sync::mpsc;
-use std::thread;
-use std::time::Instant;
+use std::{sync::mpsc, thread, time::Instant};
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
