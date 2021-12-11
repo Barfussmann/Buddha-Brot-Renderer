@@ -1,6 +1,6 @@
 use super::cell::*;
-use super::sampled_cell::SampledCell;
 use super::mandel_iter::MultiMandelIterator;
+use super::sampled_cell::SampledCell;
 use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
 use std::sync::mpsc;
@@ -88,7 +88,6 @@ impl Worker {
         }
     }
 }
-
 
 pub fn quad_test_in_cell(
     cells: [Cell; 4],

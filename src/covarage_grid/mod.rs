@@ -12,17 +12,13 @@ use super::mandel_iter;
 
 use glam::IVec2;
 
-
 pub struct CovarageGrid {
     cells: Vec<cell::Cell>,
     size: usize,
 }
 impl CovarageGrid {
     pub fn new(size: usize, cells: Vec<cell::Cell>) -> Self {
-        Self {
-            cells,
-            size,
-        }
+        Self { cells, size }
     }
     pub fn draw(&self, camera: &camera::CameraManger) {
         for cell in self.cells.iter() {

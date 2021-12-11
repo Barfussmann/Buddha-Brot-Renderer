@@ -1,5 +1,5 @@
-use super::CovarageGrid;
 use super::sampled_cell::*;
+use super::CovarageGrid;
 use serde::{Deserialize, Serialize};
 use std::fs;
 

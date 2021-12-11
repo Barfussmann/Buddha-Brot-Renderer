@@ -1,9 +1,7 @@
 use super::camera::*;
-use rand::{rngs::ThreadRng, Rng};
-use glam::DVec2;
-use glam::dvec2;
-use glam::IVec2;
+use glam::{dvec2, DVec2, IVec2};
 use macroquad::color::GREEN;
+use rand::{rngs::ThreadRng, Rng};
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub struct Cell {

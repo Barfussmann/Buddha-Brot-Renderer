@@ -1,8 +1,7 @@
 extern crate test;
 use super::camera::*;
+use glam::{dvec2, DVec2};
 use macroquad::prelude::Color;
-use glam::DVec2;
-use glam::dvec2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Relation {
@@ -32,10 +31,6 @@ impl Range {
         self.start <= index && index <= self.end
     }
     pub fn relation_to(&self, other: Self) -> Relation {
-        // let this_end_other_start_delta = self.end - other.start;
-        // let this_start_other_end_delta = self.start - other.end;
-        // // if end_start_delta
-
         if self.end + 1 < other.start {
             Relation::Before
         } else if self.start > other.end + 1 {
