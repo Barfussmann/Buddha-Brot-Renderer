@@ -1,6 +1,5 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use glam::IVec2;
-use macroquad::color::GREEN;
 use std::{sync::mpsc, thread, time::Instant};
 
 pub struct CovarageGridGen {
@@ -76,7 +75,7 @@ impl CovarageGridGen {
         SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
     pub fn draw(&self, camera: &CameraManger) {
-        self.inside_cells.draw(GREEN, camera);
+        self.inside_cells.draw(camera);
     }
     pub fn get_processed_cells_count(&self) -> usize {
         self.processed_cells_count as usize
