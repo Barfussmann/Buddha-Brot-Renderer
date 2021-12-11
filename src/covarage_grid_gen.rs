@@ -1,6 +1,6 @@
 use super::camera::*;
 use super::cell::*;
-use super::complet_sampled_cells::*;
+use super::sample_cells::*;
 use super::grid::*;
 use super::sampled_cell::*;
 use super::util::*;
@@ -85,11 +85,11 @@ impl CovarageGridGen {
         self.inside_cells
             .is_activ(Cell::new(IVec2::new(-((self.grid_size / 2) as i32) + 1, 0)))
     }
-    pub fn to_complet_sampled_cells(&mut self) -> CompletSampledCells {
+    pub fn to_complet_sampled_cells(&mut self) -> SampleCells {
         assert!(self.is_finished(), "CovarageGridGen is not finished");
         self.saved_cells
             .sort_unstable_by(|a, b| b.get_highest_iteration().cmp(&a.get_highest_iteration()));
-        CompletSampledCells::new(self.saved_cells.clone(), self.grid_size)
+        SampleCells::new(self.saved_cells.clone(), self.grid_size)
     }
     pub fn get_area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)

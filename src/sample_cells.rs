@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CompletSampledCells {
+pub struct SampleCells {
     cells: Vec<SampledCell>,
     size: usize,
 }
-impl CompletSampledCells {
+impl SampleCells {
     pub fn new(cells: Vec<SampledCell>, size: usize) -> Self {
-        CompletSampledCells { cells, size }
+        SampleCells { cells, size }
     }
     pub fn save(&self) {
         let encoded = bincode::serialize(&self).unwrap();

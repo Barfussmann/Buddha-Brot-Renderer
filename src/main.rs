@@ -10,7 +10,7 @@
 
 mod camera;
 mod cell;
-mod complet_sampled_cells;
+mod sample_cells;
 mod covarage_grid;
 mod covarage_grid_gen;
 mod grid;
@@ -47,23 +47,20 @@ async fn main() -> std::io::Result<()> {
 
     let mut grid = covarage_grid_gen::CovarageGridGen::new(6, 400, 1_000);
 
-    while !grid.is_finished() {
-        grid.sample_neighbors();
-    }
-    let covarage_grid = grid.to_complet_sampled_cells().to_covarage_grid(5);
-
+    // let covarage_grid = grid.to_complet_sampled_cells().to_covarage_grid(5);
+    
     loop {
         camera_manager.update();
-
+        
         if camera_manager.had_change() {
             mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
         }
-
+        
+        grid.sample_neighbors();
         mandel_brot_render.draw();
-        covarage_grid.draw(&camera_manager);
+        // covarage_grid.draw(&camera_manager);
 
-        // grid.draw(&camera_manager);
-
+        grid.draw(&camera_manager);
         next_frame().await;
     }
 }
