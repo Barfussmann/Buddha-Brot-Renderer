@@ -1,7 +1,7 @@
 use super::camera::*;
 use rand::{rngs::ThreadRng, Rng};
-use glam::DVec2 as Vec2;
-use glam::dvec2 as vec2;
+use glam::DVec2;
+use glam::dvec2;
 use glam::IVec2;
 use macroquad::color::GREEN;
 
@@ -19,13 +19,13 @@ impl Cell {
             center: IVec2::new(0, 0),
         }
     }
-    fn get_corner(&self, grid_size: usize) -> Vec2 {
+    fn get_corner(&self, grid_size: usize) -> DVec2 {
         self.center.as_dvec2() * Cell::side_length(grid_size)
     }
-    pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> Vec2 {
+    pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> DVec2 {
         let side_length = Cell::side_length(grid_size);
         let corner = self.get_corner(grid_size);
-        let offset = vec2(
+        let offset = dvec2(
             rng.gen_range(0. ..side_length),
             rng.gen_range(0. ..side_length),
         );
@@ -67,7 +67,7 @@ impl Cell {
         4. / grid_size as f64
     }
     pub fn draw(&self, grid_size: usize, camera: &CameraManger) {
-        let mut size = Vec2::splat(-Cell::side_length(grid_size));
+        let mut size = DVec2::splat(-Cell::side_length(grid_size));
         let mut corner = self.get_corner(grid_size);
         camera.draw_rect(corner, size, GREEN);
         corner.y *= -1.;

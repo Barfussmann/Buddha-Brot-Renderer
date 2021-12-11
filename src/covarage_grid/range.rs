@@ -1,8 +1,8 @@
 extern crate test;
 use super::camera::*;
 use macroquad::prelude::Color;
-use glam::DVec2 as Vec2;
-use glam::dvec2 as vec2;
+use glam::DVec2;
+use glam::dvec2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Relation {
@@ -97,12 +97,12 @@ impl Range {
     }
     pub fn draw(&self, x: usize, color: Color, grid_size: usize, camera: &CameraManger) {
         let side_length = 4. / grid_size as f64;
-        let index = Vec2::new((x - 1) as f64, self.start as f64) - Vec2::ONE;
-        let mut corner = (index - Vec2::splat((grid_size / 2) as f64)) * side_length;
+        let index = DVec2::new((x - 1) as f64, self.start as f64) - DVec2::ONE;
+        let mut corner = (index - DVec2::splat((grid_size / 2) as f64)) * side_length;
         let delta_y = self.len() as f64 * side_length;
-        camera.draw_rect(corner, vec2(side_length, delta_y), color);
+        camera.draw_rect(corner, dvec2(side_length, delta_y), color);
         corner.y *= -1.;
-        camera.draw_rect(corner, vec2(side_length, -delta_y), color);
+        camera.draw_rect(corner, dvec2(side_length, -delta_y), color);
     }
     pub fn iter(&self) -> std::ops::Range<usize> {
         self.start..(self.end + 1)
