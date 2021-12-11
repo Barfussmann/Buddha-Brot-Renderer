@@ -166,7 +166,7 @@ impl RangeEncoder {
 }
 #[cfg(test)]
 mod tests {
-    use super::RangeEncoder;
+    use super::*;
     #[test]
     fn new_is_empty() {
         assert!(RangeEncoder::new().is_empty());
@@ -281,11 +281,11 @@ mod tests {
         }
         for ranges in range_encoder.activ_ranges.windows(2) {
             match ranges[0].relation_to(ranges[1]) {
-                crate::range::Relation::Before => {}
-                crate::range::Relation::AdjacentBefore => {}
-                crate::range::Relation::Overlapping => panic!("can't overlapp"),
-                crate::range::Relation::AdjacentAfter => panic!("can't be after"),
-                crate::range::Relation::After => panic!("can't be after"),
+                super::Relation::Before => {}
+                super::Relation::AdjacentBefore => {}
+                super::Relation::Overlapping => panic!("can't overlapp"),
+                super::Relation::AdjacentAfter => panic!("can't be after"),
+                super::Relation::After => panic!("can't be after"),
             }
         }
     }

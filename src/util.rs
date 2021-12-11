@@ -1,4 +1,4 @@
-use super::cell::*;
+use super::covarage_grid::cell::*;
 use super::mandel_iter::*;
 use core_simd::i64x4;
 pub use glam::dvec2 as vec2;
