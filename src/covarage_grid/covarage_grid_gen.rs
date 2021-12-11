@@ -56,15 +56,6 @@ impl CovarageGridGen {
             }
         }
     }
-    pub fn rebuild_grid(&mut self, limit: usize) {
-        self.inside_cells.clear();
-        for save_cell in self.saved_cells.iter() {
-            if save_cell.get_highest_iteration() < limit as u16 {
-                continue;
-            }
-            self.inside_cells.insert(save_cell.get_cell(self.grid_size));
-        }
-    }
     /// Has to be called before cell are inserted
     fn chech_if_neighbor_is_new(&self, cell: Cell) -> bool {
         for neighbor in cell.get_neighbors() {
@@ -84,14 +75,8 @@ impl CovarageGridGen {
         sorterd_saved_cells.sort_unstable_by_key(|b| std::cmp::Reverse(b.get_highest_iteration()));
         SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
-    pub fn get_area(&self) -> f64 {
-        self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)
-    }
     pub fn draw(&self, camera: &CameraManger) {
         self.inside_cells.draw(GREEN, camera);
-    }
-    pub fn get_inside_cell_count(&self) -> usize {
-        self.inside_cells.activ_count()
     }
     pub fn get_processed_cells_count(&self) -> usize {
         self.processed_cells_count as usize

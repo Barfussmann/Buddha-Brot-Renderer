@@ -1,32 +1,6 @@
 use core_simd::*;
-use glam::DVec2 as Vec2;
 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
 
-pub struct MandelIterator {
-    z: Vec2,
-    z_squared: Vec2,
-    c: Vec2,
-    pub iteration: usize,
-}
-impl MandelIterator {
-    pub fn new(starting_point: Vec2) -> MandelIterator {
-        MandelIterator {
-            z: starting_point,
-            z_squared: starting_point * starting_point,
-            c: starting_point,
-            iteration: 1,
-        }
-    }
-    pub fn next_iteration(&mut self) {
-        self.z.y = 2. * self.z.x * self.z.y + self.c.y;
-        self.z.x = self.z_squared.x - self.z_squared.y + self.c.x;
-        self.z_squared = self.z * self.z;
-        self.iteration += 1;
-    }
-    pub fn is_in_set(&self) -> bool {
-        self.z_squared.x + self.z_squared.y < 4.
-    }
-}
 
 pub struct MultiMandelIterator {
     z_x: f64x4,
@@ -90,7 +64,31 @@ impl MultiMandelIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use glam::DVec2 as Vec2;
     use glam::dvec2 as vec2;
+
+    pub struct MandelIterator {
+        z: Vec2,
+        z_squared: Vec2,
+        c: Vec2,
+        pub iteration: usize,
+    }
+    impl MandelIterator {
+        pub fn new(starting_point: Vec2) -> MandelIterator {
+            MandelIterator {
+                z: starting_point,
+                z_squared: starting_point * starting_point,
+                c: starting_point,
+                iteration: 1,
+            }
+        }
+        pub fn next_iteration(&mut self) {
+            self.z.y = 2. * self.z.x * self.z.y + self.c.y;
+            self.z.x = self.z_squared.x - self.z_squared.y + self.c.x;
+            self.z_squared = self.z * self.z;
+            self.iteration += 1;
+        }
+    }
 
     #[test]
     fn multi_mandel_iterator_same_to_mandel_iterator() {

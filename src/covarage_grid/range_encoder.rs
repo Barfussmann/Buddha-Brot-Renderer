@@ -73,27 +73,6 @@ impl RangeEncoder {
             }
         }
     }
-    pub fn remove_index(&mut self, index: usize) {
-        let (is_activ, range_index) = self.binary_search_for_index(index);
-        assert!(is_activ);
-        let range = &mut self.activ_ranges[range_index];
-        if range.len() == 1 {
-            self.activ_ranges.remove(range_index);
-            return;
-        }
-        if range.start == index {
-            range.start += 1;
-        } else if range.end == index {
-            range.end -= 1;
-        } else {
-            let (left, right) = range.split_remove(index);
-            *range = left;
-            self.activ_ranges.insert(range_index + 1, right);
-        }
-    }
-    pub fn activ_count(&self) -> usize {
-        self.activ_ranges.iter().map(|range| range.len()).sum()
-    }
     fn binary_search_for_index(&self, index: usize) -> (bool, usize) {
         let mut size = self.activ_ranges.len();
         let mut right = size;
@@ -115,53 +94,10 @@ impl RangeEncoder {
     pub fn is_activ(&self, index: usize) -> bool {
         self.binary_search_for_index(index).0
     }
-    pub fn intersect(&self, other: &Self) -> Self {
-        let mut this_range_iter = self.activ_ranges.iter().peekable();
-        let mut other_range_iter = other.activ_ranges.iter();
-
-        let mut next_this_range = this_range_iter.next();
-        let mut next_other_range = other_range_iter.next();
-
-        let mut result = RangeEncoder::new();
-
-        while next_this_range.is_some() & next_other_range.is_some() {
-            let this = next_this_range.unwrap();
-            let other = next_other_range.unwrap();
-            match this.relation_to(*other) {
-                Relation::Before | Relation::AdjacentBefore => {
-                    next_this_range = this_range_iter.next();
-                }
-                Relation::Overlapping => {
-                    result.activ_ranges.push(this.intersect(*other).unwrap());
-                    if let Some(new_next_this_range) = this_range_iter
-                        .next_if(|next_this| next_this.relation_to(*other) == Relation::Overlapping)
-                    {
-                        next_this_range = Some(new_next_this_range);
-                    } else {
-                        next_other_range = other_range_iter.next();
-                    }
-                }
-                Relation::AdjacentAfter | Relation::After => {
-                    next_other_range = other_range_iter.next();
-                }
-            }
-        }
-
-        result
-    }
     pub fn draw(&self, x: usize, color: Color, grid_size: usize, camera: &CameraManger) {
         for range in self.activ_ranges.iter() {
             range.draw(x, color, grid_size, camera);
         }
-    }
-    pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
-        self.activ_ranges.iter().flat_map(|range| range.iter())
-    }
-    pub fn clear(&mut self) {
-        self.activ_ranges.clear();
-    }
-    pub fn get_activ_ranges(&self) -> &Vec<Range> {
-        &self.activ_ranges
     }
 }
 #[cfg(test)]
@@ -176,39 +112,6 @@ mod tests {
         let mut range_encoder = RangeEncoder::new();
         range_encoder.insert_index(5);
         assert!(!range_encoder.is_empty());
-    }
-    #[test]
-    fn after_insertion_activ_cells_is_1() {
-        let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert_index(5);
-        assert_eq!(range_encoder.activ_count(), 1);
-    }
-    #[test]
-    fn activ_cells_equal_to_inserted_cells() {
-        let mut range_encoder = RangeEncoder::new();
-        for i in 1..100 {
-            range_encoder.insert_index(i);
-            assert_eq!(range_encoder.activ_count(), i);
-        }
-    }
-    #[test]
-    fn activ_cells_equal_to_inserted_cells2() {
-        let indecies = [0, 2, 3, 4, 45, 67, 89, 90, 91, 92, 93, 94, 95, 96, 99];
-        let mut range_encoder = RangeEncoder::new();
-        for index in indecies.iter() {
-            range_encoder.insert_index(*index);
-        }
-        assert_eq!(range_encoder.activ_count(), indecies.len());
-    }
-    #[test]
-    fn iter_is_equal_to_inserted_cells() {
-        let mut range_encoder = RangeEncoder::new();
-        let indecies = [0, 2, 3, 4, 45, 67, 89, 90, 91, 92, 93, 94, 95, 96, 99];
-
-        for index in indecies.iter() {
-            range_encoder.insert_index(*index);
-        }
-        assert_eq!(range_encoder.iter().collect::<Vec<_>>(), indecies.to_vec());
     }
     #[test]
     fn cell_is_activ_after_isertion() {
@@ -232,46 +135,6 @@ mod tests {
         range_encoder.insert_index(5);
         range_encoder.insert_index(6);
         assert_eq!(range_encoder.activ_ranges.len(), 1)
-    }
-    #[test]
-    fn itersection_of_two_empty_range_encoder_is_empty() {
-        let range_encoder = RangeEncoder::new();
-        let range_encoder2 = RangeEncoder::new();
-        let intersection = range_encoder.intersect(&range_encoder2);
-        assert!(intersection.is_empty());
-    }
-    #[test]
-    fn itersection_of_empty_and_non_empty_range_encoder_is_empty() {
-        let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert_index(5);
-        let range_encoder2 = RangeEncoder::new();
-        let intersection = range_encoder.intersect(&range_encoder2);
-        assert!(intersection.is_empty());
-    }
-    #[test]
-    fn itersection_of_equal_range_encoder_is_equal() {
-        let mut range_encoder = RangeEncoder::new();
-        range_encoder.insert_index(5);
-        range_encoder.insert_index(6);
-        range_encoder.insert_index(8);
-        let intersection = range_encoder.intersect(&range_encoder);
-        assert_eq!(range_encoder, intersection);
-    }
-    #[test]
-    fn intersection_of_ranges_are_all_itersections() {
-        let mut range_encoder1 = RangeEncoder::new();
-        for index in [5, 6, 7, 12, 13, 22] {
-            range_encoder1.insert_index(index);
-        }
-        let mut range_encoder2 = RangeEncoder::new();
-        for index in [4, 5, 7, 8, 11, 12, 13, 22] {
-            range_encoder2.insert_index(index);
-        }
-        let intersection = range_encoder1.intersect(&range_encoder2);
-        assert_eq!(intersection, range_encoder2.intersect(&range_encoder1));
-        for index in [5, 7, 12, 13, 22] {
-            assert!(intersection.is_activ(index));
-        }
     }
     #[test]
     fn activ_ranges_are_sorted() {
@@ -298,38 +161,5 @@ mod tests {
         for index in [0, 1, 3, 40, 200, 1000] {
             assert!(!range_encoder.is_activ(index));
         }
-    }
-    #[test]
-    fn is_empty_after_clear() {
-        let mut range_encoder = RangeEncoder::new();
-        for index in [12, 17, 22, 54, 61, 143] {
-            range_encoder.insert_index(index);
-        }
-        range_encoder.clear();
-        assert!(range_encoder.is_empty());
-    }
-    #[test]
-    fn empty_after_insert_and_then_remove_1() {
-        let mut range_encoder = RangeEncoder::new();
-        let indecies = [12, 17, 22, 54, 61, 143];
-        for index in indecies {
-            range_encoder.insert_index(index);
-        }
-        for index in indecies {
-            range_encoder.remove_index(index);
-        }
-        assert!(range_encoder.is_empty());
-    }
-    #[test]
-    fn empty_after_insert_and_then_remove_2() {
-        let mut range_encoder = RangeEncoder::new();
-        let indecies = [12, 13, 11, 20, 19, 18];
-        for index in indecies {
-            range_encoder.insert_index(index);
-        }
-        for index in indecies {
-            range_encoder.remove_index(index);
-        }
-        assert!(range_encoder.is_empty());
     }
 }

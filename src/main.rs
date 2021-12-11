@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 #![warn(
     clippy::branches_sharing_code,
     clippy::cognitive_complexity,

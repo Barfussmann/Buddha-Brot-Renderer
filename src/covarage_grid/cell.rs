@@ -37,9 +37,6 @@ impl Cell {
             Cell::new(self.center + IVec2::new(0, -1)),
         ]
     }
-    pub fn area(grid_size: usize) -> f64 {
-        Cell::side_length(grid_size) * Cell::side_length(grid_size)
-    }
     pub fn from_index(index: usize, grid_size: usize) -> Cell {
         let x = index % grid_size;
         let y = index / grid_size;
