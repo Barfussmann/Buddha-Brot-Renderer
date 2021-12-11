@@ -1,4 +1,4 @@
-// #![allow(dead_code)]
+#![allow(dead_code)]
 #![warn(
     clippy::branches_sharing_code,
     clippy::cognitive_complexity,
@@ -36,8 +36,7 @@ async fn main() -> std::io::Result<()> {
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let mut grid = covarage_grid::covarage_grid_gen::CovarageGridGen::new(6, 400, 1_000);
-
+    let mut grid = covarage_grid::covarage_grid_gen::CovarageGridGen::new(6, 4, 10_000);
 
     loop {
         camera_manager.update();

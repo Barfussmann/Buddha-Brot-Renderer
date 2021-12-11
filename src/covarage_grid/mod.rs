@@ -1,8 +1,6 @@
 pub mod cell;
 pub mod covarage_grid_gen;
 mod grid;
-mod range;
-mod range_encoder;
 mod sample_cells;
 mod sampled_cell;
 mod worker;
@@ -10,7 +8,6 @@ mod worker;
 use super::camera;
 use super::mandel_iter;
 
-use glam::IVec2;
 
 pub struct CovarageGrid {
     cells: Vec<cell::Cell>,
