@@ -51,7 +51,7 @@ impl MandelbrotRender {
             )
             .par_bridge()
             .for_each(|(pixel_colors, (x, y))| {
-                *pixel_colors = get_color(iterat_points(*x, *y));
+                *pixel_colors = iterations_to_color(iterat_points(*x, *y, 256).to_array());
             });
     }
     pub fn set_camera_rect(&mut self, (top_left_corner, view_size): (Vec2, Vec2)) {
@@ -66,17 +66,11 @@ impl MandelbrotRender {
         draw_texture(self.texture, 0., 0., Color::new(1., 1., 1., 1.));
     }
 }
-fn get_color(iterations: [i64; 4]) -> [Color; 4] {
+fn iterations_to_color(iterations: [i64; 4]) -> [Color; 4] {
     let mut colors = [BLACK; 4];
     for i in 0..4 {
         let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u8;
         colors[i] = Color::from_rgba(color_value, color_value, color_value, 255);
     }
     colors
-}
-
-fn iterat_points(x: [f64; 4], y: [f64; 4]) -> [i64; 4] {
-    let mut iterator = MultiMandelIterator::new(x, y);
-    iterator.iterate(256);
-    iterator.get_iterations()
 }

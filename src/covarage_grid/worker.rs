@@ -1,5 +1,5 @@
-use super::{cell::*, mandel_iter::MultiMandelIterator, sampled_cell::SampledCell};
-use core_simd::i64x4;
+use super::{cell::*, mandel_iter::*, sampled_cell::SampledCell};
+use core_simd::*;
 use rand::prelude::{thread_rng, ThreadRng};
 use std::sync::mpsc;
 
@@ -91,7 +91,7 @@ pub fn quad_test_in_cell(
     cells: [Cell; 4],
     limit: usize,
     grid_size: usize,
-    iteration_depth: usize,
+    max_iterations: usize,
     rng: &mut ThreadRng,
 ) -> (i64x4, bool) {
     let inside_points = [
@@ -112,11 +112,14 @@ pub fn quad_test_in_cell(
         inside_points[2].y,
         inside_points[3].y,
     ];
-    let mut mandel_iter = MultiMandelIterator::new(x, y);
-    mandel_iter.iterate(iteration_depth);
+    let iterations = iterat_points(x, y, max_iterations);
 
+    let under_max_iterations = iterations.lanes_lt(i64x4::splat(max_iterations as i64));
+    let over_limit = iterations.lanes_ge(i64x4::splat(limit as i64));
+    let inside = under_max_iterations & over_limit;
+    let is_inside = inside.any();
     (
-        mandel_iter.raw_get_iterations(),
-        mandel_iter.is_inside(limit, iteration_depth).is_some(),
+        iterations,
+        is_inside,
     )
 }
