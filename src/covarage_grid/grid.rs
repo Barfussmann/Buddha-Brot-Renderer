@@ -1,5 +1,4 @@
 use super::{camera::*, cell::*};
-use macroquad::color::Color;
 use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
@@ -20,7 +19,7 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&self, color: Color, camera: &CameraManger) {
+    pub fn draw(&self, camera: &CameraManger) {
         for cell in self.cells.iter() {
             cell.draw(self.grid_size, camera);
         }
