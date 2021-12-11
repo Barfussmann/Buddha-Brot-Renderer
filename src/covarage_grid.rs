@@ -1,14 +1,20 @@
 use super::cell::Cell;
+use super::camera::*;
 
-struct CovarageGrid {
+pub struct CovarageGrid {
     cells: Vec<Cell>,
     size: usize,
 }
 impl CovarageGrid {
-    // fn new(size: usize, limit: usize) -> Self {
-    //     Self {
-    //         cells: Vec::new(),
-    //         size,
-    //     }
-    // }
+    pub fn new(size: usize, cells: Vec<Cell>) -> Self {
+        Self {
+            cells,
+            size,
+        }
+    }
+    pub fn draw(&self, camera: &CameraManger) {
+        for cell in self.cells.iter() {
+            cell.draw(self.size, camera);
+        }
+    }
 }

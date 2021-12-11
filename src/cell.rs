@@ -1,4 +1,5 @@
 use super::util::*;
+use super::camera::*;
 use glam::DVec2 as Vec2;
 use glam::IVec2;
 
@@ -60,5 +61,25 @@ impl Cell {
     }
     fn side_length(grid_size: usize) -> f64 {
         4. / grid_size as f64
+    }
+    pub fn draw(&self, grid_size: usize, camera: &CameraManger) {
+        let mut size = Vec2::splat(-Cell::side_length(grid_size));
+        let mut corner = self.get_corner(grid_size);
+        camera.draw_rect(corner, size, GREEN);
+        corner.y *= -1.;
+        size.y *= -1.;
+        camera.draw_rect(corner, size, GREEN);
+    }
+}
+
+mod tests {
+    use super::*;
+    #[test]
+    fn from_index_form_index_is_same() {
+        let cell = Cell::new(IVec2::new(1, 2));
+        for grid_size in 100..1000 {
+            let other = Cell::from_index(cell.index(grid_size), grid_size);
+            assert_eq!(cell, other);
+        }
     }
 }
