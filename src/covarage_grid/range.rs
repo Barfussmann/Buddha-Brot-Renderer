@@ -1,7 +1,8 @@
 extern crate test;
 use super::camera::*;
-use super::util::*;
 use macroquad::prelude::Color;
+use glam::DVec2 as Vec2;
+use glam::dvec2 as vec2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Relation {

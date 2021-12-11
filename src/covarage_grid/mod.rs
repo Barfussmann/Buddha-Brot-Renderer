@@ -8,4 +8,4 @@ mod range_encoder;
 mod sampled_cell;
 mod worker;
 use super::camera;
-use super::util;
+use super::mandel_iter;

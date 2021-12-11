@@ -1,6 +1,6 @@
 use super::cell::*;
 use super::sampled_cell::SampledCell;
-use super::util::four_point_inside_tests;
+use super::mandel_iter::MultiMandelIterator;
 use core_simd::i64x4;
 use rand::prelude::{thread_rng, ThreadRng};
 use std::sync::mpsc;
@@ -66,7 +66,7 @@ impl Worker {
         let mut current_iterations = 0;
         let mut any_inside = false;
         while !self.finished {
-            let (iterations, is_inside) = four_point_inside_tests(
+            let (iterations, is_inside) = quad_test_in_cell(
                 self.current_cells,
                 self.limit,
                 self.grid_size,
@@ -87,4 +87,39 @@ impl Worker {
             }
         }
     }
+}
+
+
+pub fn quad_test_in_cell(
+    cells: [Cell; 4],
+    limit: usize,
+    grid_size: usize,
+    iteration_depth: usize,
+    rng: &mut ThreadRng,
+) -> (i64x4, bool) {
+    let inside_points = [
+        cells[0].gen_point_inside(grid_size, rng),
+        cells[1].gen_point_inside(grid_size, rng),
+        cells[2].gen_point_inside(grid_size, rng),
+        cells[3].gen_point_inside(grid_size, rng),
+    ];
+    let x = [
+        inside_points[0].x,
+        inside_points[1].x,
+        inside_points[2].x,
+        inside_points[3].x,
+    ];
+    let y = [
+        inside_points[0].y,
+        inside_points[1].y,
+        inside_points[2].y,
+        inside_points[3].y,
+    ];
+    let mut mandel_iter = MultiMandelIterator::new(x, y);
+    mandel_iter.iterate(iteration_depth);
+
+    (
+        mandel_iter.raw_get_iterations(),
+        mandel_iter.is_inside(limit, iteration_depth).is_some(),
+    )
 }

@@ -1,7 +1,9 @@
-use super::util::*;
 use super::camera::*;
+use rand::{rngs::ThreadRng, Rng};
 use glam::DVec2 as Vec2;
+use glam::dvec2 as vec2;
 use glam::IVec2;
+use macroquad::color::GREEN;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub struct Cell {
@@ -21,11 +23,13 @@ impl Cell {
         self.center.as_dvec2() * Cell::side_length(grid_size)
     }
     pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> Vec2 {
-        gen_point_in_square(
-            self.get_corner(grid_size),
-            Cell::side_length(grid_size),
-            rng,
-        )
+        let side_length = Cell::side_length(grid_size);
+        let corner = self.get_corner(grid_size);
+        let offset = vec2(
+            rng.gen_range(0. ..side_length),
+            rng.gen_range(0. ..side_length),
+        );
+        corner - offset
     }
     pub fn get_neighbors(&self) -> Vec<Cell> {
         vec![

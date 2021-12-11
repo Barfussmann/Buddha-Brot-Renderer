@@ -12,7 +12,6 @@ mod camera;
 mod covarage_grid;
 mod mandel_brot_render;
 mod mandel_iter;
-mod util;
 
 use macroquad::prelude::{next_frame, Conf};
 

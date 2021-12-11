@@ -3,12 +3,12 @@ use super::cell::*;
 use super::sample_cells::*;
 use super::grid::*;
 use super::sampled_cell::*;
-use super::util::*;
 use super::worker::*;
 use glam::IVec2;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Instant;
+use macroquad::color::GREEN;
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
