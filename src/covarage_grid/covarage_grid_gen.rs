@@ -1,14 +1,14 @@
 use super::camera::*;
 use super::cell::*;
-use super::sample_cells::*;
 use super::grid::*;
+use super::sample_cells::*;
 use super::sampled_cell::*;
 use super::worker::*;
-use glam::IVec2;
+use super::*;
+use macroquad::color::GREEN;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Instant;
-use macroquad::color::GREEN;
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
@@ -85,11 +85,11 @@ impl CovarageGridGen {
         self.inside_cells
             .is_activ(Cell::new(IVec2::new(-((self.grid_size / 2) as i32) + 1, 0)))
     }
-    pub fn to_complet_sampled_cells(&mut self) -> SampleCells {
+    pub fn to_complet_sampled_cells(&self) -> SampleCells {
         assert!(self.is_finished(), "CovarageGridGen is not finished");
-        self.saved_cells
-            .sort_unstable_by(|a, b| b.get_highest_iteration().cmp(&a.get_highest_iteration()));
-        SampleCells::new(self.saved_cells.clone(), self.grid_size)
+        let mut sorterd_saved_cells = self.saved_cells.clone();
+        sorterd_saved_cells.sort_unstable_by_key(|b| std::cmp::Reverse(b.get_highest_iteration()));
+        SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
     pub fn get_area(&self) -> f64 {
         self.inside_cells.activ_count() as f64 * Cell::area(self.grid_size)

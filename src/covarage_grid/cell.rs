@@ -77,12 +77,11 @@ impl Cell {
 }
 
 mod tests {
-    use super::*;
     #[test]
     fn from_index_form_index_is_same() {
-        let cell = Cell::new(IVec2::new(1, 2));
+        let cell = super::Cell::new(super::IVec2::new(1, 2));
         for grid_size in 100..1000 {
-            let other = Cell::from_index(cell.index(grid_size), grid_size);
+            let other = super::Cell::from_index(cell.index(grid_size), grid_size);
             assert_eq!(cell, other);
         }
     }
