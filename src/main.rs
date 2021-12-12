@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
     let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
     mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
 
-    let mut grid = covarage_grid::covarage_grid_gen::CovarageGridGen::new(30, 40, 100_000);
+    let mut grid = covarage_grid::covarage_grid_gen::CovarageGridGen::new(30, 4, 100_000);
 
     loop {
         camera_manager.update();
