@@ -13,6 +13,7 @@ mod covarage_grid;
 mod mandel_brot_render;
 mod mandel_iter;
 
+use covarage_grid::CovarageGrid;
 use macroquad::prelude::{next_frame, Conf};
 
 const SIZE: usize = 1024;
@@ -32,23 +33,12 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> std::io::Result<()> {
-    let mut camera_manager = camera::CameraManger::new();
-    let mut mandel_brot_render = mandel_brot_render::MandelbrotRender::new(WIDTH, HEIGHT);
-    mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
-
-    let mut grid = covarage_grid::covarage_grid_gen::CovarageGridGen::new(30, 4, 100_000);
-
+    let covarage_grid = CovarageGrid::get_covarag_grid(30_000, 10, 4, 30).await;
+    let mut camera = camera::CameraManger::new();
     loop {
-        camera_manager.update();
+        camera.update();
+        covarage_grid.draw(&camera);
 
-        if camera_manager.had_change() {
-            mandel_brot_render.set_camera_rect(camera_manager.get_view_rect());
-        }
-
-        grid.sample_neighbors();
-        mandel_brot_render.draw();
-
-        grid.draw(&camera_manager);
         next_frame().await;
     }
 }

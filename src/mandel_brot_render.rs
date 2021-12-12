@@ -1,7 +1,8 @@
+use super::camera::CameraManger;
 use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use macroquad::color::*;
-use macroquad::prelude::{draw_texture, Image, Texture2D};
+use macroquad::prelude::{draw_texture, screen_height, screen_width, Image, Texture2D};
 use rayon::prelude::*;
 
 pub struct MandelbrotRender {
@@ -15,7 +16,9 @@ pub struct MandelbrotRender {
     texture: Texture2D,
 }
 impl MandelbrotRender {
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new() -> Self {
+        let width = screen_width() as usize;
+        let height = screen_height() as usize;
         let image = Image::gen_image_color(width as u16, height as u16, WHITE);
 
         Self {
@@ -62,7 +65,10 @@ impl MandelbrotRender {
         self.image.update(&self.pixel_colors);
         self.texture.update(&self.image);
     }
-    pub fn draw(&self) {
+    pub fn draw(&mut self, camera: &CameraManger) {
+        if camera.had_change() {
+            self.set_camera_rect(camera.get_view_rect())
+        }
         draw_texture(self.texture, 0., 0., Color::new(1., 1., 1., 1.));
     }
 }

@@ -11,6 +11,7 @@ pub struct CameraManger {
     zoom_factor: f64,
     mouse_poss_at_middle_click: DVec2,
     had_change: bool,
+    draw_cells: bool,
 }
 
 impl CameraManger {
@@ -21,6 +22,7 @@ impl CameraManger {
             zoom_factor: 1.5,
             mouse_poss_at_middle_click: dvec2(0., 0.),
             had_change: true,
+            draw_cells: false,
         }
     }
     fn zoom(&mut self, zoom: f64) {
@@ -51,6 +53,9 @@ impl CameraManger {
     }
     pub fn update(&mut self) {
         self.had_change = false;
+        if is_key_pressed(KeyCode::X) {
+            self.draw_cells = !self.draw_cells;
+        }
         if is_key_pressed(KeyCode::Space) {
             self.top_left_corner = dvec2(-2.0, -1.32);
             self.view_size = dvec2(3.0, 2.64);
@@ -90,5 +95,8 @@ impl CameraManger {
     }
     pub fn had_change(&self) -> bool {
         self.had_change
+    }
+    pub fn draw_cells(&self) -> bool {
+        self.draw_cells
     }
 }

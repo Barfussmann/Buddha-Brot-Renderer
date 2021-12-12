@@ -10,17 +10,19 @@ pub struct CovarageGridGen {
     processed_cells_count: i64,
     saved_cells: Vec<SampledCell>,
     start_time: Instant,
+    last_cell_count_change: Instant,
+    is_finished: bool,
 }
 
 impl CovarageGridGen {
-    pub fn new(limit: usize, sample_per_cell: usize, grid_size: usize) -> Self {
+    pub fn new(limit: usize, samples_per_cell: usize, grid_size: usize) -> Self {
         let (mut cell_to_sample_sender, cell_to_sample_receiver) = spmc::channel();
         let (cell_that_are_inside_sender, cell_that_are_inside_receiver) = mpsc::channel();
         for _ in 0..16 {
             let receiver = cell_to_sample_receiver.clone();
             let sender = cell_that_are_inside_sender.clone();
             thread::spawn(move || {
-                Worker::start(receiver, sender, limit, sample_per_cell, grid_size)
+                Worker::start(receiver, sender, limit, samples_per_cell, grid_size)
             });
         }
         let starting_x = (grid_size / 16) as i32;
@@ -37,11 +39,14 @@ impl CovarageGridGen {
             processed_cells_count: 0,
             saved_cells: Vec::new(),
             start_time: Instant::now(),
+            last_cell_count_change: Instant::now(),
+            is_finished: false,
         }
     }
     pub fn sample_neighbors(&mut self) {
         let start = Instant::now();
-        while Instant::now().duration_since(start).as_millis() < 50 {
+        let starting_cell_count = self.processed_cells_count;
+        while start.elapsed().as_millis() < 50 {
             for save_cell in self.cell_that_are_inside.try_iter().take(10_000) {
                 for neighbor in save_cell.get_cell(self.grid_size).get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
@@ -52,6 +57,13 @@ impl CovarageGridGen {
                 }
                 self.inside_cells.insert(save_cell.get_cell(self.grid_size));
                 self.saved_cells.push(save_cell);
+            }
+        }
+        if starting_cell_count != self.processed_cells_count {
+            self.last_cell_count_change = Instant::now();
+        } else {
+            if self.last_cell_count_change.elapsed().as_millis() > 500 {
+                self.is_finished = true;
             }
         }
     }
@@ -65,8 +77,7 @@ impl CovarageGridGen {
         true
     }
     pub fn is_finished(&self) -> bool {
-        self.inside_cells
-            .is_activ(Cell::new(IVec2::new(-((self.grid_size / 2) as i32) + 1, 0)))
+        self.is_finished
     }
     pub fn to_complet_sampled_cells(&self) -> SampleCells {
         assert!(self.is_finished(), "CovarageGridGen is not finished");
@@ -75,7 +86,9 @@ impl CovarageGridGen {
         SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
     pub fn draw(&mut self, camera: &CameraManger) {
-        self.inside_cells.draw(camera);
+        if camera.draw_cells() {
+            self.inside_cells.draw(camera);
+        }
     }
     pub fn get_processed_cells_count(&self) -> usize {
         self.processed_cells_count as usize
