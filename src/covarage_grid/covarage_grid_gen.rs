@@ -1,6 +1,7 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use glam::IVec2;
 use std::{sync::mpsc, thread, time::Instant};
+use speedy2d::Graphics2D;
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
@@ -85,9 +86,9 @@ impl CovarageGridGen {
         sorterd_saved_cells.sort_unstable_by_key(|b| std::cmp::Reverse(b.get_highest_iteration()));
         SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
-    pub fn draw(&mut self, camera: &CameraManger) {
+    pub fn draw(&mut self, camera: &CameraManger, grapics: &mut Graphics2D) {
         if camera.draw_cells() {
-            self.inside_cells.draw(camera);
+            self.inside_cells.draw(camera, grapics);
         }
     }
     pub fn get_processed_cells_count(&self) -> usize {

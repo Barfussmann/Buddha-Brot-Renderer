@@ -1,8 +1,9 @@
 use super::camera::CameraManger;
 use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
-use macroquad::color::*;
-use macroquad::prelude::{draw_texture, screen_height, screen_width, Image, Texture2D};
+use speedy2d::Graphics2D;
+// use macroquad::color::*;
+// use macroquad::prelude::{draw_texture, screen_height, screen_width, Image, Texture2D};
 use rayon::prelude::*;
 
 pub struct MandelbrotRender {
@@ -10,26 +11,23 @@ pub struct MandelbrotRender {
     height: usize,
     top_left_corner: Vec2,
     view_size: Vec2,
-    pixel_colors: Vec<Color>,
+    pixels: Vec<u8>,
     pixel_cords: (Vec<f64>, Vec<f64>),
-    image: Image,
-    texture: Texture2D,
+    // image: Image,
+    // texture: Texture2D,
 }
 impl MandelbrotRender {
     pub fn new() -> Self {
-        let width = screen_width() as usize;
-        let height = screen_height() as usize;
-        let image = Image::gen_image_color(width as u16, height as u16, WHITE);
+        let width = 1024 as usize;
+        let height = (1024 as f64 * (2.64 / 3.0)) as usize;
 
         Self {
             width,
             height,
             top_left_corner: Vec2::ZERO,
             view_size: Vec2::ZERO,
-            pixel_colors: vec![BLACK; width * height],
+            pixels: vec![0; width * height * 3],
             pixel_cords: (vec![0.; width * height], vec![0.; width * height]),
-            texture: Texture2D::from_image(&image),
-            image,
         }
     }
     fn calculate_pixel_cords(&mut self) {
@@ -44,8 +42,8 @@ impl MandelbrotRender {
         }
     }
     pub fn update_pixels(&mut self) {
-        self.pixel_colors
-            .array_chunks_mut::<4>()
+        self.pixels
+            .array_chunks_mut::<12>()
             .zip(
                 self.pixel_cords
                     .0
@@ -62,21 +60,30 @@ impl MandelbrotRender {
         self.view_size = view_size;
         self.calculate_pixel_cords();
         self.update_pixels();
-        self.image.update(&self.pixel_colors);
-        self.texture.update(&self.image);
+        // self.image.update(&self.pixels);
+        // self.texture.update(&self.image);
     }
-    pub fn draw(&mut self, camera: &CameraManger) {
+    pub fn draw(&mut self, camera: &CameraManger, graphics: &mut Graphics2D) {
         if camera.had_change() {
             self.set_camera_rect(camera.get_view_rect())
         }
-        draw_texture(self.texture, 0., 0., Color::new(1., 1., 1., 1.));
+        let image = graphics.create_image_from_raw_pixels(
+            speedy2d::image::ImageDataType::RGB,
+            speedy2d::image::ImageSmoothingMode::NearestNeighbor,
+            (self.width as u32, self.height as u32),
+            &self.pixels,
+        ).unwrap();
+        graphics.draw_image((0., 0.), &image);
+        // draw_texture(self.texture, 0., 0., Color::new(1., 1., 1., 1.));
     }
 }
-fn iterations_to_color(iterations: [i64; 4]) -> [Color; 4] {
-    let mut colors = [BLACK; 4];
+fn iterations_to_color(iterations: [i64; 4]) -> [u8; 12] {
+    let mut colors = [0; 12];
     for i in 0..4 {
         let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u8;
-        colors[i] = Color::from_rgba(color_value, color_value, color_value, 255);
+        colors[i * 3] = color_value;
+        colors[i * 3 + 1] = color_value;
+        colors[i * 3 + 2] = color_value;
     }
     colors
 }

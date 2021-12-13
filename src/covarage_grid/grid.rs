@@ -2,6 +2,7 @@ use super::{camera::*, cell::*};
 use glam::dvec2;
 use macroquad::color::Color;
 use std::collections::HashSet;
+use speedy2d::Graphics2D;
 
 #[derive(Clone, Debug)]
 pub struct Grid {
@@ -24,7 +25,7 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&mut self, camera: &CameraManger) {
+    pub fn draw(&mut self, camera: &CameraManger, graphics: &mut Graphics2D) {
         if self.cells_for_drawing.is_none() {
             self.init_cell_for_drawing();
         }
@@ -45,9 +46,9 @@ impl Grid {
                 let mut corner = first_cell_in_block.get_corner(self.grid_size);
                 let x_height = last_cell.get_corner(self.grid_size).x - corner.x + side_length;
 
-                camera.draw_rect(corner, dvec2(x_height, side_length), color);
+                camera.draw_rect(corner, dvec2(x_height, side_length), graphics);
                 corner.y *= -1.;
-                camera.draw_rect(corner, dvec2(x_height, -side_length), color);
+                camera.draw_rect(corner, dvec2(x_height, -side_length), graphics);
                 first_cell_in_block = *cell;
             }
             last_cell = *cell;
