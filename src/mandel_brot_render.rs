@@ -2,8 +2,6 @@ use super::camera::CameraManger;
 use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use speedy2d::Graphics2D;
-// use macroquad::color::*;
-// use macroquad::prelude::{draw_texture, screen_height, screen_width, Image, Texture2D};
 use rayon::prelude::*;
 
 pub struct MandelbrotRender {
@@ -13,8 +11,6 @@ pub struct MandelbrotRender {
     view_size: Vec2,
     pixels: Vec<u8>,
     pixel_cords: (Vec<f64>, Vec<f64>),
-    // image: Image,
-    // texture: Texture2D,
 }
 impl MandelbrotRender {
     pub fn new() -> Self {
@@ -41,7 +37,7 @@ impl MandelbrotRender {
             }
         }
     }
-    pub fn update_pixels(&mut self) {
+    fn update_pixels(&mut self) {
         self.pixels
             .array_chunks_mut::<12>()
             .zip(
@@ -55,13 +51,11 @@ impl MandelbrotRender {
                 *pixel_colors = iterations_to_color(iterat_points(*x, *y, 256).to_array());
             });
     }
-    pub fn set_camera_rect(&mut self, (top_left_corner, view_size): (Vec2, Vec2)) {
+    fn set_camera_rect(&mut self, (top_left_corner, view_size): (Vec2, Vec2)) {
         self.top_left_corner = top_left_corner;
         self.view_size = view_size;
         self.calculate_pixel_cords();
         self.update_pixels();
-        // self.image.update(&self.pixels);
-        // self.texture.update(&self.image);
     }
     pub fn draw(&mut self, camera: &CameraManger, graphics: &mut Graphics2D) {
         if camera.had_change() {
@@ -74,7 +68,6 @@ impl MandelbrotRender {
             &self.pixels,
         ).unwrap();
         graphics.draw_image((0., 0.), &image);
-        // draw_texture(self.texture, 0., 0., Color::new(1., 1., 1., 1.));
     }
 }
 fn iterations_to_color(iterations: [i64; 4]) -> [u8; 12] {
