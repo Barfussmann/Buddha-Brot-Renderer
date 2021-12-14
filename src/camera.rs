@@ -5,7 +5,7 @@ use speedy2d::*;
 
 use super::{WIDTH, HEIGHT};
 
-pub struct CameraManger<T: Updateable> {
+pub struct CameraManger {
     top_left_corner: DVec2,
     view_size: DVec2,
     mouse_poss_at_middle_click: Option<DVec2>,
@@ -14,11 +14,11 @@ pub struct CameraManger<T: Updateable> {
     mouse_pos: DVec2,
     zoom_delta: f64,
     mandel_background: Option<MandelbrotRender>,
-    generator: T,
+    generator: Box<dyn Updateable>,
 }
 
-impl<T: Updateable> CameraManger<T> {
-    pub fn new(mandel_render: bool, generator: T) -> Self {
+impl CameraManger {
+    pub fn new(mandel_render: bool, generator: Box<dyn Updateable>) -> Self {
         Self {
             top_left_corner: dvec2(-2.0, -1.32),
             view_size: dvec2(3.0, 2.64),
@@ -31,8 +31,8 @@ impl<T: Updateable> CameraManger<T> {
             generator,
         }
     }
-    pub fn new_only_mandel_render() -> CameraManger<Dummy> {
-        CameraManger::new(true, Dummy {})
+    pub fn new_only_mandel_render() -> CameraManger {
+        CameraManger::new(true, Box::new(Dummy {}))
     }
     fn zoom(&mut self, zoom: f64) {
         if zoom == 1.0 {
@@ -73,8 +73,8 @@ impl<T: Updateable> CameraManger<T> {
 }
 
 #[allow(unused_variables)]
-impl<T: Updateable> WindowHandler for CameraManger<T> {
-    fn on_draw(&mut self, helper: &mut WindowHelper<()>, graphics: &mut Graphics2D) {
+impl WindowHandler for CameraManger {
+    fn on_draw(&mut self, helper: &mut WindowHelper, graphics: &mut Graphics2D) {
         self.update();
 
         let mandel_renderer = std::mem::replace(&mut self.mandel_background, None);

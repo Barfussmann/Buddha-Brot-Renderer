@@ -42,7 +42,7 @@ impl CovarageGrid {
         CovarageGrid { cells, size }
     }
     pub fn gen_sample_cells(size: usize, limit: usize, samples_per_cell: usize) -> SampleCells {
-        let camera = CameraManger::new(true, CovarageGridGen::new(limit, samples_per_cell, size));
+        let camera = CameraManger::new(true, Box::new(CovarageGridGen::new(limit, samples_per_cell, size)));
         let window = Window::new_centered("Mandelbrot", (WIDTH as u32, HEIGHT as u32)).unwrap();
         window.run_loop(camera);
     }
