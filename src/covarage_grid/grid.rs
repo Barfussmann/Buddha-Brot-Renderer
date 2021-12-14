@@ -1,8 +1,6 @@
 use super::{camera::*, cell::*};
 use glam::dvec2;
-use macroquad::color::Color;
 use std::collections::HashSet;
-use speedy2d::Graphics2D;
 
 #[derive(Clone, Debug)]
 pub struct Grid {
@@ -25,7 +23,7 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&mut self, camera: &CameraManger, graphics: &mut Graphics2D) {
+    pub fn draw(&mut self, rect_drawer: &mut RectDrawer) {
         if self.cells_for_drawing.is_none() {
             self.init_cell_for_drawing();
         }
@@ -39,16 +37,15 @@ impl Grid {
         let mut first_cell_in_block = Cell::dummy();
         let mut prev_index = 0;
         let side_length = Cell::side_length(self.grid_size);
-        let color = Color::new(0., 1., 0., 0.5);
         let mut last_cell = Cell::dummy();
         for cell in self.cells_for_drawing.as_ref().unwrap().iter().flat_map(|(row, _)| row.iter()) {
             if prev_index + 1 != cell.index(self.grid_size) {
                 let mut corner = first_cell_in_block.get_corner(self.grid_size);
                 let x_height = last_cell.get_corner(self.grid_size).x - corner.x + side_length;
 
-                camera.draw_rect(corner, dvec2(x_height, side_length), graphics);
+                rect_drawer.draw_rect(corner, dvec2(x_height, side_length));
                 corner.y *= -1.;
-                camera.draw_rect(corner, dvec2(x_height, -side_length), graphics);
+                rect_drawer.draw_rect(corner, dvec2(x_height, -side_length));
                 first_cell_in_block = *cell;
             }
             last_cell = *cell;

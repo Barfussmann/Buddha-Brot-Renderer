@@ -1,7 +1,6 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use glam::IVec2;
 use std::{sync::mpsc, thread, time::Instant};
-use speedy2d::Graphics2D;
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
@@ -47,7 +46,7 @@ impl CovarageGridGen {
     pub fn sample_neighbors(&mut self) {
         let start = Instant::now();
         let starting_cell_count = self.processed_cells_count;
-        while start.elapsed().as_millis() < 50 {
+        while start.elapsed().as_millis() < 20 {
             for save_cell in self.cell_that_are_inside.try_iter().take(10_000) {
                 for neighbor in save_cell.get_cell(self.grid_size).get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
@@ -86,15 +85,22 @@ impl CovarageGridGen {
         sorterd_saved_cells.sort_unstable_by_key(|b| std::cmp::Reverse(b.get_highest_iteration()));
         SampleCells::new(sorterd_saved_cells, self.grid_size)
     }
-    pub fn draw(&mut self, camera: &CameraManger, grapics: &mut Graphics2D) {
-        if camera.draw_cells() {
-            self.inside_cells.draw(camera, grapics);
-        }
-    }
     pub fn get_processed_cells_count(&self) -> usize {
         self.processed_cells_count as usize
     }
     pub fn get_cells_per_second(&self) -> f64 {
         self.processed_cells_count as f64 / self.start_time.elapsed().as_secs_f64()
+    }
+}
+
+impl Updateable for CovarageGridGen {
+    fn update(&mut self) {
+        self.sample_neighbors();
+    }
+    fn draw(&mut self, rect_drawer: &mut RectDrawer) {
+        self.inside_cells.draw(rect_drawer);
+    }
+    fn is_finished(&self) -> bool {
+        self.is_finished
     }
 }

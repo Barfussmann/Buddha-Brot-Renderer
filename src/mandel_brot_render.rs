@@ -1,4 +1,3 @@
-use super::camera::CameraManger;
 use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use speedy2d::Graphics2D;
@@ -57,9 +56,9 @@ impl MandelbrotRender {
         self.calculate_pixel_cords();
         self.update_pixels();
     }
-    pub fn draw(&mut self, camera: &CameraManger, graphics: &mut Graphics2D) {
-        if camera.had_change() {
-            self.set_camera_rect(camera.get_view_rect())
+    pub fn draw(&mut self, new_view_rect: Option<(Vec2, Vec2)>, graphics: &mut Graphics2D) {
+        if let Some(view_rect) = new_view_rect {
+            self.set_camera_rect(view_rect);
         }
         let image = graphics.create_image_from_raw_pixels(
             speedy2d::image::ImageDataType::RGB,
