@@ -1,7 +1,6 @@
 use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use rayon::prelude::*;
-use kludgine::core::image::*;
 
 pub struct MandelbrotRender {
     width: usize,
@@ -56,11 +55,9 @@ impl MandelbrotRender {
         self.calculate_pixel_cords();
         self.update_pixels();
     }
-    pub fn to_image(&mut self, new_view_rect: Option<(Vec2, Vec2)>) -> RgbaImage {
-        if let Some(view_rect) = new_view_rect {
-            self.set_camera_rect(view_rect);
-        }
-        RgbaImage::from_raw(self.width as u32, self.height as u32, self.pixels.clone()).unwrap()
+    pub fn get_raw_pixels(&mut self, new_view_rect: (Vec2, Vec2)) -> Vec<u8> {
+        self.set_camera_rect(new_view_rect);
+        self.pixels.clone()
     }
     // pub fn draw(&mut self, new_view_rect: Option<(Vec2, Vec2)>, graphics: &mut Graphics2D) {
     //     if let Some(view_rect) = new_view_rect {

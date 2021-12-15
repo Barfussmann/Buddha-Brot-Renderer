@@ -23,7 +23,7 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&mut self, rect_drawer: &mut RectDrawer) {
+    pub fn draw(&mut self, rect_drawer: &mut Drawer) {
         if self.cells_for_drawing.is_none() {
             self.init_cell_for_drawing();
         }
