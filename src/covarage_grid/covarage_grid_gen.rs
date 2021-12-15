@@ -93,14 +93,14 @@ impl CovarageGridGen {
     }
 }
 
-impl Updateable for CovarageGridGen {
-    fn update(&mut self) {
-        self.sample_neighbors();
-    }
-    fn draw(&mut self, rect_drawer: &mut RectDrawer) {
-        self.inside_cells.draw(rect_drawer);
-    }
-    fn is_finished(&self) -> bool {
-        self.is_finished
-    }
-}
+// impl Updateable for CovarageGridGen {
+//     fn update(&mut self) {
+//         self.sample_neighbors();
+//     }
+//     fn draw(&mut self, rect_drawer: &mut RectDrawer) {
+//         self.inside_cells.draw(rect_drawer);
+//     }
+//     fn is_finished(&self) -> bool {
+//         self.is_finished
+//     }
+// }

@@ -6,7 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macroquad = "0.3.10"
 rand = "0.8.4"
 glam = "0.20.0"
 rayon = "1.5.1"
@@ -14,7 +13,7 @@ core_simd = { git = "https://github.com/rust-lang/portable-simd" }
 spmc = "0.3.0"
 serde = { version = "1.0.130",  features = ["derive"] }
 bincode = "1.3.3"
-speedy2d = "1.2.0" 
+kludgine = "0.1.0-dev.6"
 
 [profile.dev]
 opt-level = 3

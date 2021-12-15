@@ -10,7 +10,6 @@ use super::{WIDTH, HEIGHT};
 use super::camera;
 use super::camera::*;
 use super::mandel_iter;
-use speedy2d::Window;
 
 use covarage_grid_gen::CovarageGridGen;
 use sample_cells::*;
@@ -42,15 +41,16 @@ impl CovarageGrid {
         CovarageGrid { cells, size }
     }
     pub fn gen_sample_cells(size: usize, limit: usize, samples_per_cell: usize) -> SampleCells {
-        let camera = CameraManger::new(true, Box::new(CovarageGridGen::new(limit, samples_per_cell, size)));
-        let window = Window::new_centered("Mandelbrot", (WIDTH as u32, HEIGHT as u32)).unwrap();
-        window.run_loop(camera);
+        // let camera = CameraManger::new(true, Box::new(CovarageGridGen::new(limit, samples_per_cell, size)));
+        // let window = Window::new_centered("Mandelbrot", (WIDTH as u32, HEIGHT as u32)).unwrap();
+        // window.run_loop(camera);
+        todo!()
     }
-    pub fn draw(&self, rect_drawer: &mut RectDrawer) {
-        for cell in self.cells.iter() {
-            cell.draw(self.size, rect_drawer);
-        }
-    }
+    // pub fn draw(&self, rect_drawer: &mut RectDrawer) {
+    //     for cell in self.cells.iter() {
+    //         cell.draw(self.size, rect_drawer);
+    //     }
+    // }
     fn get_file_name(size: usize, limit: usize, samples_per_cell: usize) -> String {
         format!(
             "./gridsize: {}, limit: {}, samples_per_cells: {}.cells",

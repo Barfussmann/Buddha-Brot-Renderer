@@ -1,7 +1,7 @@
 use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
-use speedy2d::Graphics2D;
 use rayon::prelude::*;
+use kludgine::core::image::*;
 
 pub struct MandelbrotRender {
     width: usize,
@@ -21,7 +21,7 @@ impl MandelbrotRender {
             height,
             top_left_corner: Vec2::ZERO,
             view_size: Vec2::ZERO,
-            pixels: vec![0; width * height * 3],
+            pixels: vec![0; width * height * 4],
             pixel_cords: (vec![0.; width * height], vec![0.; width * height]),
         }
     }
@@ -38,7 +38,7 @@ impl MandelbrotRender {
     }
     fn update_pixels(&mut self) {
         self.pixels
-            .array_chunks_mut::<12>()
+            .array_chunks_mut::<16>()
             .zip(
                 self.pixel_cords
                     .0
@@ -56,26 +56,33 @@ impl MandelbrotRender {
         self.calculate_pixel_cords();
         self.update_pixels();
     }
-    pub fn draw(&mut self, new_view_rect: Option<(Vec2, Vec2)>, graphics: &mut Graphics2D) {
+    pub fn to_image(&mut self, new_view_rect: Option<(Vec2, Vec2)>) -> RgbaImage {
         if let Some(view_rect) = new_view_rect {
             self.set_camera_rect(view_rect);
         }
-        let image = graphics.create_image_from_raw_pixels(
-            speedy2d::image::ImageDataType::RGB,
-            speedy2d::image::ImageSmoothingMode::NearestNeighbor,
-            (self.width as u32, self.height as u32),
-            &self.pixels,
-        ).unwrap();
-        graphics.draw_image((0., 0.), &image);
+        RgbaImage::from_raw(self.width as u32, self.height as u32, self.pixels.clone()).unwrap()
     }
+    // pub fn draw(&mut self, new_view_rect: Option<(Vec2, Vec2)>, graphics: &mut Graphics2D) {
+    //     if let Some(view_rect) = new_view_rect {
+    //         self.set_camera_rect(view_rect);
+    //     }
+    //     let image = graphics.create_image_from_raw_pixels(
+    //         speedy2d::image::ImageDataType::RGB,
+    //         speedy2d::image::ImageSmoothingMode::NearestNeighbor,
+    //         (self.width as u32, self.height as u32),
+    //         &self.pixels,
+    //     ).unwrap();
+    //     graphics.draw_image((0., 0.), &image);
+    // }
 }
-fn iterations_to_color(iterations: [i64; 4]) -> [u8; 12] {
-    let mut colors = [0; 12];
+fn iterations_to_color(iterations: [i64; 4]) -> [u8; 16] {
+    let mut colors = [0; 16];
     for i in 0..4 {
         let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u8;
-        colors[i * 3] = color_value;
-        colors[i * 3 + 1] = color_value;
-        colors[i * 3 + 2] = color_value;
+        colors[i * 4] = color_value;
+        colors[i * 4 + 1] = color_value;
+        colors[i * 4 + 2] = color_value;
+        colors[i * 4 + 3] = 255;
     }
     colors
 }

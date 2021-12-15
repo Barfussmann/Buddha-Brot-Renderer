@@ -1,7 +1,6 @@
 use super::mandel_brot_render::MandelbrotRender;
 use glam::{dvec2, DVec2};
-use speedy2d::window::*;
-use speedy2d::*;
+use kludgine::prelude::*;
 
 use super::{WIDTH, HEIGHT};
 
@@ -14,11 +13,11 @@ pub struct CameraManger {
     mouse_pos: DVec2,
     zoom_delta: f64,
     mandel_background: Option<MandelbrotRender>,
-    generator: Box<dyn Updateable>,
+    // generator: Box<dyn Updateable>,
 }
 
 impl CameraManger {
-    pub fn new(mandel_render: bool, generator: Box<dyn Updateable>) -> Self {
+    pub fn new(mandel_render: bool) -> Self {
         Self {
             top_left_corner: dvec2(-2.0, -1.32),
             view_size: dvec2(3.0, 2.64),
@@ -28,11 +27,8 @@ impl CameraManger {
             mouse_pos: DVec2::ZERO,
             zoom_delta: 1.0,
             mandel_background: mandel_render.then(|| MandelbrotRender::new()),
-            generator,
+            // generator,
         }
-    }
-    pub fn new_only_mandel_render() -> CameraManger {
-        CameraManger::new(true, Box::new(Dummy {}))
     }
     fn zoom(&mut self, zoom: f64) {
         if zoom == 1.0 {
@@ -72,104 +68,156 @@ impl CameraManger {
     }
 }
 
-#[allow(unused_variables)]
-impl WindowHandler for CameraManger {
-    fn on_draw(&mut self, helper: &mut WindowHelper, graphics: &mut Graphics2D) {
-        self.update();
+impl Window for CameraManger {
 
-        let mandel_renderer = std::mem::replace(&mut self.mandel_background, None);
-        if let Some(mut mandel_renderer) = mandel_renderer {
-            mandel_renderer.draw(self.had_change.then(|| self.get_view_rect()), graphics);
-            self.mandel_background = Some(mandel_renderer);
-        }
-        self.had_change = false;
-        self.generator.update();
-        self.generator.draw(&mut RectDrawer::new(
-            self.top_left_corner,
-            self.view_size,
-            graphics,
-        ));
-        if !self.generator.is_finished() {
-            helper.request_redraw();
-            // helper.terminate_loop();
-        }
-    }
-    fn on_mouse_move(&mut self, helper: &mut WindowHelper<()>, position: dimen::Vector2<f32>) {
-        self.mouse_pos = dvec2(position.x as f64, position.y as f64);
-        self.update_drag();
-    }
-    fn on_mouse_button_down(&mut self, helper: &mut WindowHelper<()>, button: MouseButton) {
-        match button {
-            MouseButton::Left => self.zoom_delta = 1.1,
-            MouseButton::Middle => self.mouse_poss_at_middle_click = Some(self.get_mouse_pos()),
-            MouseButton::Right => self.zoom_delta = 0.9,
-            MouseButton::Other(_) => {}
-        }
-    }
-    fn on_mouse_button_up(&mut self, helper: &mut WindowHelper<()>, button: MouseButton) {
-        match button {
-            MouseButton::Left => self.zoom_delta = 1.0,
-            MouseButton::Middle => self.mouse_poss_at_middle_click = None,
-            MouseButton::Right => self.zoom_delta = 1.0,
-            MouseButton::Other(_) => {}
-        }
-    }
-    fn on_key_down(
+    // fn process_input(
+    //     &mut self,
+    //     _input: InputEvent,
+    //     _status: &mut RedrawStatus,
+    //     _scene: &Target,
+    //     _window: WindowHandle,
+    // ) -> kludgine::app::Result<()>
+    // where
+    //     Self: Sized,
+    // {
+    //     Ok(())
+    // }
+
+    fn render(
         &mut self,
-        helper: &mut WindowHelper<()>,
-        virtual_key_code: Option<window::VirtualKeyCode>,
-        scancode: KeyScancode,
-    ) {
-        if virtual_key_code == Some(window::VirtualKeyCode::Space) {
-            self.top_left_corner = dvec2(-2.0, -1.32);
-            self.view_size = dvec2(3.0, 2.64);
-            self.had_change = true;
+        scene: &Target,
+        status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::app::Result<()> {
+        let view_rect = Some(self.get_view_rect());
+        if let Some(manedel_backgroud) = self.mandel_background.as_mut() {
+            let image =  manedel_backgroud.to_image(view_rect);
+            let text = Texture::new(std::sync::Arc::new(image));
+            let sprite = SpriteSource::entire_texture(text);
+            // Exten
+
+            let rect = Rect::<f32, Pixels>::new(Point::new(0., 0.), Size::new(WIDTH as f32, HEIGHT as f32));
+            sprite.render_raw_with_alpha_in_box(scene, rect.as_extents(), SpriteRotation::none(), 1.);
         }
-        if virtual_key_code == Some(window::VirtualKeyCode::X) {
-            self.draw_cells = !self.draw_cells;
-        }
+        Ok(())
+    }
+
+    // fn update(
+    //     &mut self,
+    //     scene: &Target,
+    //     status: &mut RedrawStatus,
+    //     _window: WindowHandle,
+    // ) -> kludgine::app::Result<()>
+    // where
+    //     Self: Sized,
+    // {
+    //     Ok(())
+    // }
+}
+
+impl WindowCreator for CameraManger {
+    fn window_title(&self) -> String {
+        "Mandelbrot".to_string()
     }
 }
 
-pub struct RectDrawer<'a> {
+
+// #[allow(unused_variables)]
+// impl WindowHandler for CameraManger {
+//     fn on_draw(&mut self, helper: &mut WindowHelper, graphics: &mut Graphics2D) {
+//         self.update();
+
+//         let mandel_renderer = std::mem::replace(&mut self.mandel_background, None);
+//         if let Some(mut mandel_renderer) = mandel_renderer {
+//             mandel_renderer.draw(self.had_change.then(|| self.get_view_rect()), graphics);
+//             self.mandel_background = Some(mandel_renderer);
+//         }
+//         self.had_change = false;
+//         self.generator.update();
+//         self.generator.draw(&mut RectDrawer::new(
+//             self.top_left_corner,
+//             self.view_size,
+//             graphics,
+//         ));
+//         helper.request_redraw();
+//         if !self.generator.is_finished() {
+//             helper.terminate_loop();
+//         }
+//     }
+//     fn on_mouse_move(&mut self, helper: &mut WindowHelper<()>, position: dimen::Vector2<f32>) {
+//         self.mouse_pos = dvec2(position.x as f64, position.y as f64);
+//         self.update_drag();
+//     }
+//     fn on_mouse_button_down(&mut self, helper: &mut WindowHelper<()>, button: MouseButton) {
+//         match button {
+//             MouseButton::Left => self.zoom_delta = 1.1,
+//             MouseButton::Middle => self.mouse_poss_at_middle_click = Some(self.get_mouse_pos()),
+//             MouseButton::Right => self.zoom_delta = 0.9,
+//             MouseButton::Other(_) => {}
+//         }
+//     }
+//     fn on_mouse_button_up(&mut self, helper: &mut WindowHelper<()>, button: MouseButton) {
+//         match button {
+//             MouseButton::Left => self.zoom_delta = 1.0,
+//             MouseButton::Middle => self.mouse_poss_at_middle_click = None,
+//             MouseButton::Right => self.zoom_delta = 1.0,
+//             MouseButton::Other(_) => {}
+//         }
+//     }
+//     fn on_key_down(
+//         &mut self,
+//         helper: &mut WindowHelper<()>,
+//         virtual_key_code: Option<window::VirtualKeyCode>,
+//         scancode: KeyScancode,
+//     ) {
+//         if virtual_key_code == Some(window::VirtualKeyCode::Space) {
+//             self.top_left_corner = dvec2(-2.0, -1.32);
+//             self.view_size = dvec2(3.0, 2.64);
+//             self.had_change = true;
+//         }multiwindow
+//         if virtual_key_code == Some(window::VirtualKeyCode::X) {
+//             self.draw_cells = !self.draw_cells;
+//         }
+//     }
+// }
+
+pub struct RectDrawer {
     top_left_corner: DVec2,
     view_size: DVec2,
-    graphics: &'a mut Graphics2D,
 }
-impl<'a> RectDrawer<'a> {
-    fn new(top_left_corner: DVec2, view_size: DVec2, graphics: &'a mut Graphics2D) -> Self {
+impl RectDrawer {
+    fn new(top_left_corner: DVec2, view_size: DVec2) -> Self {
         RectDrawer {
             top_left_corner,
             view_size,
-            graphics,
         }
     }
     pub fn draw_rect(&mut self, corner: DVec2, size: DVec2) {
-        let corner = (corner - self.top_left_corner) / self.view_size;
-        let size = size / self.view_size;
-        let screen_mult = dvec2(WIDTH as f64, HEIGHT as f64);
-        let screen_corner = dvec2(corner.x, corner.y) * screen_mult;
-        let screen_size = dvec2(size.x, size.y) * screen_mult;
+        // let corner = (corner - self.top_left_corner) / self.view_size;
+        // let size = size / self.view_size;
+        // let screen_mult = dvec2(WIDTH as f64, HEIGHT as f64);
+        // let screen_corner = dvec2(corner.x, corner.y) * screen_mult;
+        // let screen_size = dvec2(size.x, size.y) * screen_mult;
 
-        let bottom_right = screen_corner + screen_size;
-        let top_left = dimen::Vector2::new(screen_corner.x as f32, screen_corner.y as f32);
+        // let bottom_right = screen_corner + screen_size;
+        // let top_left = dimen::Vector2::new(screen_corner.x as f32, screen_corner.y as f32);
 
-        let bottom_right = dimen::Vector2::new(bottom_right.x as f32, bottom_right.y as f32);
-        let rect = shape::Rectangle::new(top_left, bottom_right);
-        self.graphics.draw_rectangle(rect, color::Color::GREEN);
+        // let bottom_right = dimen::Vector2::new(bottom_right.x as f32, bottom_right.y as f32);
+        // let rect = shape::Rectangle::new(top_left, bottom_right);
+        // self.graphics.draw_rectangle(rect, color::Color::GREEN);
     }
 }
 
-pub trait Updateable {
-    fn update(&mut self);
-    fn draw(&mut self, rect_drawer: &mut RectDrawer);
-    fn is_finished(&self) -> bool;
-}
-pub struct Dummy;
-impl Updateable for Dummy {
-    fn draw(&mut self, _rect_drawer: &mut RectDrawer) {}
-    fn update(&mut self) {}
-    fn is_finished(&self) -> bool {
-        false
-    }
-}
+// pub trait Updateable {
+//     fn update(&mut self);
+//     fn draw(&mut self, rect_drawer: &mut RectDrawer);
+//     fn is_finished(&self) -> bool;
+// }
+// pub struct Dummy;
+// impl Updateable for Dummy {
+//     fn draw(&mut self, _rect_drawer: &mut RectDrawer) {}
+//     fn update(&mut self) {}
+//     fn is_finished(&self) -> bool {
+//         false
+//     }
+// }
