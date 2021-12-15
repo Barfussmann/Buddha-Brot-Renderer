@@ -23,7 +23,7 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&mut self, rect_drawer: &mut Drawer) {
+    pub fn draw(&mut self, drawer:& Drawer) {
         if self.cells_for_drawing.is_none() {
             self.init_cell_for_drawing();
         }
@@ -43,9 +43,9 @@ impl Grid {
                 let mut corner = first_cell_in_block.get_corner(self.grid_size);
                 let x_height = last_cell.get_corner(self.grid_size).x - corner.x + side_length;
 
-                rect_drawer.draw_rect(corner, dvec2(x_height, side_length));
+                drawer.draw_rect(corner, dvec2(x_height, side_length));
                 corner.y *= -1.;
-                rect_drawer.draw_rect(corner, dvec2(x_height, -side_length));
+                drawer.draw_rect(corner, dvec2(x_height, -side_length));
                 first_cell_in_block = *cell;
             }
             last_cell = *cell;

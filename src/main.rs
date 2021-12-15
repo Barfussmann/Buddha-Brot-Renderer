@@ -14,7 +14,7 @@ mod covarage_grid;
 mod mandel_brot_render;
 mod mandel_iter;
 
-use covarage_grid::CovarageGrid;
+use covarage_grid::covarage_grid_gen::CovarageGridGen;
 use kludgine::prelude::*;
 
 const SIZE: usize = 1024;
@@ -22,6 +22,7 @@ pub const WIDTH: usize = SIZE;
 pub const HEIGHT: usize = (SIZE as f64 * (2.64 / 3.0)) as usize;
 
 fn main() {
-    let test = camera::CameraManger::new(true);
-    SingleWindowApplication::run(test);
+    let covarage_grid = CovarageGridGen::new(30, 10_000, 10_000);
+    let camera = camera::CameraManger::new(true, covarage_grid);
+    SingleWindowApplication::run(camera);
 }

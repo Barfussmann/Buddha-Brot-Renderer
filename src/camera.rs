@@ -1,24 +1,28 @@
+use std::sync::{Arc, Mutex};
+
 use super::mandel_brot_render::MandelbrotRender;
 use glam::{dvec2, DVec2};
-use kludgine::prelude::*;
 use kludgine::core::easygpu::figures::SizedRect;
 use kludgine::core::image::RgbaImage;
-
+use kludgine::prelude::*;
 
 use super::{HEIGHT, WIDTH};
 
-pub struct CameraManger {
+pub struct CameraManger<T: Updateable> {
     top_left_corner: DVec2,
     view_size: DVec2,
     mouse_poss_at_click: Option<DVec2>,
     mouse_pos: DVec2,
     mandel_background: Option<MandelbrotRender>,
     redraw_requester: Option<RedrawRequester>,
-    // generator: Box<dyn Updateable>,
+    generator: T,
 }
 
-impl CameraManger {
-    pub fn new(mandel_render: bool) -> Self {
+impl<T> CameraManger<T>
+where
+    T: Updateable + Sync + Send + 'static,
+{
+    pub fn new(mandel_render: bool, generator: T) -> CameraManger<T> {
         Self {
             top_left_corner: dvec2(-2.0, -1.32),
             view_size: dvec2(3.0, 2.64),
@@ -26,7 +30,7 @@ impl CameraManger {
             mouse_pos: DVec2::ZERO,
             mandel_background: mandel_render.then(|| MandelbrotRender::new()),
             redraw_requester: None,
-            // generator,
+            generator,
         }
     }
     fn zoom(&mut self, zoom: f64) {
@@ -63,7 +67,10 @@ impl CameraManger {
     }
 }
 
-impl Window for CameraManger {
+impl<T> Window for CameraManger<T>
+where
+    T: Updateable + Sync + Send + 'static,
+{
     fn initialize(
         &mut self,
         _scene: &Target,
@@ -76,7 +83,6 @@ impl Window for CameraManger {
         self.redraw_requester = Some(redrawer);
         Ok(())
     }
-
     fn process_input(
         &mut self,
         input: InputEvent,
@@ -96,11 +102,9 @@ impl Window for CameraManger {
                 Some(VirtualKeyCode::Space) => self.reset_zoom(),
                 _ => (),
             },
-            Event::MouseButton { state, .. } => {
-                match state {
-                    ElementState::Pressed => self.mouse_poss_at_click = Some(self.get_mouse_pos()),
-                    ElementState::Released => self.mouse_poss_at_click = None,
-                }
+            Event::MouseButton { state, .. } => match state {
+                ElementState::Pressed => self.mouse_poss_at_click = Some(self.get_mouse_pos()),
+                ElementState::Released => self.mouse_poss_at_click = None,
             },
             Event::MouseMoved { position } => {
                 if let Some(position) = position {
@@ -115,22 +119,41 @@ impl Window for CameraManger {
         }
         Ok(())
     }
+
     fn render(
         &mut self,
         scene: &Target,
         status: &mut RedrawStatus,
         _window: WindowHandle,
     ) -> kludgine::app::Result<()> {
+        let drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
+
         let view_rect = self.get_view_rect();
         if let Some(manedel_backgroud) = self.mandel_background.as_mut() {
-            let drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
             drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect));
         }
+        self.generator.draw(&drawer);
+        Ok(())
+    }
+    fn update(
+        &mut self,
+        scene: &Target,
+        status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::app::Result<()>
+    where
+        Self: Sized,
+    {
+        self.generator.update();
+        status.set_needs_redraw();
         Ok(())
     }
 }
 
-impl WindowCreator for CameraManger {
+impl<T> WindowCreator for CameraManger<T>
+where
+    T: Updateable + Sync + Send + 'static,
+{
     fn window_title(&self) -> String {
         "Mandelbrot".to_string()
     }
@@ -138,7 +161,6 @@ impl WindowCreator for CameraManger {
         Size::new(WIDTH as u32, HEIGHT as u32)
     }
 }
-
 
 pub struct Drawer<'a> {
     top_left_corner: DVec2,
@@ -155,20 +177,17 @@ impl<'a> Drawer<'a> {
     }
     pub fn draw_raw_pixels(&self, rgba_pixels: Vec<u8>) {
         let image = RgbaImage::from_raw(WIDTH as u32, HEIGHT as u32, rgba_pixels).unwrap();
-        let texture = Texture::new(std::sync::Arc::new(image));
+        let texture = Texture::new(Arc::new(image));
         let sprite = SpriteSource::entire_texture(texture);
 
-        let rect = Rect::<f32, Pixels>::new(
-            Point::new(0., 0.),
-            Size::new(WIDTH as f32, HEIGHT as f32),
-        );
+        let rect =
+            Rect::<f32, Pixels>::new(Point::new(0., 0.), Size::new(WIDTH as f32, HEIGHT as f32));
         sprite.render_raw_with_alpha_in_box(
             &self.scene,
             rect.as_extents(),
             SpriteRotation::none(),
             1.,
         );
-
     }
     pub fn draw_rect(&self, corner: DVec2, size: DVec2) {
         let corner = (corner - self.top_left_corner) / self.view_size;
@@ -177,50 +196,18 @@ impl<'a> Drawer<'a> {
         let screen_corner = dvec2(corner.x, corner.y) * screen_mult;
         let screen_size = dvec2(size.x, size.y) * screen_mult;
 
-
         let rect: SizedRect<_, Pixels> = Rect::new(
             Point::new(screen_corner.x as f32, screen_corner.y as f32),
             Size::new(screen_size.x as f32, screen_size.y as f32),
         );
 
-        let rect = Shape::rect(rect);
+        let rect = Shape::rect(rect).fill(Fill::new(Color::GREEN));
         rect.render(&self.scene);
     }
 }
 
-// #[allow(unused_variables)]
-// impl WindowHandler for CameraManger {
-//     fn on_draw(&mut self, helper: &mut WindowHelper, graphics: &mut Graphics2D) {
-//         self.update();
-
-//         let mandel_renderer = std::mem::replace(&mut self.mandel_background, None);
-//         if let Some(mut mandel_renderer) = mandel_renderer {
-//             mandel_renderer.draw(self.had_change.then(|| self.get_view_rect()), graphics);
-//             self.mandel_background = Some(mandel_renderer);
-//         }
-//         self.had_change = false;
-//         self.generator.update();
-//         self.generator.draw(&mut RectDrawer::new(
-//             self.top_left_corner,
-//             self.view_size,
-//             graphics,
-//         ));
-//         helper.request_redraw();
-//         if !self.generator.is_finished() {
-//             helper.terminate_loop();
-//         }
-//     }
-
-// pub trait Updateable {
-//     fn update(&mut self);
-//     fn draw(&mut self, rect_drawer: &mut RectDrawer);
-//     fn is_finished(&self) -> bool;
-// }
-// pub struct Dummy;
-// impl Updateable for Dummy {
-//     fn draw(&mut self, _rect_drawer: &mut RectDrawer) {}
-//     fn update(&mut self) {}
-//     fn is_finished(&self) -> bool {
-//         false
-//     }
-// }
+pub trait Updateable {
+    fn update(&mut self);
+    fn draw(&mut self, drawer: &Drawer);
+    fn is_finished(&self) -> bool;
+}

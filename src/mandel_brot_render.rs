@@ -50,27 +50,17 @@ impl MandelbrotRender {
             });
     }
     fn set_camera_rect(&mut self, (top_left_corner, view_size): (Vec2, Vec2)) {
-        self.top_left_corner = top_left_corner;
-        self.view_size = view_size;
-        self.calculate_pixel_cords();
-        self.update_pixels();
+        if (top_left_corner, view_size) != (self.top_left_corner, self.view_size) {
+            self.top_left_corner = top_left_corner;
+            self.view_size = view_size;
+            self.calculate_pixel_cords();
+            self.update_pixels();
+        }
     }
     pub fn get_raw_pixels(&mut self, new_view_rect: (Vec2, Vec2)) -> Vec<u8> {
         self.set_camera_rect(new_view_rect);
         self.pixels.clone()
     }
-    // pub fn draw(&mut self, new_view_rect: Option<(Vec2, Vec2)>, graphics: &mut Graphics2D) {
-    //     if let Some(view_rect) = new_view_rect {
-    //         self.set_camera_rect(view_rect);
-    //     }
-    //     let image = graphics.create_image_from_raw_pixels(
-    //         speedy2d::image::ImageDataType::RGB,
-    //         speedy2d::image::ImageSmoothingMode::NearestNeighbor,
-    //         (self.width as u32, self.height as u32),
-    //         &self.pixels,
-    //     ).unwrap();
-    //     graphics.draw_image((0., 0.), &image);
-    // }
 }
 fn iterations_to_color(iterations: [i64; 4]) -> [u8; 16] {
     let mut colors = [0; 16];

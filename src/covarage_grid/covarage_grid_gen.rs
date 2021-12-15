@@ -1,12 +1,12 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use glam::IVec2;
-use std::{sync::mpsc, thread, time::Instant};
+use std::{sync::{mpsc, Mutex}, thread, time::Instant};
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
     grid_size: usize,
-    cell_to_sample: spmc::Sender<Cell>,
-    cell_that_are_inside: mpsc::Receiver<SampledCell>,
+    cell_to_sample: Mutex<spmc::Sender<Cell>>,
+    cell_that_are_inside: Mutex<mpsc::Receiver<SampledCell>>,
     processed_cells_count: i64,
     saved_cells: Vec<SampledCell>,
     start_time: Instant,
@@ -34,8 +34,8 @@ impl CovarageGridGen {
         CovarageGridGen {
             inside_cells: Grid::new(grid_size),
             grid_size,
-            cell_to_sample: cell_to_sample_sender,
-            cell_that_are_inside: cell_that_are_inside_receiver,
+            cell_to_sample: Mutex::new(cell_to_sample_sender),
+            cell_that_are_inside: Mutex::new(cell_that_are_inside_receiver),
             processed_cells_count: 0,
             saved_cells: Vec::new(),
             start_time: Instant::now(),
@@ -47,13 +47,14 @@ impl CovarageGridGen {
         let start = Instant::now();
         let starting_cell_count = self.processed_cells_count;
         while start.elapsed().as_millis() < 20 {
-            for save_cell in self.cell_that_are_inside.try_iter().take(10_000) {
+            // let test = self.cell_that_are_inside.lock().unwrap().try_iter();
+            for save_cell in self.cell_that_are_inside.lock().unwrap().try_iter().take(10_000) {
                 for neighbor in save_cell.get_cell(self.grid_size).get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
                         continue;
                     }
                     self.processed_cells_count += 1;
-                    self.cell_to_sample.send(neighbor).unwrap();
+                    self.cell_to_sample.get_mut().unwrap().send(neighbor).unwrap();
                 }
                 self.inside_cells.insert(save_cell.get_cell(self.grid_size));
                 self.saved_cells.push(save_cell);
@@ -93,14 +94,14 @@ impl CovarageGridGen {
     }
 }
 
-// impl Updateable for CovarageGridGen {
-//     fn update(&mut self) {
-//         self.sample_neighbors();
-//     }
-//     fn draw(&mut self, rect_drawer: &mut RectDrawer) {
-//         self.inside_cells.draw(rect_drawer);
-//     }
-//     fn is_finished(&self) -> bool {
-//         self.is_finished
-//     }
-// }
+impl Updateable for CovarageGridGen {
+    fn update(&mut self) {
+        self.sample_neighbors();
+    }
+    fn draw(&mut self, drawer: & Drawer) {
+        self.inside_cells.draw(drawer);
+    }
+    fn is_finished(&self) -> bool {
+        self.is_finished
+    }
+}
