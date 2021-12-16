@@ -17,7 +17,6 @@ pub struct CameraManger<T: Updateable> {
     mandel_background: Option<MandelbrotRender>,
     redraw_requester: Option<RedrawRequester>,
     generator: T,
-    shapes: Vec<Shape<Pixels>>,
 }
 
 impl<T> CameraManger<T>
@@ -33,7 +32,6 @@ where
             mandel_background: mandel_render.then(|| MandelbrotRender::new()),
             redraw_requester: None,
             generator,
-            shapes: Vec::new(),
         }
     }
     fn zoom(&mut self, zoom: f64) {
@@ -131,19 +129,8 @@ where
     ) -> kludgine::app::Result<()> {
         let mut drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
         let view_rect = self.get_view_rect();
-        status.set_needs_redraw();
         if let Some(manedel_backgroud) = self.mandel_background.as_mut() {
             drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect));
-        }
-        if !self.shapes.is_empty() {
-            for _ in 0..16_000 {
-                let shape = self.shapes.pop().unwrap();
-                shape.render(scene);
-                if self.shapes.is_empty() {
-                    break;
-                }
-            }
-            return Ok(());
         }
         self.generator.draw(&mut drawer);
         Ok(())
@@ -157,10 +144,8 @@ where
     where
         Self: Sized,
     {
-        if self.shapes.is_empty() {
-            self.generator.update();
-            status.set_needs_redraw();
-        }
+        self.generator.update();
+        status.set_needs_redraw();
         Ok(())
     }
 }
