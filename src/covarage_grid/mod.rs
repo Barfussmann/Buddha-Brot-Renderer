@@ -15,6 +15,7 @@ use covarage_grid_gen::CovarageGridGen;
 use kludgine::prelude::{Runtime, SingleWindowApplication, WindowBuilder};
 use sample_cells::*;
 use std::{fs, path::Path, thread, time::Duration};
+use glam::DVec2;
 
 pub struct CovarageGrid {
     cells: Vec<cell::Cell>,
@@ -66,5 +67,9 @@ impl CovarageGrid {
             "./gridsize: {}, limit: {}, samples_per_cells: {}.cells",
             size, limit, samples_per_cell,
         )
+    }
+    pub fn get_samples(&self, count: usize) -> Vec<DVec2> {
+        let rng = &mut rand::thread_rng();
+        self.cells.iter().cycle().take(count).map(|cell| cell.gen_point_inside(self.size, rng)).collect()
     }
 }

@@ -21,11 +21,16 @@ impl Cell {
     pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> DVec2 {
         let side_length = Cell::side_length(grid_size);
         let corner = self.get_corner(grid_size);
+
         let offset = dvec2(
             rng.gen_range(0. ..side_length),
             rng.gen_range(0. ..side_length),
         );
-        corner + offset
+        let mut point = corner + offset;
+        if rng.gen() {
+            point.y *= -1.0;
+        }
+        point
     }
     pub fn get_neighbors(&self) -> Vec<Cell> {
         vec![

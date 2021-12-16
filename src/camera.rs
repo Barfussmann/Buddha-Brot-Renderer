@@ -169,6 +169,7 @@ pub struct Drawer<'a> {
     view_size: DVec2,
     scene: &'a Target,
     current_rect: usize,
+    sprite: SpriteSource,
 }
 impl<'a> Drawer<'a> {
     fn new(top_left_corner: DVec2, view_size: DVec2, scene: &'a Target) -> Self {
@@ -177,16 +178,20 @@ impl<'a> Drawer<'a> {
             view_size,
             scene,
             current_rect: 0,
+            sprite: SpriteSource::entire_texture(Texture::new(Arc::new(RgbaImage::new(
+                WIDTH as u32,
+                HEIGHT as u32,
+            )))),
         }
     }
-    pub fn draw_raw_pixels(&self, rgba_pixels: Vec<u8>) {
+    pub fn draw_raw_pixels(&mut self, rgba_pixels: Vec<u8>) {
         let image = RgbaImage::from_raw(WIDTH as u32, HEIGHT as u32, rgba_pixels).unwrap();
-        let texture = Texture::new(Arc::new(image));
-        let sprite = SpriteSource::entire_texture(texture);
+        
+        self.sprite.texture.image = Arc::new(image);
 
         let rect =
             Rect::<f32, Pixels>::new(Point::new(0., 0.), Size::new(WIDTH as f32, HEIGHT as f32));
-        sprite.render_raw_with_alpha_in_box(
+        self.sprite.render_raw_with_alpha_in_box(
             self.scene,
             rect.as_extents(),
             SpriteRotation::none(),

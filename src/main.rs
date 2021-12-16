@@ -1,4 +1,4 @@
-// #![allow(dead_code, unused_variables, unused_imports)]
+#![allow(dead_code, unused_variables, unused_imports)]
 #![warn(
     clippy::branches_sharing_code,
     clippy::cognitive_complexity,
@@ -22,7 +22,7 @@ pub const WIDTH: usize = SIZE;
 pub const HEIGHT: usize = (SIZE as f64 * (2.64 / 3.0)) as usize;
 
 fn main() {
-    let test = CovarageGrid::get_covarag_grid(1_000, 30, 1_000, 50);
+    let test = CovarageGrid::get_covarag_grid(10_000, 30, 100_000, 50);
     // let covarage_grid = CovarageGridGen::new(30, 4, 1_000);
     // let camera = camera::CameraManger::new(true, covarage_grid);
     // SingleWindowApplication::run(camera);
