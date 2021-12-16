@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use super::mandel_brot_render::MandelbrotRender;
 use glam::{dvec2, DVec2};
@@ -95,11 +95,7 @@ where
         Self: Sized,
     {
         match input.event {
-            Event::Keyboard {
-                scancode,
-                key,
-                state,
-            } => {
+            Event::Keyboard { key, .. } => {
                 if let Some(VirtualKeyCode::Space) = key {
                     self.reset_zoom()
                 }
@@ -114,7 +110,7 @@ where
                     self.update_drag();
                 }
             }
-            Event::MouseWheel { delta, touch_phase } => {
+            Event::MouseWheel { delta, .. } => {
                 if let MouseScrollDelta::LineDelta(_, y) = delta {
                     self.zoom(1. + y as f64 / 2.)
                 }
@@ -126,7 +122,7 @@ where
     fn render(
         &mut self,
         scene: &Target,
-        status: &mut RedrawStatus,
+        _status: &mut RedrawStatus,
         _window: WindowHandle,
     ) -> kludgine::app::Result<()> {
         let mut drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
@@ -139,7 +135,7 @@ where
     }
     fn update(
         &mut self,
-        scene: &Target,
+        _scene: &Target,
         status: &mut RedrawStatus,
         window: WindowHandle,
     ) -> kludgine::app::Result<()>
@@ -224,7 +220,7 @@ impl<'a> Drawer<'a> {
 
 pub trait Updateable {
     fn update(&mut self) {}
-    fn draw(&mut self, drawer: &mut Drawer) {}
+    fn draw(&mut self, _drawer: &mut Drawer) {}
     fn is_finished(&self) -> bool {
         false
     }

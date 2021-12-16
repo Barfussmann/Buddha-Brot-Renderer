@@ -1,6 +1,5 @@
 use super::{camera::*, cell::*};
 use glam::dvec2;
-use kludgine::prelude::{Pixels, Shape};
 use std::collections::HashSet;
 
 #[derive(Clone, Debug)]

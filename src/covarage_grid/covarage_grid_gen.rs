@@ -1,7 +1,6 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use std::fs;
 use glam::IVec2;
-use kludgine::prelude::{self, Pixels, Shape};
 use std::{
     sync::{mpsc, Mutex},
     thread,
