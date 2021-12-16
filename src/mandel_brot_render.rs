@@ -2,9 +2,9 @@ use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use rayon::prelude::*;
 
+use super::{WIDTH, HEIGHT};
+
 pub struct MandelbrotRender {
-    width: usize,
-    height: usize,
     top_left_corner: Vec2,
     view_size: Vec2,
     pixels: Vec<u8>,
@@ -12,23 +12,18 @@ pub struct MandelbrotRender {
 }
 impl MandelbrotRender {
     pub fn new() -> Self {
-        let width = 1024 as usize;
-        let height = (1024 as f64 * (2.64 / 3.0)) as usize;
-
         Self {
-            width,
-            height,
             top_left_corner: Vec2::ZERO,
             view_size: Vec2::ZERO,
-            pixels: vec![0; width * height * 4],
-            pixel_cords: (vec![0.; width * height], vec![0.; width * height]),
+            pixels: vec![0; WIDTH * HEIGHT * 4],
+            pixel_cords: (vec![0.; WIDTH * HEIGHT], vec![0.; WIDTH * HEIGHT]),
         }
     }
     fn calculate_pixel_cords(&mut self) {
-        let delta_pixel = self.view_size / Vec2::new(self.width as f64, self.height as f64);
-        for x in 0..self.width {
-            for y in 0..self.height {
-                let index = y * self.width + x;
+        let delta_pixel = self.view_size / Vec2::new(WIDTH as f64, HEIGHT as f64);
+        for x in 0..WIDTH {
+            for y in 0..HEIGHT {
+                let index = y * WIDTH + x;
                 let cords = self.top_left_corner + Vec2::new(x as f64, y as f64) * delta_pixel;
                 self.pixel_cords.0[index] = cords.x;
                 self.pixel_cords.1[index] = cords.y;

@@ -77,10 +77,8 @@ impl CovarageGridGen {
         }
         if starting_cell_count != self.processed_cells_count {
             self.last_cell_count_change = Instant::now();
-        } else {
-            if self.last_cell_count_change.elapsed().as_millis() > 500 {
-                self.is_finished = true;
-            }
+        } else if self.last_cell_count_change.elapsed().as_millis() > 500 {
+            self.is_finished = true;
         }
     }
     /// Has to be called before cell are inserted

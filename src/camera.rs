@@ -29,7 +29,7 @@ where
             view_size: dvec2(3.0, 2.64),
             mouse_poss_at_click: None,
             mouse_pos: DVec2::ZERO,
-            mandel_background: mandel_render.then(|| MandelbrotRender::new()),
+            mandel_background: mandel_render.then(MandelbrotRender::new),
             redraw_requester: None,
             generator,
         }
@@ -99,10 +99,11 @@ where
                 scancode,
                 key,
                 state,
-            } => match key {
-                Some(VirtualKeyCode::Space) => self.reset_zoom(),
-                _ => (),
-            },
+            } => {
+                if let Some(VirtualKeyCode::Space) = key {
+                    self.reset_zoom()
+                }
+            }
             Event::MouseButton { state, .. } => match state {
                 ElementState::Pressed => self.mouse_poss_at_click = Some(self.get_mouse_pos()),
                 ElementState::Released => self.mouse_poss_at_click = None,
@@ -113,10 +114,11 @@ where
                     self.update_drag();
                 }
             }
-            Event::MouseWheel { delta, touch_phase } => match delta {
-                MouseScrollDelta::LineDelta(_, y) => self.zoom(1. + y as f64 / 2.),
-                _ => (),
-            },
+            Event::MouseWheel { delta, touch_phase } => {
+                if let MouseScrollDelta::LineDelta(_, y) = delta {
+                    self.zoom(1. + y as f64 / 2.)
+                }
+            }
         }
         Ok(())
     }
@@ -185,7 +187,7 @@ impl<'a> Drawer<'a> {
         let rect =
             Rect::<f32, Pixels>::new(Point::new(0., 0.), Size::new(WIDTH as f32, HEIGHT as f32));
         sprite.render_raw_with_alpha_in_box(
-            &self.scene,
+            self.scene,
             rect.as_extents(),
             SpriteRotation::none(),
             1.,
@@ -211,7 +213,7 @@ impl<'a> Drawer<'a> {
 
         let rect = Shape::rect(rect).fill(Fill::new(Color::GREEN));
 
-        rect.render(&self.scene);
+        rect.render(self.scene);
         true
     }
 }
