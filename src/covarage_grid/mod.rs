@@ -5,7 +5,7 @@ mod sample_cells;
 mod sampled_cell;
 mod worker;
 
-use super::{WIDTH, HEIGHT};
+use super::{HEIGHT, WIDTH};
 
 use super::camera;
 use super::camera::*;

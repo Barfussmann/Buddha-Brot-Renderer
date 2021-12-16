@@ -1,7 +1,6 @@
 use core_simd::*;
 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
 
-
 pub fn iterat_points(x: [f64; 4], y: [f64; 4], max_inarations: usize) -> i64x4 {
     let zero = f64x4::splat(0.0);
     let mut z_x = zero;

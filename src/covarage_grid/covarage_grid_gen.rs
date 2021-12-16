@@ -1,7 +1,11 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use glam::IVec2;
-use kludgine::prelude::{Shape, self, Pixels};
-use std::{sync::{mpsc, Mutex}, thread, time::Instant};
+use kludgine::prelude::{self, Pixels, Shape};
+use std::{
+    sync::{mpsc, Mutex},
+    thread,
+    time::Instant,
+};
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
@@ -49,13 +53,23 @@ impl CovarageGridGen {
         let starting_cell_count = self.processed_cells_count;
         while start.elapsed().as_millis() < 20 {
             // let test = self.cell_that_are_inside.lock().unwrap().try_iter();
-            for save_cell in self.cell_that_are_inside.lock().unwrap().try_iter().take(10_000) {
+            for save_cell in self
+                .cell_that_are_inside
+                .lock()
+                .unwrap()
+                .try_iter()
+                .take(10_000)
+            {
                 for neighbor in save_cell.get_cell(self.grid_size).get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
                         continue;
                     }
                     self.processed_cells_count += 1;
-                    self.cell_to_sample.get_mut().unwrap().send(neighbor).unwrap();
+                    self.cell_to_sample
+                        .get_mut()
+                        .unwrap()
+                        .send(neighbor)
+                        .unwrap();
                 }
                 self.inside_cells.insert(save_cell.get_cell(self.grid_size));
                 self.saved_cells.push(save_cell);
@@ -99,12 +113,11 @@ impl Updateable for CovarageGridGen {
     fn update(&mut self) {
         self.sample_neighbors();
     }
-    
+
     fn draw(&mut self, drawer: &mut Drawer) {
         self.inside_cells.draw(drawer);
     }
     fn is_finished(&self) -> bool {
         self.is_finished
     }
-
 }

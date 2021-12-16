@@ -118,8 +118,5 @@ pub fn quad_test_in_cell(
     let over_limit = iterations.lanes_ge(i64x4::splat(limit as i64));
     let inside = under_max_iterations & over_limit;
     let is_inside = inside.any();
-    (
-        iterations,
-        is_inside,
-    )
+    (iterations, is_inside)
 }
