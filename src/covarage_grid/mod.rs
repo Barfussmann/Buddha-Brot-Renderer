@@ -1,5 +1,5 @@
 pub mod cell;
-pub mod covarage_grid_gen;
+mod covarage_grid_gen;
 mod grid;
 mod sample_cells;
 mod sampled_cell;
@@ -12,8 +12,9 @@ use super::camera::*;
 use super::mandel_iter;
 
 use covarage_grid_gen::CovarageGridGen;
+use kludgine::prelude::{Runtime, SingleWindowApplication, WindowBuilder};
 use sample_cells::*;
-use std::fs;
+use std::{fs, path::Path, thread, time::Duration};
 
 pub struct CovarageGrid {
     cells: Vec<cell::Cell>,
@@ -27,31 +28,40 @@ impl CovarageGrid {
         sample_limit: usize,
     ) -> CovarageGrid {
         let file_name = CovarageGrid::get_file_name(size, limit, samples_per_cell);
-        let sample_cells: SampleCells = if let Ok(sampled_cells_data) = fs::read(file_name.clone())
-        {
-            bincode::deserialize(&sampled_cells_data).unwrap()
-        } else {
-            let sample_cells = CovarageGrid::gen_sample_cells(size, limit, samples_per_cell);
-            let data = bincode::serialize(&sample_cells).unwrap();
-            fs::write(file_name, &data).unwrap();
-            sample_cells
-        };
+        let path = Path::new(&file_name);
+
+        if !path.exists() {
+            CovarageGrid::gen_sample_cells(size, limit, samples_per_cell)
+        }
+        while !path.exists() {
+            thread::sleep(Duration::from_millis(100));
+        }
+
+        let sampled_cells_data = fs::read(path).unwrap();
+        let sample_cells: SampleCells = bincode::deserialize(&sampled_cells_data).unwrap();
+
         let cells = sample_cells.to_cells(sample_limit);
 
         CovarageGrid { cells, size }
     }
-    pub fn gen_sample_cells(size: usize, limit: usize, samples_per_cell: usize) -> SampleCells {
-        // let camera = CameraManger::new(true, Box::new(CovarageGridGen::new(limit, samples_per_cell, size)));
-        // let window = Window::new_centered("Mandelbrot", (WIDTH as u32, HEIGHT as u32)).unwrap();
-        // window.run_loop(camera);
-        todo!()
+    pub fn gen_sample_cells(size: usize, limit: usize, samples_per_cell: usize) {
+        let camera = CameraManger::new(
+            true,
+            CovarageGridGen::new(
+                limit,
+                samples_per_cell,
+                size,
+                CovarageGrid::get_file_name(size, limit, samples_per_cell),
+            ),
+        );
+        let window_builder = WindowBuilder::default()
+            .with_title("Genarating Covarage Grid")
+            .with_size((WIDTH as u32, HEIGHT as u32).into());
+        println!("test");
+        SingleWindowApplication::run(camera);
+        // Runtime::open_window(window_builder, camera);
     }
-    // pub fn draw(&self, rect_drawer: &mut RectDrawer) {
-    //     for cell in self.cells.iter() {
-    //         cell.draw(self.size, rect_drawer);
-    //     }
-    // }
-    fn get_file_name(size: usize, limit: usize, samples_per_cell: usize) -> String {
+    pub fn get_file_name(size: usize, limit: usize, samples_per_cell: usize) -> String {
         format!(
             "./gridsize: {}, limit: {}, samples_per_cells: {}.cells",
             size, limit, samples_per_cell,

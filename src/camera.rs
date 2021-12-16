@@ -150,6 +150,7 @@ where
         status.set_needs_redraw();
         if self.generator.is_finished() {
             window.request_close();
+            self.generator.finish();
         }
         Ok(())
     }
@@ -222,7 +223,10 @@ impl<'a> Drawer<'a> {
 }
 
 pub trait Updateable {
-    fn update(&mut self);
-    fn draw(&mut self, drawer: &mut Drawer);
-    fn is_finished(&self) -> bool;
+    fn update(&mut self) {}
+    fn draw(&mut self, drawer: &mut Drawer) {}
+    fn is_finished(&self) -> bool {
+        false
+    }
+    fn finish(&mut self) {}
 }
