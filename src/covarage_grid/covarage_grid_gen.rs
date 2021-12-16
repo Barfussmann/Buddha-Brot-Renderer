@@ -1,6 +1,6 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
-use std::fs;
 use glam::IVec2;
+use std::fs;
 use std::{
     sync::{mpsc, Mutex},
     thread,
@@ -47,7 +47,7 @@ impl CovarageGridGen {
     pub fn sample_neighbors(&mut self) {
         let mut had_change = false;
         let start = Instant::now();
-        while start.elapsed().as_millis() < 20 {
+        while start.elapsed().as_millis() < 300 {
             for save_cell in self
                 .cell_that_are_inside
                 .lock()

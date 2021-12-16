@@ -128,7 +128,7 @@ where
         let mut drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
         let view_rect = self.get_view_rect();
         if let Some(manedel_backgroud) = self.mandel_background.as_mut() {
-            drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect));
+            drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect), false);
         }
         self.generator.draw(&mut drawer);
         Ok(())
@@ -169,7 +169,6 @@ pub struct Drawer<'a> {
     view_size: DVec2,
     scene: &'a Target,
     current_rect: usize,
-    sprite: SpriteSource,
 }
 impl<'a> Drawer<'a> {
     fn new(top_left_corner: DVec2, view_size: DVec2, scene: &'a Target) -> Self {
@@ -178,24 +177,15 @@ impl<'a> Drawer<'a> {
             view_size,
             scene,
             current_rect: 0,
-            sprite: SpriteSource::entire_texture(Texture::new(Arc::new(RgbaImage::new(
-                WIDTH as u32,
-                HEIGHT as u32,
-            )))),
         }
     }
-    pub fn draw_raw_pixels(&mut self, rgba_pixels: Vec<u8>) {
+    pub fn draw_raw_pixels(&mut self, rgba_pixels: Vec<u8>, test: bool) {
         let image = RgbaImage::from_raw(WIDTH as u32, HEIGHT as u32, rgba_pixels).unwrap();
-        
-        self.sprite.texture.image = Arc::new(image);
-
-        let rect =
-            Rect::<f32, Pixels>::new(Point::new(0., 0.), Size::new(WIDTH as f32, HEIGHT as f32));
-        self.sprite.render_raw_with_alpha_in_box(
+        let sprite = SpriteSource::entire_texture(Texture::new(Arc::new(image)));
+        sprite.render_at(
             self.scene,
-            rect.as_extents(),
+            Point::<_, Pixels>::new(0.0_f32, 0.0_f32),
             SpriteRotation::none(),
-            1.,
         );
     }
     // return true when drawing was succsesful
