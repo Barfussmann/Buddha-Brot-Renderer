@@ -1,5 +1,6 @@
 use super::{camera::*, cell::*};
 use glam::dvec2;
+use kludgine::prelude::{Pixels, Shape};
 use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
@@ -23,7 +24,7 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&mut self, drawer:& Drawer) {
+    pub fn draw(&mut self, drawer: &mut Drawer) {
         if self.cells_for_drawing.is_none() {
             self.init_cell_for_drawing();
         }
@@ -38,14 +39,22 @@ impl Grid {
         let mut prev_index = 0;
         let side_length = Cell::side_length(self.grid_size);
         let mut last_cell = Cell::dummy();
-        for cell in self.cells_for_drawing.as_ref().unwrap().iter().flat_map(|(row, _)| row.iter()) {
+        for cell in self
+            .cells_for_drawing
+            .as_ref()
+            .unwrap()
+            .iter()
+            .flat_map(|(row, _)| row.iter())
+        {
             if prev_index + 1 != cell.index(self.grid_size) {
                 let mut corner = first_cell_in_block.get_corner(self.grid_size);
                 let x_height = last_cell.get_corner(self.grid_size).x - corner.x + side_length;
 
                 drawer.draw_rect(corner, dvec2(x_height, side_length));
                 corner.y *= -1.;
-                drawer.draw_rect(corner, dvec2(x_height, -side_length));
+                if !drawer.draw_rect(corner, dvec2(x_height, -side_length)) {
+                    break;
+                }
                 first_cell_in_block = *cell;
             }
             last_cell = *cell;

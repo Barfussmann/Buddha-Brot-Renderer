@@ -60,7 +60,7 @@ impl Cell {
     pub fn side_length(grid_size: usize) -> f64 {
         4. / grid_size as f64
     }
-    pub fn draw(&self, grid_size: usize, drawer: &Drawer) {
+    pub fn draw(&self, grid_size: usize, drawer: &mut Drawer) {
         let mut size = DVec2::splat(Cell::side_length(grid_size));
         let mut corner = self.get_corner(grid_size);
 

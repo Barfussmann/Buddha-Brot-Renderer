@@ -1,5 +1,6 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
 use glam::IVec2;
+use kludgine::prelude::{Shape, self, Pixels};
 use std::{sync::{mpsc, Mutex}, thread, time::Instant};
 
 pub struct CovarageGridGen {
@@ -98,10 +99,12 @@ impl Updateable for CovarageGridGen {
     fn update(&mut self) {
         self.sample_neighbors();
     }
-    fn draw(&mut self, drawer: & Drawer) {
+    
+    fn draw(&mut self, drawer: &mut Drawer) {
         self.inside_cells.draw(drawer);
     }
     fn is_finished(&self) -> bool {
         self.is_finished
     }
+
 }

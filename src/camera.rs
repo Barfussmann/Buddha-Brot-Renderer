@@ -7,6 +7,7 @@ use kludgine::core::image::RgbaImage;
 use kludgine::prelude::*;
 
 use super::{HEIGHT, WIDTH};
+const MAX_RECTS: usize = 15_000;
 
 pub struct CameraManger<T: Updateable> {
     top_left_corner: DVec2,
@@ -16,6 +17,7 @@ pub struct CameraManger<T: Updateable> {
     mandel_background: Option<MandelbrotRender>,
     redraw_requester: Option<RedrawRequester>,
     generator: T,
+    shapes: Vec<Shape<Pixels>>,
 }
 
 impl<T> CameraManger<T>
@@ -31,6 +33,7 @@ where
             mandel_background: mandel_render.then(|| MandelbrotRender::new()),
             redraw_requester: None,
             generator,
+            shapes: Vec::new(),
         }
     }
     fn zoom(&mut self, zoom: f64) {
@@ -126,13 +129,23 @@ where
         status: &mut RedrawStatus,
         _window: WindowHandle,
     ) -> kludgine::app::Result<()> {
-        let drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
-
+        let mut drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
         let view_rect = self.get_view_rect();
+        status.set_needs_redraw();
         if let Some(manedel_backgroud) = self.mandel_background.as_mut() {
             drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect));
         }
-        self.generator.draw(&drawer);
+        if !self.shapes.is_empty() {
+            for _ in 0..16_000 {
+                let shape = self.shapes.pop().unwrap();
+                shape.render(scene);
+                if self.shapes.is_empty() {
+                    break;
+                }
+            }
+            return Ok(());
+        }
+        self.generator.draw(&mut drawer);
         Ok(())
     }
     fn update(
@@ -144,8 +157,10 @@ where
     where
         Self: Sized,
     {
-        self.generator.update();
-        status.set_needs_redraw();
+        if self.shapes.is_empty() {
+            self.generator.update();
+            status.set_needs_redraw();
+        }
         Ok(())
     }
 }
@@ -166,6 +181,7 @@ pub struct Drawer<'a> {
     top_left_corner: DVec2,
     view_size: DVec2,
     scene: &'a Target,
+    current_rect: usize,
 }
 impl<'a> Drawer<'a> {
     fn new(top_left_corner: DVec2, view_size: DVec2, scene: &'a Target) -> Self {
@@ -173,6 +189,7 @@ impl<'a> Drawer<'a> {
             top_left_corner,
             view_size,
             scene,
+            current_rect: 0,
         }
     }
     pub fn draw_raw_pixels(&self, rgba_pixels: Vec<u8>) {
@@ -189,7 +206,13 @@ impl<'a> Drawer<'a> {
             1.,
         );
     }
-    pub fn draw_rect(&self, corner: DVec2, size: DVec2) {
+    // return true when drawing was succsesful
+    pub fn draw_rect(&mut self, corner: DVec2, size: DVec2) -> bool {
+        if self.current_rect >= MAX_RECTS {
+            return false;
+        }
+        self.current_rect += 1;
+
         let corner = (corner - self.top_left_corner) / self.view_size;
         let size = size / self.view_size;
         let screen_mult = dvec2(WIDTH as f64, HEIGHT as f64);
@@ -202,12 +225,14 @@ impl<'a> Drawer<'a> {
         );
 
         let rect = Shape::rect(rect).fill(Fill::new(Color::GREEN));
+
         rect.render(&self.scene);
+        true
     }
 }
 
 pub trait Updateable {
     fn update(&mut self);
-    fn draw(&mut self, drawer: &Drawer);
+    fn draw(&mut self, drawer: &mut Drawer);
     fn is_finished(&self) -> bool;
 }
