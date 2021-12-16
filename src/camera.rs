@@ -141,13 +141,16 @@ where
         &mut self,
         scene: &Target,
         status: &mut RedrawStatus,
-        _window: WindowHandle,
+        window: WindowHandle,
     ) -> kludgine::app::Result<()>
     where
         Self: Sized,
     {
         self.generator.update();
         status.set_needs_redraw();
+        if self.generator.is_finished() {
+            window.request_close();
+        }
         Ok(())
     }
 }

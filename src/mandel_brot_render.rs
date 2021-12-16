@@ -2,7 +2,7 @@ use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use rayon::prelude::*;
 
-use super::{WIDTH, HEIGHT};
+use super::{HEIGHT, WIDTH};
 
 pub struct MandelbrotRender {
     top_left_corner: Vec2,

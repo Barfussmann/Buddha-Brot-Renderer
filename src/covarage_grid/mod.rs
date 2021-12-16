@@ -54,9 +54,7 @@ impl CovarageGrid {
     fn get_file_name(size: usize, limit: usize, samples_per_cell: usize) -> String {
         format!(
             "./gridsize: {}, limit: {}, samples_per_cells: {}.cells",
-            size,
-            limit,
-            samples_per_cell,
+            size, limit, samples_per_cell,
         )
     }
 }
