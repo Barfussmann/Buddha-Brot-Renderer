@@ -10,8 +10,7 @@ use super::{HEIGHT, WIDTH};
 const MAX_RECTS: usize = 15_000;
 
 pub struct CameraManger<T: Updateable> {
-    top_left_corner: DVec2,
-    view_size: DVec2,
+    view_rect: ViewRect,
     mouse_poss_at_click: Option<DVec2>,
     mouse_pos: DVec2,
     mandel_background: Option<MandelbrotRender>,
@@ -25,8 +24,7 @@ where
 {
     pub fn new(mandel_render: bool, generator: T) -> CameraManger<T> {
         Self {
-            top_left_corner: dvec2(-2.0, -1.32),
-            view_size: dvec2(3.0, 2.64),
+            view_rect: ViewRect::default(),
             mouse_poss_at_click: None,
             mouse_pos: DVec2::ZERO,
             mandel_background: mandel_render.then(MandelbrotRender::new),
@@ -35,32 +33,31 @@ where
         }
     }
     fn zoom(&mut self, zoom: f64) {
-        let camera_offset = (self.get_mouse_pos() - self.top_left_corner) - self.view_size / 2.;
+        let camera_offset = (self.get_mouse_pos() - self.view_rect.top_left_corner) - self.view_rect.view_size / 2.;
         let camara_rect_shrinkage = 0.5 * (1. - 1. / zoom);
-        let center_offset = self.view_size * camara_rect_shrinkage;
-        self.top_left_corner += camera_offset * camara_rect_shrinkage * 2. + center_offset;
+        let center_offset = self.view_rect.view_size * camara_rect_shrinkage;
+        self.view_rect.top_left_corner += camera_offset * camara_rect_shrinkage * 2. + center_offset;
 
         self.request_redraw();
 
-        self.view_size /= zoom;
+        self.view_rect.view_size /= zoom;
     }
     fn update_drag(&mut self) {
         if let Some(mouse_poss_at_middle_click) = self.mouse_poss_at_click {
             let delta = mouse_poss_at_middle_click - self.get_mouse_pos();
-            self.top_left_corner += delta;
+            self.view_rect.top_left_corner += delta;
             self.request_redraw();
         }
     }
     fn get_mouse_pos(&self) -> DVec2 {
-        let mouse_offset = self.mouse_pos / dvec2(WIDTH as f64, HEIGHT as f64) * self.view_size;
-        self.top_left_corner + mouse_offset
+        let mouse_offset = self.mouse_pos / dvec2(WIDTH as f64, HEIGHT as f64) * self.view_rect.view_size;
+        self.view_rect.top_left_corner + mouse_offset
     }
-    pub fn get_view_rect(&self) -> (DVec2, DVec2) {
-        (self.top_left_corner, self.view_size)
+    pub fn get_view_rect(&self) -> ViewRect {
+        self.view_rect
     }
     pub fn reset_zoom(&mut self) {
-        self.top_left_corner = dvec2(-2.0, -1.32);
-        self.view_size = dvec2(3.0, 2.64);
+        self.view_rect = ViewRect::default();
         self.request_redraw();
     }
     fn request_redraw(&self) {
@@ -125,10 +122,10 @@ where
         _status: &mut RedrawStatus,
         _window: WindowHandle,
     ) -> kludgine::app::Result<()> {
-        let mut drawer = Drawer::new(self.top_left_corner, self.view_size, scene);
+        let mut drawer = Drawer::new(self.view_rect, scene);
         let view_rect = self.get_view_rect();
         if let Some(manedel_backgroud) = self.mandel_background.as_mut() {
-            drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect), false);
+            drawer.draw_raw_pixels(manedel_backgroud.get_raw_pixels(view_rect));
         }
         self.generator.draw(&mut drawer);
         Ok(())
@@ -165,21 +162,19 @@ where
 }
 
 pub struct Drawer<'a> {
-    top_left_corner: DVec2,
-    view_size: DVec2,
+    view_rect: ViewRect,
     scene: &'a Target,
     current_rect: usize,
 }
 impl<'a> Drawer<'a> {
-    fn new(top_left_corner: DVec2, view_size: DVec2, scene: &'a Target) -> Self {
+    fn new(view_rect: ViewRect, scene: &'a Target) -> Self {
         Drawer {
-            top_left_corner,
-            view_size,
+            view_rect,
             scene,
             current_rect: 0,
         }
     }
-    pub fn draw_raw_pixels(&mut self, rgba_pixels: Vec<u8>, test: bool) {
+    pub fn draw_raw_pixels(&mut self, rgba_pixels: Vec<u8>) {
         let image = RgbaImage::from_raw(WIDTH as u32, HEIGHT as u32, rgba_pixels).unwrap();
         let sprite = SpriteSource::entire_texture(Texture::new(Arc::new(image)));
         sprite.render_at(
@@ -195,8 +190,8 @@ impl<'a> Drawer<'a> {
         }
         self.current_rect += 1;
 
-        let corner = (corner - self.top_left_corner) / self.view_size;
-        let size = size / self.view_size;
+        let corner = (corner - self.view_rect.top_left_corner) / self.view_rect.view_size;
+        let size = size / self.view_rect.view_size;
         let screen_mult = dvec2(WIDTH as f64, HEIGHT as f64);
         let screen_corner = dvec2(corner.x, corner.y) * screen_mult;
         let screen_size = dvec2(size.x, size.y) * screen_mult;
@@ -210,6 +205,28 @@ impl<'a> Drawer<'a> {
 
         rect.render(self.scene);
         true
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ViewRect {
+    pub top_left_corner: DVec2,
+    pub view_size: DVec2,
+}
+impl ViewRect {
+    pub fn get_screen_scale(&self) -> DVec2 {
+        dvec2(WIDTH as f64, HEIGHT as f64) / self.view_size
+    }
+    pub fn get_bottom_right_corner(&self) -> DVec2 {
+        self.top_left_corner + self.view_size
+    }
+}
+impl Default for ViewRect {
+    fn default() -> Self {
+        ViewRect {
+            top_left_corner: dvec2(-2.0, -1.32),
+            view_size: dvec2(3.0, 2.64),
+        }
     }
 }
 

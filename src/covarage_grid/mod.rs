@@ -32,7 +32,7 @@ impl CovarageGrid {
         let path = Path::new(&file_name);
 
         if !path.exists() {
-            CovarageGrid::gen_sample_cells(size, limit, samples_per_cell)
+            CovarageGrid::gen_sample_cells(size, limit, samples_per_cell);
         }
         while !path.exists() {
             thread::sleep(Duration::from_millis(100));
@@ -68,7 +68,7 @@ impl CovarageGrid {
             size, limit, samples_per_cell,
         )
     }
-    pub fn get_samples(&self, count: usize) -> Vec<DVec2> {
+    pub fn gen_sapmles(&self, count: usize) -> Vec<DVec2> {
         let rng = &mut rand::thread_rng();
         self.cells.iter().cycle().take(count).map(|cell| cell.gen_point_inside(self.size, rng)).collect()
     }
