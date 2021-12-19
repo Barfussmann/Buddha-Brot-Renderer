@@ -38,9 +38,9 @@ where
         let center_offset = self.view_rect.view_size * camara_rect_shrinkage;
         self.view_rect.top_left_corner += camera_offset * camara_rect_shrinkage * 2. + center_offset;
 
-        self.request_redraw();
-
         self.view_rect.view_size /= zoom;
+        
+        self.request_redraw();
     }
     fn update_drag(&mut self) {
         if let Some(mouse_poss_at_middle_click) = self.mouse_poss_at_click {
@@ -60,7 +60,8 @@ where
         self.view_rect = ViewRect::default();
         self.request_redraw();
     }
-    fn request_redraw(&self) {
+    fn request_redraw(&mut self) {
+        self.generator.update_view_rect(self.view_rect);
         self.redraw_requester.as_ref().unwrap().request_redraw();
     }
 }
@@ -237,4 +238,5 @@ pub trait Updateable {
         false
     }
     fn finish(&mut self) {}
+    fn update_view_rect(&mut self, _view_rect: ViewRect) {}
 }
