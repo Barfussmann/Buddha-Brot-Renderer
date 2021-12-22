@@ -11,6 +11,7 @@ use super::camera;
 use super::mandel_iter;
 use super::mandel_iter::*;
 
+use rand::prelude::ThreadRng;
 // use covarage_grid_gen::CovarageGridGen;
 // use kludgine::prelude::SingleWindowApplication;
 use sample_cells::*;
@@ -40,8 +41,10 @@ impl CovarageGrid {
 
         let sampled_cells_data = fs::read(path).unwrap();
         let sample_cells: SampleCells = bincode::deserialize(&sampled_cells_data).unwrap();
+        
 
         let cells = sample_cells.to_cells(sample_limit);
+        println!("cells: {}", cells.len());
 
         CovarageGrid { cells, size }
     }
@@ -92,5 +95,26 @@ impl CovarageGrid {
         for (new_sample, old_sample) in new_samples.zip(target.iter_mut()) {
             *old_sample = new_sample;
         }
+    }
+    pub fn gen_sample_iter<'a>(&'a self, mut rng: ThreadRng) -> impl Iterator<Item = DVec2> + 'a {
+        self.cells.iter().cycle().flat_map(move |cell|
+            {
+                let poss_samples = [
+                    cell.gen_point_inside(self.size, &mut rng),
+                    cell.gen_point_inside(self.size, &mut rng),
+                    cell.gen_point_inside(self.size, &mut rng),
+                    cell.gen_point_inside(self.size, &mut rng),
+                ];
+                let iteraion_counts = iterate_points_dvec2(&poss_samples, 100);
+
+                std::iter::zip(iteraion_counts, poss_samples).filter_map(|(iteration_count, point)| {
+                    if 30 < iteration_count && iteration_count < 100 {
+                        Some(point)
+                    } else {
+                        None
+                    }
+                })
+            }
+        )
     }
 }
