@@ -19,20 +19,20 @@ use glam::DVec2;
 
 pub struct CovarageGrid {
     cells: Vec<cell::Cell>,
-    size: usize,
+    gridsize: usize,
 }
 impl CovarageGrid {
     pub fn get_covarag_grid(
-        size: usize,
+        grid_size: usize,
         limit: usize,
         samples_per_cell: usize,
         sample_limit: usize,
     ) -> Self {
-        let file_name = Self::get_file_name(size, limit, samples_per_cell);
+        let file_name = Self::get_file_name(grid_size, limit, samples_per_cell);
         let path = Path::new(&file_name);
 
         if !path.exists() {
-            Self::gen_sample_cells(size, limit, samples_per_cell);
+            Self::gen_sample_cells(grid_size, limit, samples_per_cell);
         }
         while !path.exists() {
             thread::sleep(Duration::from_millis(100));
@@ -45,9 +45,9 @@ impl CovarageGrid {
         let cells = sample_cells.to_cells(sample_limit);
         println!("cells: {}", cells.len());
 
-        Self { cells, size }
+        Self { cells, gridsize: grid_size }
     }
-    pub fn gen_sample_cells(_size: usize, _limit: usize, _samples_per_cell: usize) {
+    pub fn gen_sample_cells(_grid_size: usize, _limit: usize, _samples_per_cell: usize) {
         todo!();
         // let camera = CameraManger::new(
         //     true,
@@ -64,10 +64,10 @@ impl CovarageGrid {
         //     .with_size((WIDTH as u32, HEIGHT as u32).into());
         // Runtime::open_window(window_builder, camera);
     }
-    pub fn get_file_name(size: usize, limit: usize, samples_per_cell: usize) -> String {
+    pub fn get_file_name(grid_size: usize, limit: usize, samples_per_cell: usize) -> String {
         format!(
             "./gridsize: {}, limit: {}, samples_per_cells: {}.cells",
-            size, limit, samples_per_cell,
+            grid_size, limit, samples_per_cell,
         )
     }
     pub fn gen_samples(&self, target: &mut Vec<DVec2>) {
@@ -75,10 +75,10 @@ impl CovarageGrid {
         let new_samples = self.cells.iter().cycle().flat_map(|cell|
             {
                 let poss_samples = [
-                    cell.gen_point_inside(self.size, rng),
-                    cell.gen_point_inside(self.size, rng),
-                    cell.gen_point_inside(self.size, rng),
-                    cell.gen_point_inside(self.size, rng),
+                    cell.gen_point_inside(self.gridsize, rng),
+                    cell.gen_point_inside(self.gridsize, rng),
+                    cell.gen_point_inside(self.gridsize, rng),
+                    cell.gen_point_inside(self.gridsize, rng),
                 ];
                 let iteraion_counts = iterate_points_dvec2(&poss_samples, 100);
 
@@ -94,5 +94,11 @@ impl CovarageGrid {
         for (new_sample, old_sample) in new_samples.zip(target.iter_mut()) {
             *old_sample = new_sample;
         }
+    }
+    pub const fn get_cells(&self) -> &Vec<cell::Cell> {
+        &self.cells
+    }
+    pub const fn get_grid_size(&self) -> usize {
+        self.gridsize
     }
 }

@@ -6,26 +6,26 @@ use super::mandel_iter::*;
 use flume::{Receiver, Sender};
 use glam::DVec2;
 
-struct SampleGen {
+pub struct SampleGen {
     cell_iter: Cycle<Iter<'static, cell::Cell>>,
     used_samples: Receiver<Vec<DVec2>>,
     new_samples: Sender<Vec<DVec2>>,
     rng: rand::rngs::ThreadRng,
-    size: usize,
+    grid_size: usize,
 }
 impl SampleGen {
-    fn start_working(
+    pub fn start_working(
         cell_iter: Cycle<Iter<'static, cell::Cell>>,
         used_samples: Receiver<Vec<DVec2>>,
         new_samples: Sender<Vec<DVec2>>,
-        size: usize,
+        grid_size: usize,
     ) {
         Self {
             cell_iter,
             used_samples,
             new_samples,
             rng: rand::thread_rng(),
-            size,
+            grid_size,
         }
         .work();
     }
@@ -35,10 +35,10 @@ impl SampleGen {
                 let cell = self.cell_iter.next().unwrap();
 
                 let poss_samples = [
-                    cell.gen_point_inside(self.size, &mut self.rng),
-                    cell.gen_point_inside(self.size, &mut self.rng),
-                    cell.gen_point_inside(self.size, &mut self.rng),
-                    cell.gen_point_inside(self.size, &mut self.rng),
+                    cell.gen_point_inside(self.grid_size, &mut self.rng),
+                    cell.gen_point_inside(self.grid_size, &mut self.rng),
+                    cell.gen_point_inside(self.grid_size, &mut self.rng),
+                    cell.gen_point_inside(self.grid_size, &mut self.rng),
                 ];
                 let iteration_counts = iterate_points_dvec2(&poss_samples, 100);
                 for (sample, iteration_count) in std::iter::zip(poss_samples, iteration_counts) {

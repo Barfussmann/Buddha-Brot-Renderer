@@ -1,6 +1,8 @@
 use super::camera::*;
 use super::covarage_grid::*;
+use super::sample_gen::SampleGen;
 use core::simd::*;
+use flume::{Receiver, Sender};
 use glam::DVec2;
 use std::time::Instant;
 
@@ -14,29 +16,55 @@ pub struct Buddha {
     max_iteration: u64x4,
     value_to_replace: mask64x4,
     pixels: Vec<u32>,
-    sample_index: usize,
     samples: Vec<DVec2>,
     covarage_grid: &'static CovarageGrid,
-    // sample_gen_iter: 
     view: View,
+    used_samples: Sender<Vec<DVec2>>,
+    new_samples: Receiver<Vec<DVec2>>,
 }
 
 #[allow(unused_variables)]
 impl Buddha {
-    pub fn new(max_iterations: u64, view_rect: ViewRect, covarage_grid: &'static CovarageGrid) -> Self {
+    pub fn new(
+        max_iterations: u64,
+        view_rect: ViewRect,
+        covarage_grid: &'static CovarageGrid,
+    ) -> Self {
         let zero = f64x4::splat(0.);
+        let (used_samples_tx, used_samples_rx) = flume::unbounded();
+        let (new_samples_tx, new_samples_rx) = flume::unbounded();
+
+        let iter = covarage_grid.get_cells().iter().cycle();
+        for _ in 0..16 {
+            let used_samples_rx = used_samples_rx.clone();
+            let new_samples_tx = new_samples_tx.clone();
+            let iter = iter.clone();
+            std::thread::spawn(move || {
+                SampleGen::start_working(
+                    iter,
+                    used_samples_rx,
+                    new_samples_tx,
+                    covarage_grid.get_grid_size(),
+                )
+            });
+        }
+        for _ in 0..48 {
+            used_samples_tx.send(Vec::with_capacity(1024)).unwrap();
+        }
+
         let mut buddha = Self {
             mandel_iter: MandelIter::new(),
             max_iteration: u64x4::splat(max_iterations),
             inside: mask64x4::splat(false),
-            inside_view_rect: mask64x4::splat(false),
             index: i64x4::splat(0),
+            inside_view_rect: mask64x4::splat(false),
             pixels: vec![0; WIDTH * HEIGHT],
-            samples: vec![DVec2::ZERO; 1_000_000],
-            sample_index: 0,
+            samples: Vec::new(),
             value_to_replace: mask64x4::from_array([true, false, false, false]),
             covarage_grid,
             view: View::new(ViewRect::default()),
+            used_samples: used_samples_tx,
+            new_samples: new_samples_rx,
         };
         buddha.replenish_samples();
         buddha.set_view_rect(view_rect);
@@ -44,9 +72,6 @@ impl Buddha {
     }
     fn iterate(&mut self) {
         let zero = f64x4::splat(0.);
-        if self.sample_index == self.samples.len() {
-            self.replenish_samples();
-        }
 
         self.mandel_iter.next_iteration();
         self.inside = self.is_inside();
@@ -85,18 +110,19 @@ impl Buddha {
     fn try_replace_samples(&mut self) {
         let zero = f64x4::splat(0.);
 
-        let value_to_replace =
-            self.value_to_replace & (!self.inside | self.mandel_iter.iteration.lanes_ge(self.max_iteration));
+        let value_to_replace = self.value_to_replace
+            & (!self.inside | self.mandel_iter.iteration.lanes_ge(self.max_iteration));
         // hacky method to rotate.
         self.value_to_replace = unsafe {
             mask64x4::from_int_unchecked(self.value_to_replace.to_int().rotate_lanes_left::<1>())
         };
-        let new_sample = self.samples[self.sample_index];
-        // increase index when sample was used
-        self.sample_index += value_to_replace.any() as usize;
-
-        self.mandel_iter.try_replace(value_to_replace, new_sample);
-
+        if value_to_replace.any() {
+            let new_sample = self.samples.pop().unwrap();
+            if self.samples.is_empty() {
+                self.replenish_samples();
+            }
+            self.mandel_iter.try_replace(value_to_replace, new_sample);
+        }
     }
     fn normalise_pixels(&mut self) -> Vec<u8> {
         self.pixels[0] = 0;
@@ -121,8 +147,9 @@ impl Buddha {
             .collect()
     }
     fn replenish_samples(&mut self) {
-        self.sample_index = 0;
-        self.covarage_grid.gen_samples(&mut self.samples);
+        let new_samples = self.new_samples.recv().unwrap();
+        let used_samples = std::mem::replace(&mut self.samples, new_samples);
+        self.used_samples.send(used_samples).unwrap();
     }
     fn set_view_rect(&mut self, view_rect: ViewRect) {
         self.view = View::new(view_rect);
@@ -132,7 +159,7 @@ impl Buddha {
 impl Updateable for Buddha {
     fn update(&mut self) {
         let instant = Instant::now();
-        let samples = 1_000_000;
+        let samples = 100_000_000;
         for _ in 0..samples / 4 {
             for _ in 0..4 {
                 self.iterate();
