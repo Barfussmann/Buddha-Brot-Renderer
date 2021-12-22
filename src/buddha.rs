@@ -10,9 +10,6 @@ use super::{HEIGHT, WIDTH};
 
 pub struct Buddha {
     mandel_iter: MandelIter,
-    inside: mask64x4,
-    inside_view_rect: mask64x4,
-    index: i64x4,
     max_iteration: u64x4,
     value_to_replace: mask64x4,
     pixels: Vec<u32>,
@@ -54,9 +51,6 @@ impl Buddha {
         let mut buddha = Self {
             mandel_iter: MandelIter::new(),
             max_iteration: u64x4::splat(max_iterations),
-            inside: mask64x4::splat(false),
-            index: i64x4::splat(0),
-            inside_view_rect: mask64x4::splat(false),
             pixels: vec![0; WIDTH * HEIGHT],
             samples: Vec::new(),
             value_to_replace: mask64x4::from_array([true, false, false, false]),
@@ -72,11 +66,8 @@ impl Buddha {
         let zero = f64x4::splat(0.);
 
         self.mandel_iter.next_iteration();
-        self.inside = self.is_inside();
 
-        self.compute_is_in_view_rect();
-        if self.inside_view_rect.any() {
-            self.compute_index();
+        if self.compute_is_in_view_rect() {
             self.add_pixels();
         }
     }
@@ -84,16 +75,12 @@ impl Buddha {
         let abs = self.mandel_iter.z_squared_x + self.mandel_iter.z_squared_y;
         abs.lanes_le(f64x4::splat(4.))
     }
-    fn compute_is_in_view_rect(&mut self) {
-        self.inside_view_rect = self.view.is_inside(self.mandel_iter.get_z());
-    }
-    fn compute_index(&mut self) {
-        self.index = self
-            .view
-            .screen_index(self.mandel_iter.get_z(), self.inside_view_rect);
+    fn compute_is_in_view_rect(&mut self) -> bool {
+        self.view.is_inside(self.mandel_iter.get_z()).any()
     }
     fn add_pixels(&mut self) {
-        let indexs = self.index.as_array();
+        let screen_index = self.view.screen_index(self.mandel_iter.get_z());
+        let indexs = screen_index.as_array();
         let added_pixels = [
             self.pixels[indexs[0] as usize].saturating_add(1),
             self.pixels[indexs[1] as usize].saturating_add(1),
@@ -109,7 +96,7 @@ impl Buddha {
         let zero = f64x4::splat(0.);
 
         let value_to_replace = self.value_to_replace
-            & (!self.inside | self.mandel_iter.iteration.lanes_ge(self.max_iteration));
+            & (!self.is_inside() | self.mandel_iter.iteration.lanes_ge(self.max_iteration));
         // hacky method to rotate.
         self.value_to_replace = unsafe {
             mask64x4::from_int_unchecked(self.value_to_replace.to_int().rotate_lanes_left::<1>())
@@ -185,6 +172,7 @@ struct View {
     y_upper_bound: f64x4,
     x_screen_scale: f64x4,
     y_screen_scale: f64x4,
+    in_view: mask64x4,
 }
 impl View {
     #[inline(always)]
@@ -199,21 +187,23 @@ impl View {
             y_upper_bound: f64x4::splat(upper_bound.y),
             x_screen_scale: f64x4::splat(screen_scale.x),
             y_screen_scale: f64x4::splat(screen_scale.y),
+            in_view: mask64x4::splat(true),
         }
     }
     #[inline(always)]
-    fn is_inside(&self, (x, y): (f64x4, f64x4)) -> mask64x4 {
+    fn is_inside(&mut self, (x, y): (f64x4, f64x4)) -> mask64x4 {
         let x_inside = x.lanes_ge(self.x_lower_bound) & x.lanes_le(self.x_upper_bound);
         let y_inside = y.lanes_ge(self.y_lower_bound) & y.lanes_le(self.y_upper_bound);
-        x_inside & y_inside
+        self.in_view = x_inside & y_inside;
+        self.in_view
     }
     #[inline(always)]
-    fn screen_index(&self, (x, y): (f64x4, f64x4), in_view_rect: mask64x4) -> i64x4 {
+    fn screen_index(&self, (x, y): (f64x4, f64x4)) -> i64x4 {
         let x_screen = (x - self.x_lower_bound) * self.x_screen_scale;
         let y_screen = (y - self.y_lower_bound) * self.y_screen_scale;
 
-        let inside_x = in_view_rect.select(x_screen, f64x4::splat(0.));
-        let inside_y = in_view_rect.select(y_screen, f64x4::splat(0.));
+        let inside_x = self.in_view.select(x_screen, f64x4::splat(0.));
+        let inside_y = self.in_view.select(y_screen, f64x4::splat(0.));
         let x_index = unsafe { inside_x.to_int_unchecked() };
         let y_index = unsafe { inside_y.to_int_unchecked() };
         x_index + y_index * i64x4::splat(WIDTH as i64)
