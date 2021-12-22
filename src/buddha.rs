@@ -20,7 +20,6 @@ pub struct Buddha<'a> {
     iteration: u64x4,
     max_iteration: u64x4,
     value_to_replace: mask64x4,
-    width: i64x4,
     pixels: Vec<u32>,
     sample_index: usize,
     samples: Vec<DVec2>,
@@ -44,7 +43,6 @@ impl<'a> Buddha<'a> {
             inside: mask64x4::splat(false),
             inside_view_rect: mask64x4::splat(false),
             index: i64x4::splat(0),
-            width: i64x4::splat(WIDTH as i64),
             pixels: vec![0; WIDTH * HEIGHT],
             samples: vec![DVec2::ZERO; 1_000_000],
             sample_index: 0,
@@ -55,11 +53,6 @@ impl<'a> Buddha<'a> {
         buddha.replenish_samples();
         buddha.set_view_rect(view_rect);
         buddha
-    }
-    fn iterate_samples(&mut self) {
-        while self.sample_index < self.samples.len() {
-            self.iterate();
-        }
     }
     fn iterate(&mut self) {
         let zero = f64x4::splat(0.);
