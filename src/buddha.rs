@@ -6,7 +6,7 @@ use std::time::Instant;
 
 use super::{HEIGHT, WIDTH};
 
-pub struct Buddha<'a> {
+pub struct Buddha {
     mandel_iter: MandelIter,
     inside: mask64x4,
     inside_view_rect: mask64x4,
@@ -16,14 +16,14 @@ pub struct Buddha<'a> {
     pixels: Vec<u32>,
     sample_index: usize,
     samples: Vec<DVec2>,
-    covarage_grid: &'a CovarageGrid,
+    covarage_grid: &'static CovarageGrid,
     // sample_gen_iter: 
     view: View,
 }
 
 #[allow(unused_variables)]
-impl<'a> Buddha<'a> {
-    pub fn new(max_iterations: u64, view_rect: ViewRect, covarage_grid: &'a CovarageGrid) -> Self {
+impl Buddha {
+    pub fn new(max_iterations: u64, view_rect: ViewRect, covarage_grid: &'static CovarageGrid) -> Self {
         let zero = f64x4::splat(0.);
         let mut buddha = Self {
             mandel_iter: MandelIter::new(),
@@ -129,7 +129,7 @@ impl<'a> Buddha<'a> {
     }
 }
 
-impl Updateable for Buddha<'_> {
+impl Updateable for Buddha {
     fn update(&mut self) {
         let instant = Instant::now();
         let samples = 1_000_000;
