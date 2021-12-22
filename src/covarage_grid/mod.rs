@@ -11,7 +11,6 @@ use super::camera;
 use super::mandel_iter;
 use super::mandel_iter::*;
 
-use rand::prelude::ThreadRng;
 // use covarage_grid_gen::CovarageGridGen;
 // use kludgine::prelude::SingleWindowApplication;
 use sample_cells::*;
@@ -28,12 +27,12 @@ impl CovarageGrid {
         limit: usize,
         samples_per_cell: usize,
         sample_limit: usize,
-    ) -> CovarageGrid {
-        let file_name = CovarageGrid::get_file_name(size, limit, samples_per_cell);
+    ) -> Self {
+        let file_name = Self::get_file_name(size, limit, samples_per_cell);
         let path = Path::new(&file_name);
 
         if !path.exists() {
-            CovarageGrid::gen_sample_cells(size, limit, samples_per_cell);
+            Self::gen_sample_cells(size, limit, samples_per_cell);
         }
         while !path.exists() {
             thread::sleep(Duration::from_millis(100));
@@ -46,7 +45,7 @@ impl CovarageGrid {
         let cells = sample_cells.to_cells(sample_limit);
         println!("cells: {}", cells.len());
 
-        CovarageGrid { cells, size }
+        Self { cells, size }
     }
     pub fn gen_sample_cells(_size: usize, _limit: usize, _samples_per_cell: usize) {
         todo!();
@@ -56,7 +55,7 @@ impl CovarageGrid {
         //         limit,
         //         samples_per_cell,
         //         size,
-        //         CovarageGrid::get_file_name(size, limit, samples_per_cell),
+        //         Self::get_file_name(size, limit, samples_per_cell),
         //     ),
         // );
         // SingleWindowApplication::run(camera);
@@ -95,26 +94,5 @@ impl CovarageGrid {
         for (new_sample, old_sample) in new_samples.zip(target.iter_mut()) {
             *old_sample = new_sample;
         }
-    }
-    pub fn gen_sample_iter<'a>(&'a self, mut rng: ThreadRng) -> impl Iterator<Item = DVec2> + 'a {
-        self.cells.iter().cycle().flat_map(move |cell|
-            {
-                let poss_samples = [
-                    cell.gen_point_inside(self.size, &mut rng),
-                    cell.gen_point_inside(self.size, &mut rng),
-                    cell.gen_point_inside(self.size, &mut rng),
-                    cell.gen_point_inside(self.size, &mut rng),
-                ];
-                let iteraion_counts = iterate_points_dvec2(&poss_samples, 100);
-
-                std::iter::zip(iteraion_counts, poss_samples).filter_map(|(iteration_count, point)| {
-                    if 30 < iteration_count && iteration_count < 100 {
-                        Some(point)
-                    } else {
-                        None
-                    }
-                })
-            }
-        )
     }
 }

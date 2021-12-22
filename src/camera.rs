@@ -22,7 +22,7 @@ impl<T> CameraManger<T>
 where
     T: Updateable + Sync + Send + 'static,
 {
-    pub fn new(mandel_render: bool, generator: T) -> CameraManger<T> {
+    pub fn new(mandel_render: bool, generator: T) -> Self {
         Self {
             view_rect: ViewRect::default(),
             mouse_poss_at_click: None,
@@ -94,7 +94,7 @@ where
     {
         match input.event {
             Event::Keyboard { key, .. } => {
-                if let Some(VirtualKeyCode::Space) = key {
+                if key == Some(VirtualKeyCode::Space) {
                     self.reset_zoom()
                 }
             }
@@ -168,7 +168,7 @@ pub struct Drawer<'a> {
     current_rect: usize,
 }
 impl<'a> Drawer<'a> {
-    fn new(view_rect: ViewRect, scene: &'a Target) -> Self {
+    const fn new(view_rect: ViewRect, scene: &'a Target) -> Self {
         Drawer {
             view_rect,
             scene,
@@ -224,7 +224,7 @@ impl ViewRect {
 }
 impl Default for ViewRect {
     fn default() -> Self {
-        ViewRect {
+        Self {
             top_left_corner: dvec2(-2.0, -1.32),
             view_size: dvec2(3.0, 2.64),
         }

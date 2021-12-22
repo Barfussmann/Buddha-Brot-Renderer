@@ -34,7 +34,7 @@ impl CovarageGridGen {
                 .send(Cell::new(IVec2::new(x, -1)))
                 .unwrap();
         }
-        CovarageGridGen {
+        Self {
             inside_cells: Grid::new(grid_size),
             grid_size,
             cell_to_sample: Mutex::new(cell_to_sample_sender),

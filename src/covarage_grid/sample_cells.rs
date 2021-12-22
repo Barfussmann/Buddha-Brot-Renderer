@@ -9,7 +9,7 @@ pub struct SampleCells {
 }
 impl SampleCells {
     pub fn new(cells: Vec<SampledCell>, size: usize) -> Self {
-        SampleCells { cells, size }
+        Self { cells, size }
     }
     pub fn to_cells(&self, limit: usize) -> Vec<Cell> {
         let mut cells: Vec<Cell> = self.cells

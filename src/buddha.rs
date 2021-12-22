@@ -2,7 +2,6 @@ use super::camera::*;
 use super::covarage_grid::*;
 use core::simd::*;
 use glam::DVec2;
-use rand::thread_rng;
 use std::time::Instant;
 
 use super::{HEIGHT, WIDTH};
@@ -122,7 +121,6 @@ impl<'a> Buddha<'a> {
             .collect()
     }
     fn replenish_samples(&mut self) {
-        let iter = self.covarage_grid.gen_sample_iter(thread_rng());
         self.sample_index = 0;
         self.covarage_grid.gen_samples(&mut self.samples);
     }
@@ -153,9 +151,6 @@ impl Updateable for Buddha<'_> {
         self.set_view_rect(view_rect);
         self.pixels = vec![0; WIDTH * HEIGHT];
     }
-    // fn is_finished(&self) -> bool {
-    //     self.pixels.iter().max().unwrap() > &20_000_000
-    // }
 }
 
 struct View {
@@ -209,7 +204,7 @@ struct MandelIter {
     iteration: u64x4,
 }
 impl MandelIter {
-    fn new() -> Self {
+    const fn new() -> Self {
         let zero = f64x4::splat(0.);
         Self {
             z_x: zero,
@@ -244,7 +239,7 @@ impl MandelIter {
         self.iteration = value_to_replace.select(u64x4::splat(0), self.iteration);
     }
     #[inline(always)]
-    fn get_z(&self) -> (f64x4, f64x4) {
+    const fn get_z(&self) -> (f64x4, f64x4) {
         (self.z_x, self.z_y)
     }
 }

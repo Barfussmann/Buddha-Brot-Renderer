@@ -7,19 +7,19 @@ pub struct Cell {
 }
 
 impl Cell {
-    pub fn new(corner: IVec2) -> Self {
-        Cell { corner }
+    pub const fn new(corner: IVec2) -> Self {
+        Self { corner }
     }
     pub fn dummy() -> Self {
-        Cell {
+        Self {
             corner: IVec2::new(0, 0),
         }
     }
     pub fn get_corner(&self, grid_size: usize) -> DVec2 {
-        self.corner.as_dvec2() * Cell::side_length(grid_size)
+        self.corner.as_dvec2() * Self::side_length(grid_size)
     }
     pub fn gen_point_inside(&self, grid_size: usize, rng: &mut ThreadRng) -> DVec2 {
-        let side_length = Cell::side_length(grid_size);
+        let side_length = Self::side_length(grid_size);
         let corner = self.get_corner(grid_size);
 
         let offset = dvec2(
@@ -32,23 +32,23 @@ impl Cell {
         }
         point
     }
-    pub fn get_neighbors(&self) -> Vec<Cell> {
+    pub fn get_neighbors(&self) -> Vec<Self> {
         vec![
-            Cell::new(self.corner + IVec2::new(1, 0)),
-            Cell::new(self.corner + IVec2::new(0, 1)),
-            Cell::new(self.corner + IVec2::new(-1, 0)),
-            Cell::new(self.corner + IVec2::new(0, -1)),
+            Self::new(self.corner + IVec2::new(1, 0)),
+            Self::new(self.corner + IVec2::new(0, 1)),
+            Self::new(self.corner + IVec2::new(-1, 0)),
+            Self::new(self.corner + IVec2::new(0, -1)),
         ]
     }
-    pub fn from_index(index: usize, grid_size: usize) -> Cell {
+    pub fn from_index(index: usize, grid_size: usize) -> Self {
         let x = index % grid_size;
         let y = index / grid_size;
-        Cell::from_index_2d(x, y, grid_size)
+        Self::from_index_2d(x, y, grid_size)
     }
     pub fn from_index_2d(x: usize, y: usize, grid_size: usize) -> Self {
         let offset = IVec2::splat(grid_size as i32 / 2);
         let center = IVec2::new(x as i32 - 1, y as i32) - offset;
-        Cell { corner: center }
+        Self { corner: center }
     }
     pub fn index(&self, grid_size: usize) -> usize {
         let (x, y) = self.index_2d(grid_size);

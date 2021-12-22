@@ -44,7 +44,7 @@ impl MandelbrotRender {
             });
     }
     fn set_camera_rect(&mut self, view_rect: ViewRect) {
-        if self.view_rect != self.view_rect {
+        if self.view_rect != view_rect {
             self.view_rect = view_rect;
             self.calculate_pixel_cords();
             self.update_pixels();

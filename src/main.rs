@@ -1,5 +1,6 @@
-#![allow(dead_code)]
+#![allow(dead_code, unused_variables)]
 #![warn(
+    clippy::nursery,
     clippy::branches_sharing_code,
     clippy::cognitive_complexity,
     clippy::option_if_let_else,
@@ -13,6 +14,7 @@ mod camera;
 mod covarage_grid;
 mod mandel_brot_render;
 mod mandel_iter;
+mod sample_gen;
 
 use buddha::Buddha;
 use camera::*;
@@ -29,7 +31,7 @@ lazy_static! {
 
 fn main() {
     let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
-    
+
     let test = CameraManger::new(false, buddha);
     SingleWindowApplication::run(test);
 }

@@ -8,7 +8,7 @@ pub struct SampledCell {
 }
 impl SampledCell {
     pub fn new(cell: Cell, highest_iteration: u16, grid_size: usize) -> Self {
-        SampledCell {
+        Self {
             cell_index: cell.index(grid_size),
             highest_iteration,
         }
@@ -16,7 +16,7 @@ impl SampledCell {
     pub fn get_cell(&self, grid_size: usize) -> Cell {
         Cell::from_index(self.cell_index, grid_size)
     }
-    pub fn get_highest_iteration(&self) -> u16 {
+    pub const fn get_highest_iteration(&self) -> u16 {
         self.highest_iteration
     }
 }
