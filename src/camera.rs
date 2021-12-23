@@ -33,13 +33,15 @@ where
         }
     }
     fn zoom(&mut self, zoom: f64) {
-        let camera_offset = (self.get_mouse_pos() - self.view_rect.top_left_corner) - self.view_rect.view_size / 2.;
+        let camera_offset =
+            (self.get_mouse_pos() - self.view_rect.top_left_corner) - self.view_rect.view_size / 2.;
         let camara_rect_shrinkage = 0.5 * (1. - 1. / zoom);
         let center_offset = self.view_rect.view_size * camara_rect_shrinkage;
-        self.view_rect.top_left_corner += camera_offset * camara_rect_shrinkage * 2. + center_offset;
+        self.view_rect.top_left_corner +=
+            camera_offset * camara_rect_shrinkage * 2. + center_offset;
 
         self.view_rect.view_size /= zoom;
-        
+
         self.request_redraw();
     }
     fn update_drag(&mut self) {
@@ -50,7 +52,8 @@ where
         }
     }
     fn get_mouse_pos(&self) -> DVec2 {
-        let mouse_offset = self.mouse_pos / dvec2(WIDTH as f64, HEIGHT as f64) * self.view_rect.view_size;
+        let mouse_offset =
+            self.mouse_pos / dvec2(WIDTH as f64, HEIGHT as f64) * self.view_rect.view_size;
         self.view_rect.top_left_corner + mouse_offset
     }
     pub fn get_view_rect(&self) -> ViewRect {
@@ -166,19 +169,26 @@ pub struct Drawer<'a> {
     view_rect: ViewRect,
     scene: &'a Target,
     current_rect: usize,
+    image: SpriteSource,
 }
 impl<'a> Drawer<'a> {
-    const fn new(view_rect: ViewRect, scene: &'a Target) -> Self {
+    fn new(view_rect: ViewRect, scene: &'a Target) -> Self {
         Drawer {
             view_rect,
             scene,
             current_rect: 0,
+            image: SpriteSource::entire_texture(Texture::new(Arc::new(RgbaImage::new(
+                WIDTH as u32,
+                HEIGHT as u32,
+            )))),
         }
     }
     pub fn draw_raw_pixels(&mut self, rgba_pixels: Vec<u8>) {
-        let image = RgbaImage::from_raw(WIDTH as u32, HEIGHT as u32, rgba_pixels).unwrap();
-        let sprite = SpriteSource::entire_texture(Texture::new(Arc::new(image)));
-        sprite.render_at(
+        Arc::get_mut(&mut self.image.texture.image)
+            .unwrap()
+            .copy_from_slice(&rgba_pixels);
+        // let image = RgbaImage::from_raw(WIDTH as u32, HEIGHT as u32, rgba_pixels).unwrap();
+        self.image.render_at(
             self.scene,
             Point::<_, Pixels>::new(0.0_f32, 0.0_f32),
             SpriteRotation::none(),
