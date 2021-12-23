@@ -1,5 +1,4 @@
-use std::iter::Cycle;
-use std::slice::Iter;
+use std::{slice::Iter, iter::Cycle};
 
 use super::covarage_grid::*;
 use super::mandel_iter::*;

@@ -15,6 +15,7 @@ mod covarage_grid;
 mod mandel_brot_render;
 mod mandel_iter;
 mod sample_gen;
+mod sample_mutator;
 
 use buddha::Buddha;
 use camera::*;

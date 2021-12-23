@@ -1,9 +1,11 @@
 use super::camera::*;
 use super::covarage_grid::*;
 use super::sample_gen::SampleGen;
+use super::sample_mutator::SampleMutator;
 use core::simd::*;
 use flume::{Receiver, Sender};
 use glam::DVec2;
+use rand::Rng;
 use std::time::Instant;
 
 use super::{HEIGHT, WIDTH};
@@ -11,12 +13,17 @@ use super::{HEIGHT, WIDTH};
 pub struct Buddha {
     mandel_iter: MandelIter,
     max_iteration: u64x4,
+    iterations_on_screen: i64x4,
     value_to_replace: mask64x4,
     pixels: Vec<u32>,
     samples: Vec<DVec2>,
     view: View,
     used_samples: Sender<Vec<DVec2>>,
     new_samples: Receiver<Vec<DVec2>>,
+    mutated_samples: Receiver<Vec<DVec2>>,
+    interesting_samples: Sender<Vec<DVec2>>,
+    current_interesting_samples: Vec<DVec2>,
+    using_mutated_samples: bool,
 }
 
 #[allow(unused_variables)]
@@ -48,15 +55,35 @@ impl Buddha {
             used_samples_tx.send(Vec::with_capacity(1024)).unwrap();
         }
 
+        let (mutated_samples_tx, mutated_samples_rx) = flume::unbounded();
+        let (interesting_samples_tx, interesting_samples_rx) = flume::unbounded();
+
+        for _ in 0..16 {
+            let mutated_samples_tx = mutated_samples_tx.clone();
+            let interesting_samples_rx = interesting_samples_rx.clone();
+            std::thread::spawn(move || {
+                SampleMutator::start_working(
+                    mutated_samples_tx,
+                    interesting_samples_rx,
+                    covarage_grid.get_grid_size(),
+                )
+            });
+        }
+
         let mut buddha = Self {
             mandel_iter: MandelIter::new(),
             max_iteration: u64x4::splat(max_iterations),
+            iterations_on_screen: i64x4::splat(0),
             pixels: vec![0; WIDTH * HEIGHT],
             samples: Vec::new(),
             value_to_replace: mask64x4::from_array([true, false, false, false]),
             view: View::new(ViewRect::default()),
             used_samples: used_samples_tx,
             new_samples: new_samples_rx,
+            mutated_samples: mutated_samples_rx,
+            interesting_samples: interesting_samples_tx,
+            current_interesting_samples: Vec::new(),
+            using_mutated_samples: false,
         };
         buddha.replenish_samples();
         buddha.set_view_rect(view_rect);
@@ -79,6 +106,7 @@ impl Buddha {
         self.view.is_inside(self.mandel_iter.get_z()).any()
     }
     fn add_pixels(&mut self) {
+        self.iterations_on_screen -= self.view.in_view.to_int();
         let screen_index = self.view.screen_index(self.mandel_iter.get_z());
         let indexs = screen_index.as_array();
         let added_pixels = [
@@ -106,7 +134,36 @@ impl Buddha {
             if self.samples.is_empty() {
                 self.replenish_samples();
             }
+            let iter_on_screen_of_removed_sample = value_to_replace
+                .select(self.iterations_on_screen, i64x4::splat(0))
+                .horizontal_sum();
+            if iter_on_screen_of_removed_sample != 0 {
+                self.send_interesting_sample(value_to_replace)
+            }
+
+            self.iterations_on_screen =
+                value_to_replace.select(i64x4::splat(0), self.iterations_on_screen);
             self.mandel_iter.try_replace(value_to_replace, new_sample);
+        }
+    }
+    fn send_interesting_sample(&mut self, value: mask64x4) {
+        if self.using_mutated_samples {
+            return;
+        }
+        let x = value
+            .select(self.mandel_iter.get_c().0, f64x4::splat(0.))
+            .horizontal_sum();
+        let y = value
+            .select(self.mandel_iter.get_c().1, f64x4::splat(0.))
+            .horizontal_sum();
+        self.current_interesting_samples.push(DVec2::new(x, y));
+        if self.current_interesting_samples.len() > 128 {
+            self.interesting_samples
+                .send(std::mem::replace(
+                    &mut self.current_interesting_samples,
+                    Vec::with_capacity(128),
+                ))
+                .unwrap();
         }
     }
     fn normalise_pixels(&mut self) -> Vec<u8> {
@@ -132,9 +189,17 @@ impl Buddha {
             .collect()
     }
     fn replenish_samples(&mut self) {
-        let new_samples = self.new_samples.recv().unwrap();
-        let used_samples = std::mem::replace(&mut self.samples, new_samples);
-        self.used_samples.send(used_samples).unwrap();
+        if let Ok(mutated_sapmles) = self.mutated_samples.try_recv() {
+            self.samples = mutated_sapmles;
+            self.using_mutated_samples = true;
+            print!("|")
+        } else {
+            let new_samples = self.new_samples.recv().unwrap();
+            let used_samples = std::mem::replace(&mut self.samples, new_samples);
+            self.used_samples.send(used_samples).unwrap();
+            self.using_mutated_samples = false;
+            print!(".")
+        }
     }
     fn set_view_rect(&mut self, view_rect: ViewRect) {
         self.view = View::new(view_rect);
@@ -144,7 +209,7 @@ impl Buddha {
 impl Updateable for Buddha {
     fn update(&mut self) {
         let instant = Instant::now();
-        let samples = 100_000_000;
+        let samples = 10_000_000;
         for _ in 0..samples / 4 {
             for _ in 0..4 {
                 self.iterate();
@@ -256,5 +321,8 @@ impl MandelIter {
     #[inline(always)]
     const fn get_z(&self) -> (f64x4, f64x4) {
         (self.z_x, self.z_y)
+    }
+    const fn get_c(&self) -> (f64x4, f64x4) {
+        (self.c_x, self.c_y)
     }
 }
