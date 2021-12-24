@@ -1,4 +1,5 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
+use crate::{HEIGHT, WIDTH};
 use glam::IVec2;
 use std::fs;
 use std::{
@@ -47,7 +48,7 @@ impl CovarageGridGen {
     pub fn sample_neighbors(&mut self) {
         let mut had_change = false;
         let start = Instant::now();
-        while start.elapsed().as_millis() < 300 {
+        while start.elapsed().as_millis() < 100 {
             for save_cell in self
                 .cell_that_are_inside
                 .lock()
@@ -99,9 +100,8 @@ impl Updateable for CovarageGridGen {
     fn update(&mut self) {
         self.sample_neighbors();
     }
-    fn draw(&mut self) -> Vec<u32> {
-        todo!()
-        // self.inside_cells.draw(drawer);
+    fn draw(&mut self, view: ViewRect) -> Vec<u32> {
+        self.inside_cells.draw(view)
     }
     fn is_finished(&self) -> bool {
         self.is_finished()

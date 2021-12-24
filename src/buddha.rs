@@ -5,7 +5,6 @@ use super::sample_mutator::SampleMutator;
 use core::simd::*;
 use flume::{Receiver, Sender};
 use glam::DVec2;
-use rand::Rng;
 use std::time::Instant;
 
 use super::{HEIGHT, WIDTH};
@@ -147,6 +146,7 @@ impl Buddha {
         }
     }
     fn send_interesting_sample(&mut self, value: mask64x4) {
+        // return;
         if self.using_mutated_samples {
             return;
         }
@@ -184,8 +184,8 @@ impl Buddha {
         let mul = reduced_max as f32 / (255.0_f32).powi(2);
         self.pixels
             .iter()
-            .map(|pixel|{
-                let color = (*pixel as f32 / mul).sqrt() as u32;
+            .map(|pixel| {
+                let color = (*pixel as f32 / mul).sqrt().clamp(0., 255.) as u32;
                 color | color << 8 | color << 16
             })
             .collect()
@@ -221,7 +221,7 @@ impl Updateable for Buddha {
             samples as f64 / instant.elapsed().as_micros() as f64
         );
     }
-    fn draw(&mut self) -> Vec<u32> {
+    fn draw(&mut self, _view: ViewRect) -> Vec<u32> {
         self.normalise_pixels()
     }
     fn update_view_rect(&mut self, view_rect: ViewRect) {

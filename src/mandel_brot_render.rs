@@ -7,14 +7,14 @@ use super::{HEIGHT, WIDTH};
 
 pub struct MandelbrotRender {
     view_rect: ViewRect,
-    pixels: Vec<u8>,
+    pixels: Vec<u32>,
     pixel_cords: (Vec<f64>, Vec<f64>),
 }
 impl MandelbrotRender {
     pub fn new() -> Self {
         Self {
             view_rect: ViewRect::default(),
-            pixels: vec![0; WIDTH * HEIGHT * 4],
+            pixels: vec![0; WIDTH * HEIGHT],
             pixel_cords: (vec![0.; WIDTH * HEIGHT], vec![0.; WIDTH * HEIGHT]),
         }
     }
@@ -31,7 +31,7 @@ impl MandelbrotRender {
     }
     fn update_pixels(&mut self) {
         self.pixels
-            .array_chunks_mut::<16>()
+            .array_chunks_mut::<4>()
             .zip(
                 self.pixel_cords
                     .0
@@ -50,19 +50,16 @@ impl MandelbrotRender {
             self.update_pixels();
         }
     }
-    pub fn get_raw_pixels(&mut self, new_view_rect: ViewRect) -> Vec<u8> {
+    pub fn get_raw_pixels(&mut self, new_view_rect: ViewRect) -> Vec<u32> {
         self.set_camera_rect(new_view_rect);
         self.pixels.clone()
     }
 }
-fn iterations_to_color(iterations: [i64; 4]) -> [u8; 16] {
-    let mut colors = [0; 16];
+fn iterations_to_color(iterations: [i64; 4]) -> [u32; 4] {
+    let mut colors = [0; 4];
     for i in 0..4 {
-        let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u8;
-        colors[i * 4] = color_value;
-        colors[i * 4 + 1] = color_value;
-        colors[i * 4 + 2] = color_value;
-        colors[i * 4 + 3] = 255;
+        let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u32;
+        colors[i] = color_value + (color_value << 8) + (color_value << 16);
     }
     colors
 }

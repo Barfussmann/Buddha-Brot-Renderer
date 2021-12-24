@@ -64,15 +64,38 @@ impl Cell {
     pub fn side_length(grid_size: usize) -> f64 {
         4. / grid_size as f64
     }
+    pub fn from_pos(pos: DVec2, grid_size: usize) -> Self {
+        let mut ipos = (pos / Self::side_length(grid_size)).as_ivec2();
+        if pos.x.is_sign_negative() {
+            ipos.x -= 1;
+        } 
+        Self::new(ipos)
+    }
 }
 
 mod tests {
+    #[allow(unused_imports)]
+    use rand::thread_rng;
     #[test]
     fn from_index_form_index_is_same() {
-        let cell = super::Cell::new(super::IVec2::new(1, 2));
         for grid_size in 100..1000 {
+            let cell = super::Cell::new(super::IVec2::new(1, 2));
             let other = super::Cell::from_index(cell.index(grid_size), grid_size);
             assert_eq!(cell, other);
+        }
+    }
+    #[test]
+    fn from_pos_is_same_as_gen_point_pos() {
+        let cell_1 = super::Cell::from_pos(super::DVec2::ZERO, 1000);
+        let cell_2 = super::Cell::from_pos(super::dvec2(-1., 1.), 1000);
+        let rng = &mut thread_rng();
+        for _ in 0..10_000 {
+            let mut from_pos_1 = super::Cell::from_pos(cell_1.gen_point_inside(1000, rng), 1000);
+            from_pos_1.corner.y = from_pos_1.corner.y.abs();
+            assert_eq!(cell_1, from_pos_1);
+            let mut from_pos_2 = super::Cell::from_pos(cell_2.gen_point_inside(1000, rng), 1000);
+            from_pos_2.corner.y = from_pos_2.corner.y.abs();
+            assert_eq!(cell_2, from_pos_2);
         }
     }
 }
