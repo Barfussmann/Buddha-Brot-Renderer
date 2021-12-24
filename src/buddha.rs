@@ -181,24 +181,22 @@ impl Buddha {
         {
             reduced_max /= 2;
         }
-        let mul = u32::MAX.checked_div(reduced_max).unwrap_or_default();
+        let mul = reduced_max as f32 / (255.0_f32).powi(2);
         self.pixels
             .iter()
             // .flat_map(|pixel| std::iter::repeat(*pixel).take(4))
-            .flat_map(|pixel| std::iter::repeat((pixel.saturating_mul(mul) >> 24) as u8).take(4))
+            .flat_map(|pixel| std::iter::repeat((*pixel as f32 / mul).sqrt() as u8).take(4))
             .collect()
     }
     fn replenish_samples(&mut self) {
         if let Ok(mutated_sapmles) = self.mutated_samples.try_recv() {
             self.samples = mutated_sapmles;
             self.using_mutated_samples = true;
-            print!("|")
         } else {
             let new_samples = self.new_samples.recv().unwrap();
             let used_samples = std::mem::replace(&mut self.samples, new_samples);
             self.used_samples.send(used_samples).unwrap();
             self.using_mutated_samples = false;
-            print!(".")
         }
     }
     fn set_view_rect(&mut self, view_rect: ViewRect) {

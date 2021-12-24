@@ -31,7 +31,7 @@ lazy_static! {
 }
 
 fn main() {
-    let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
+    let buddha = Buddha::new(1000, ViewRect::default(), &COVARAGE_GRID);
 
     let test = CameraManger::new(false, buddha);
     SingleWindowApplication::run(test);
