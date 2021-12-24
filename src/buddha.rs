@@ -166,7 +166,7 @@ impl Buddha {
                 .unwrap();
         }
     }
-    fn normalise_pixels(&mut self) -> Vec<u8> {
+    fn normalise_pixels(&mut self) -> Vec<u32> {
         self.pixels[0] = 0;
         let max = *self.pixels.iter().max().unwrap();
         let mut reduced_max = max;
@@ -184,8 +184,10 @@ impl Buddha {
         let mul = reduced_max as f32 / (255.0_f32).powi(2);
         self.pixels
             .iter()
-            // .flat_map(|pixel| std::iter::repeat(*pixel).take(4))
-            .flat_map(|pixel| std::iter::repeat((*pixel as f32 / mul).sqrt() as u8).take(4))
+            .map(|pixel|{
+                let color = (*pixel as f32 / mul).sqrt() as u32;
+                color | color << 8 | color << 16
+            })
             .collect()
     }
     fn replenish_samples(&mut self) {
@@ -219,8 +221,8 @@ impl Updateable for Buddha {
             samples as f64 / instant.elapsed().as_micros() as f64
         );
     }
-    fn draw(&mut self, drawer: &mut Drawer) {
-        drawer.draw_raw_pixels(self.normalise_pixels());
+    fn draw(&mut self) -> Vec<u32> {
+        self.normalise_pixels()
     }
     fn update_view_rect(&mut self, view_rect: ViewRect) {
         self.set_view_rect(view_rect);

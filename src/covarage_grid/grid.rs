@@ -23,42 +23,43 @@ impl Grid {
     pub fn is_activ(&self, cell: Cell) -> bool {
         self.cells.contains(&cell)
     }
-    pub fn draw(&mut self, drawer: &mut Drawer) {
-        if self.cells_for_drawing.is_none() {
-            self.init_cell_for_drawing();
-        }
-        for row in self.cells_for_drawing.as_mut().unwrap().iter_mut() {
-            if row.1 {
-                row.0.sort_by_key(|cell| cell.index_2d(self.grid_size).0);
-                row.1 = false;
-            }
-        }
+    pub fn draw(&mut self) {
+        todo!();
+        // if self.cells_for_drawing.is_none() {
+        //     self.init_cell_for_drawing();
+        // }
+        // for row in self.cells_for_drawing.as_mut().unwrap().iter_mut() {
+        //     if row.1 {
+        //         row.0.sort_by_key(|cell| cell.index_2d(self.grid_size).0);
+        //         row.1 = false;
+        //     }
+        // }
 
-        let mut first_cell_in_block = Cell::dummy();
-        let mut prev_index = 0;
-        let side_length = Cell::side_length(self.grid_size);
-        let mut last_cell = Cell::dummy();
-        for cell in self
-            .cells_for_drawing
-            .as_ref()
-            .unwrap()
-            .iter()
-            .flat_map(|(row, _)| row.iter())
-        {
-            if prev_index + 1 != cell.index(self.grid_size) {
-                let mut corner = first_cell_in_block.get_corner(self.grid_size);
-                let x_height = last_cell.get_corner(self.grid_size).x - corner.x + side_length;
+        // let mut first_cell_in_block = Cell::dummy();
+        // let mut prev_index = 0;
+        // let side_length = Cell::side_length(self.grid_size);
+        // let mut last_cell = Cell::dummy();
+        // for cell in self
+        //     .cells_for_drawing
+        //     .as_ref()
+        //     .unwrap()
+        //     .iter()
+        //     .flat_map(|(row, _)| row.iter())
+        // {
+        //     if prev_index + 1 != cell.index(self.grid_size) {
+        //         let mut corner = first_cell_in_block.get_corner(self.grid_size);
+        //         let x_height = last_cell.get_corner(self.grid_size).x - corner.x + side_length;
 
-                drawer.draw_rect(corner, dvec2(x_height, side_length));
-                corner.y *= -1.;
-                if !drawer.draw_rect(corner, dvec2(x_height, -side_length)) {
-                    break;
-                }
-                first_cell_in_block = *cell;
-            }
-            last_cell = *cell;
-            prev_index = cell.index(self.grid_size);
-        }
+        //         drawer.draw_rect(corner, dvec2(x_height, side_length));
+        //         corner.y *= -1.;
+        //         if !drawer.draw_rect(corner, dvec2(x_height, -side_length)) {
+        //             break;
+        //         }
+        //         first_cell_in_block = *cell;
+        //     }
+        //     last_cell = *cell;
+        //     prev_index = cell.index(self.grid_size);
+        // }
     }
     fn init_cell_for_drawing(&mut self) {
         self.cells_for_drawing = Some(vec![(Vec::new(), false); self.grid_size]);

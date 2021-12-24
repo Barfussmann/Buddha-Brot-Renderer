@@ -99,8 +99,9 @@ impl Updateable for CovarageGridGen {
     fn update(&mut self) {
         self.sample_neighbors();
     }
-    fn draw(&mut self, drawer: &mut Drawer) {
-        self.inside_cells.draw(drawer);
+    fn draw(&mut self) -> Vec<u32> {
+        todo!()
+        // self.inside_cells.draw(drawer);
     }
     fn is_finished(&self) -> bool {
         self.is_finished()

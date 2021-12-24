@@ -1,11 +1,6 @@
 #![allow(dead_code, unused_variables)]
 #![warn(
     clippy::nursery,
-    clippy::branches_sharing_code,
-    clippy::cognitive_complexity,
-    clippy::option_if_let_else,
-    clippy::suspicious_operation_groupings,
-    clippy::useless_let_if_seq
 )]
 #![feature(test, portable_simd, iter_zip, array_chunks)]
 
@@ -20,7 +15,6 @@ mod sample_mutator;
 use buddha::Buddha;
 use camera::*;
 use covarage_grid::CovarageGrid;
-use kludgine::prelude::*;
 use lazy_static::*;
 
 const SIZE: usize = 1024;
@@ -33,6 +27,6 @@ lazy_static! {
 fn main() {
     let buddha = Buddha::new(1000, ViewRect::default(), &COVARAGE_GRID);
 
-    let test = CameraManger::new(false, buddha);
-    SingleWindowApplication::run(test);
+    let test = CameraManger::start(false, buddha);
+    // SingleWindowApplication::run(test);
 }
