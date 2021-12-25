@@ -29,6 +29,9 @@ impl Pixels {
         self.pixels[indexs[2] as usize] = added_pixels[2];
         self.pixels[indexs[3] as usize] = added_pixels[3];
     }
+    pub fn set(&mut self, index: usize, value: u32) {
+        self.pixels[index] = value;
+    }
     pub fn noramalise(&mut self) -> Vec<u32> {
         self.pixels[0] = 0;
         let max = *self.pixels.iter().max().unwrap();
