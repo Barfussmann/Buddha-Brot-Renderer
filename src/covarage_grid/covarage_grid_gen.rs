@@ -1,5 +1,4 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
-use crate::{HEIGHT, WIDTH};
 use glam::IVec2;
 use std::fs;
 use std::{
