@@ -2,6 +2,7 @@ use super::camera::*;
 use super::covarage_grid::*;
 use super::sample_gen::SampleGen;
 use super::sample_mutator::SampleMutator;
+use super::pixels::Pixels;
 use core::simd::*;
 use flume::{Receiver, Sender};
 use glam::DVec2;
@@ -14,7 +15,7 @@ pub struct Buddha {
     max_iteration: u64x4,
     iterations_on_screen: i64x4,
     value_to_replace: mask64x4,
-    pixels: Vec<u32>,
+    pixels: Pixels,
     samples: Vec<DVec2>,
     view: View,
     used_samples: Sender<Vec<DVec2>>,
@@ -73,7 +74,7 @@ impl Buddha {
             mandel_iter: MandelIter::new(),
             max_iteration: u64x4::splat(max_iterations),
             iterations_on_screen: i64x4::splat(0),
-            pixels: vec![0; WIDTH * HEIGHT],
+            pixels: Pixels::new(WIDTH, HEIGHT),
             samples: Vec::new(),
             value_to_replace: mask64x4::from_array([true, false, false, false]),
             view: View::new(ViewRect::default()),
@@ -107,42 +108,37 @@ impl Buddha {
     fn add_pixels(&mut self) {
         self.iterations_on_screen -= self.view.in_view.to_int();
         let screen_index = self.view.screen_index(self.mandel_iter.get_z());
-        let indexs = screen_index.as_array();
-        let added_pixels = [
-            self.pixels[indexs[0] as usize].saturating_add(1),
-            self.pixels[indexs[1] as usize].saturating_add(1),
-            self.pixels[indexs[2] as usize].saturating_add(1),
-            self.pixels[indexs[3] as usize].saturating_add(1),
-        ];
-        self.pixels[indexs[0] as usize] = added_pixels[0];
-        self.pixels[indexs[1] as usize] = added_pixels[1];
-        self.pixels[indexs[2] as usize] = added_pixels[2];
-        self.pixels[indexs[3] as usize] = added_pixels[3];
+        self.pixels.quad_add_one(screen_index);
     }
     fn try_replace_samples(&mut self) {
-        let zero = f64x4::splat(0.);
+        let values_to_replace =
+            !self.is_inside() | self.mandel_iter.iteration.lanes_ge(self.max_iteration);
 
-        let value_to_replace = self.value_to_replace
-            & (!self.is_inside() | self.mandel_iter.iteration.lanes_ge(self.max_iteration));
-        // hacky method to rotate.
-        self.value_to_replace = unsafe {
-            mask64x4::from_int_unchecked(self.value_to_replace.to_int().rotate_lanes_left::<1>())
-        };
-        if value_to_replace.any() {
+        if values_to_replace.any() {
+            let shifted = (values_to_replace.to_int().rotate_lanes_right::<1>()
+                & i64x4::from_array([0, -1, -1, -1]))
+                | (values_to_replace.to_int().rotate_lanes_right::<2>()
+                    & i64x4::from_array([0, 0, -1, -1]))
+                | (values_to_replace.to_int().rotate_lanes_right::<2>()
+                    & i64x4::from_array([0, 0, 0, -1]));
+            let singel_value_to_replace =
+                values_to_replace & !unsafe { mask64x4::from_int_unchecked(shifted) };
+
             let new_sample = self.samples.pop().unwrap();
             if self.samples.is_empty() {
                 self.replenish_samples();
             }
-            let iter_on_screen_of_removed_sample = value_to_replace
+            let iter_on_screen_of_removed_sample = singel_value_to_replace
                 .select(self.iterations_on_screen, i64x4::splat(0))
                 .horizontal_sum();
             if iter_on_screen_of_removed_sample != 0 {
-                self.send_interesting_sample(value_to_replace)
+                self.send_interesting_sample(singel_value_to_replace)
             }
 
             self.iterations_on_screen =
-                value_to_replace.select(i64x4::splat(0), self.iterations_on_screen);
-            self.mandel_iter.try_replace(value_to_replace, new_sample);
+                singel_value_to_replace.select(i64x4::splat(0), self.iterations_on_screen);
+            self.mandel_iter
+                .replace(singel_value_to_replace, new_sample);
         }
     }
     fn send_interesting_sample(&mut self, value: mask64x4) {
@@ -167,28 +163,7 @@ impl Buddha {
         }
     }
     fn normalise_pixels(&mut self) -> Vec<u32> {
-        self.pixels[0] = 0;
-        let max = *self.pixels.iter().max().unwrap();
-        let mut reduced_max = max;
-        while self
-            .pixels
-            .iter()
-            .filter(|&&pixel| pixel > reduced_max)
-            .count()
-            * 1_000
-            < self.pixels.len()
-            && reduced_max > 1
-        {
-            reduced_max /= 2;
-        }
-        let mul = reduced_max as f32 / (255.0_f32).powi(2);
-        self.pixels
-            .iter()
-            .map(|pixel| {
-                let color = (*pixel as f32 / mul).sqrt().clamp(0., 255.) as u32;
-                color | color << 8 | color << 16
-            })
-            .collect()
+        self.pixels.noramalise()
     }
     fn replenish_samples(&mut self) {
         if let Ok(mutated_sapmles) = self.mutated_samples.try_recv() {
@@ -210,10 +185,8 @@ impl Updateable for Buddha {
     fn update(&mut self) {
         let instant = Instant::now();
         let samples = 10_000_000;
-        for _ in 0..samples / 4 {
-            for _ in 0..4 {
-                self.iterate();
-            }
+        for _ in 0..samples {
+            self.iterate();
             self.try_replace_samples();
         }
         println!(
@@ -226,7 +199,7 @@ impl Updateable for Buddha {
     }
     fn update_view_rect(&mut self, view_rect: ViewRect) {
         self.set_view_rect(view_rect);
-        self.pixels = vec![0; WIDTH * HEIGHT];
+        self.pixels.clear();
     }
 }
 
@@ -305,7 +278,7 @@ impl MandelIter {
         self.iteration += u64x4::splat(1);
     }
     #[inline(always)]
-    fn try_replace(&mut self, value_to_replace: mask64x4, new_sample: DVec2) {
+    fn replace(&mut self, value_to_replace: mask64x4, new_sample: DVec2) {
         let zero = f64x4::splat(0.);
         let new_c_x = f64x4::splat(new_sample.x);
         let new_c_y = f64x4::splat(new_sample.y);
