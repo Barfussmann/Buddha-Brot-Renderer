@@ -1,7 +1,8 @@
-use std::{slice::Iter, iter::Cycle};
+use std::{iter::Cycle, slice::Iter};
 
 use super::covarage_grid::*;
 use super::mandel_iter::*;
+use super::{MAX_ITER, MIN_ITER};
 use flume::{Receiver, Sender};
 use glam::DVec2;
 
@@ -39,9 +40,9 @@ impl SampleGen {
                     cell.gen_point_inside(self.grid_size, &mut self.rng),
                     cell.gen_point_inside(self.grid_size, &mut self.rng),
                 ];
-                let iteration_counts = iterate_points_dvec2(&poss_samples, 100);
+                let iteration_counts = iterate_points_dvec2(&poss_samples, MAX_ITER);
                 for (sample, iteration_count) in std::iter::zip(poss_samples, iteration_counts) {
-                    if 30 < iteration_count && iteration_count < 100 {
+                    if (MIN_ITER as i64) < iteration_count && iteration_count < MAX_ITER as i64 {
                         used_samples.push(sample);
                     }
                 }

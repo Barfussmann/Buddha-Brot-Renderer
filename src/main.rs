@@ -19,6 +19,8 @@ use lazy_static::*;
 const SIZE: usize = 1024;
 pub const WIDTH: usize = SIZE;
 pub const HEIGHT: usize = SIZE;
+pub const MIN_ITER: usize = 50;
+pub const MAX_ITER: usize = 100;
 // pub const HEIGHT: usize = (SIZE as f64 * (2.64 / 3.0)) as usize;
 lazy_static! {
     static ref COVARAGE_GRID: CovarageGrid = CovarageGrid::get_covarag_grid(10_000, 50, 100_000, 50);

@@ -1,4 +1,5 @@
 use super::mandel_iter::*;
+use super::{MAX_ITER, MIN_ITER};
 use flume::{Receiver, Sender};
 use glam::DVec2;
 use rand::{prelude::ThreadRng, Rng};
@@ -33,10 +34,10 @@ impl SampleMutator {
                         Self::mutate_point(interesting_sample, rng, self.grid_size),
                         Self::mutate_point(interesting_sample, rng, self.grid_size),
                     ];
-                    let iteration_counts = iterate_points_dvec2(&poss_samples, 100);
+                    let iteration_counts = iterate_points_dvec2(&poss_samples, MAX_ITER);
                     for (sample, iteration_count) in std::iter::zip(poss_samples, iteration_counts)
                     {
-                        if 30 < iteration_count && iteration_count < 100 {
+                        if (MIN_ITER as i64) < iteration_count && iteration_count < MAX_ITER as i64 {
                             new_samples.push(sample);
                         }
                     }
