@@ -1,17 +1,14 @@
 use super::{camera::*, cell::*, grid::*, sample_cells::*, sampled_cell::*, worker::*};
+use flume::{Receiver, Sender};
 use glam::IVec2;
 use std::fs;
-use std::{
-    sync::{mpsc, Mutex},
-    thread,
-    time::Instant,
-};
+use std::{thread, time::Instant};
 
 pub struct CovarageGridGen {
     inside_cells: Grid,
     grid_size: usize,
-    cell_to_sample: Mutex<spmc::Sender<Cell>>,
-    cell_that_are_inside: Mutex<mpsc::Receiver<SampledCell>>,
+    cell_to_sample: Sender<Cell>,
+    cell_that_are_inside: Receiver<SampledCell>,
     saved_cells: Vec<SampledCell>,
     last_cell_count_change: Instant,
     file_name_to_save_to: String,
@@ -19,8 +16,8 @@ pub struct CovarageGridGen {
 
 impl CovarageGridGen {
     pub fn new(limit: usize, samples_per_cell: usize, grid_size: usize, file_name: String) -> Self {
-        let (mut cell_to_sample_sender, cell_to_sample_receiver) = spmc::channel();
-        let (cell_that_are_inside_sender, cell_that_are_inside_receiver) = mpsc::channel();
+        let (cell_to_sample_sender, cell_to_sample_receiver) = flume::unbounded();
+        let (cell_that_are_inside_sender, cell_that_are_inside_receiver) = flume::unbounded();
         for _ in 0..16 {
             let receiver = cell_to_sample_receiver.clone();
             let sender = cell_that_are_inside_sender.clone();
@@ -37,8 +34,8 @@ impl CovarageGridGen {
         Self {
             inside_cells: Grid::new(grid_size),
             grid_size,
-            cell_to_sample: Mutex::new(cell_to_sample_sender),
-            cell_that_are_inside: Mutex::new(cell_that_are_inside_receiver),
+            cell_to_sample: cell_to_sample_sender,
+            cell_that_are_inside: cell_that_are_inside_receiver,
             saved_cells: Vec::new(),
             last_cell_count_change: Instant::now(),
             file_name_to_save_to: file_name,
@@ -50,8 +47,6 @@ impl CovarageGridGen {
         while start.elapsed().as_millis() < 100 {
             for save_cell in self
                 .cell_that_are_inside
-                .lock()
-                .unwrap()
                 .try_iter()
                 .take(10_000)
             {
@@ -61,8 +56,6 @@ impl CovarageGridGen {
                     }
                     had_change = true;
                     self.cell_to_sample
-                        .get_mut()
-                        .unwrap()
                         .send(neighbor)
                         .unwrap();
                 }

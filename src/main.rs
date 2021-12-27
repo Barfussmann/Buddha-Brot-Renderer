@@ -24,7 +24,7 @@ pub const MIN_ITER: usize = 50;
 pub const MAX_ITER: usize = 100;
 lazy_static! {
     static ref COVARAGE_GRID: CovarageGrid =
-        CovarageGrid::get_covarag_grid(10_000, 30, 10_000, 50);
+        CovarageGrid::get_covarag_grid(1_000, 30, 10_000, 50);
 }
 
 fn main() {

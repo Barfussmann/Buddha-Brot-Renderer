@@ -1,11 +1,11 @@
 use super::{cell::*, mandel_iter::*, sampled_cell::SampledCell};
 use core_simd::*;
 use rand::prelude::{thread_rng, ThreadRng};
-use std::sync::mpsc;
+use flume::{Sender, Receiver};
 
 pub struct Worker {
-    cell_to_sample: spmc::Receiver<Cell>,
-    cell_that_are_inside: mpsc::Sender<SampledCell>,
+    cell_to_sample: Receiver<Cell>,
+    cell_that_are_inside: Sender<SampledCell>,
     current_cells: [Cell; 4],
     sampels: usize,
     grid_size: usize,
@@ -15,8 +15,8 @@ pub struct Worker {
 }
 impl Worker {
     pub fn start(
-        cell_to_work_on: spmc::Receiver<Cell>,
-        cell_that_are_inside: mpsc::Sender<SampledCell>,
+        cell_to_work_on: Receiver<Cell>,
+        cell_that_are_inside: Sender<SampledCell>,
         limit: usize,
         sampels: usize,
         grid_size: usize,
