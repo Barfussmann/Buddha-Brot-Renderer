@@ -1,8 +1,9 @@
 use super::camera::*;
 use super::covarage_grid::*;
+use super::histogram::Histogram;
+use super::pixels::Pixels;
 use super::sample_gen::SampleGen;
 use super::sample_mutator::SampleMutator;
-use super::pixels::Pixels;
 use core::simd::*;
 use flume::{Receiver, Sender};
 use glam::DVec2;
@@ -24,6 +25,7 @@ pub struct Buddha {
     interesting_samples: Sender<Vec<DVec2>>,
     current_interesting_samples: Vec<DVec2>,
     using_mutated_samples: bool,
+    histogram: Histogram,
 }
 
 #[allow(unused_variables)]
@@ -84,6 +86,7 @@ impl Buddha {
             interesting_samples: interesting_samples_tx,
             current_interesting_samples: Vec::new(),
             using_mutated_samples: false,
+            histogram: Histogram::new(WIDTH, HEIGHT, ViewRect::default()),
         };
         buddha.replenish_samples();
         buddha.set_view_rect(view_rect);
@@ -152,7 +155,9 @@ impl Buddha {
         let y = value
             .select(self.mandel_iter.get_c().1, f64x4::splat(0.))
             .horizontal_sum();
-        self.current_interesting_samples.push(DVec2::new(x, y));
+        let iteresting_sample = DVec2::new(x, y);
+        self.histogram.add_point(iteresting_sample);
+        self.current_interesting_samples.push(iteresting_sample);
         if self.current_interesting_samples.len() > 128 {
             self.interesting_samples
                 .send(std::mem::replace(
@@ -195,11 +200,13 @@ impl Updateable for Buddha {
         );
     }
     fn draw(&mut self, _view: ViewRect) -> Vec<u32> {
+        self.histogram.draw();
         self.normalise_pixels()
     }
     fn update_view_rect(&mut self, view_rect: ViewRect) {
         self.set_view_rect(view_rect);
         self.pixels.clear();
+        self.histogram.clear();
     }
 }
 

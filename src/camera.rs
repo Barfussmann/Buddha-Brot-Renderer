@@ -16,7 +16,7 @@ pub struct CameraManger<T: Updateable> {
 
 impl<T> CameraManger<T>
 where
-    T: Updateable + Sync + Send + 'static,
+    T: Updateable + 'static,
 {
     pub fn start(mandel_render: bool, generator: T) {
         Self {
@@ -124,6 +124,10 @@ impl ViewRect {
     }
     pub fn get_bottom_right_corner(&self) -> DVec2 {
         self.top_left_corner + self.view_size
+    }
+    pub fn screen_index(&self, point: DVec2) -> usize {
+        let screen = (point - self.top_left_corner) * self.get_screen_scale();
+        screen.x as usize + (screen.y as usize * WIDTH)
     }
 }
 impl Default for ViewRect {
