@@ -23,8 +23,7 @@ pub const HEIGHT: usize = (SIZE as f64 * (2.64 / 3.0)) as usize;
 pub const MIN_ITER: usize = 50;
 pub const MAX_ITER: usize = 100;
 lazy_static! {
-    static ref COVARAGE_GRID: CovarageGrid =
-        CovarageGrid::get_covarag_grid(1_000, 30, 10_000, 50);
+    static ref COVARAGE_GRID: CovarageGrid = CovarageGrid::get_covarag_grid(1_000, 30, 10_000, 50);
 }
 
 fn main() {

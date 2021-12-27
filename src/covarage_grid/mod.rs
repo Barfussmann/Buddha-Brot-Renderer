@@ -14,7 +14,6 @@ use glam::DVec2;
 use sample_cells::*;
 use std::{fs, path::Path, thread, time::Duration};
 
-
 pub struct CovarageGrid {
     cells: Vec<cell::Cell>,
     gridsize: usize,
@@ -54,8 +53,8 @@ impl CovarageGrid {
             grid_size,
             Self::get_file_name(grid_size, limit, samples_per_cell),
         );
-        
-        std::thread::spawn(move|| camera::CameraManger::start(true, covarage_grid_gen));
+
+        std::thread::spawn(move || camera::CameraManger::start(true, covarage_grid_gen));
     }
     pub fn get_file_name(grid_size: usize, limit: usize, samples_per_cell: usize) -> String {
         format!(

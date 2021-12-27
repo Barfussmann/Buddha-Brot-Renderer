@@ -1,5 +1,5 @@
-use super::pixels::Pixels;
 use super::camera::ViewRect;
+use super::pixels::Pixels;
 use glam::DVec2;
 use minifb::{Window, WindowOptions};
 
@@ -29,9 +29,11 @@ impl Histogram {
         }
     }
     pub fn draw(&mut self) {
-        self.window.update_with_buffer(&self.pixels.noramalise(), self.width, self.height).unwrap();
+        self.window
+            .update_with_buffer(&self.pixels.noramalise(), self.width, self.height)
+            .unwrap();
     }
-    pub fn clear(&mut self){
+    pub fn clear(&mut self) {
         self.pixels.clear();
     }
 }

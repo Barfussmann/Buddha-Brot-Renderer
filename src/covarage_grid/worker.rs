@@ -1,7 +1,7 @@
 use super::{cell::*, mandel_iter::*, sampled_cell::SampledCell};
 use core_simd::*;
+use flume::{Receiver, Sender};
 use rand::prelude::{thread_rng, ThreadRng};
-use flume::{Sender, Receiver};
 
 pub struct Worker {
     cell_to_sample: Receiver<Cell>,

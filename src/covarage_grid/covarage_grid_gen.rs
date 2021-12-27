@@ -45,19 +45,13 @@ impl CovarageGridGen {
         let mut had_change = false;
         let start = Instant::now();
         while start.elapsed().as_millis() < 100 {
-            for save_cell in self
-                .cell_that_are_inside
-                .try_iter()
-                .take(10_000)
-            {
+            for save_cell in self.cell_that_are_inside.try_iter().take(10_000) {
                 for neighbor in save_cell.get_cell(self.grid_size).get_neighbors() {
                     if !self.chech_if_neighbor_is_new(neighbor) {
                         continue;
                     }
                     had_change = true;
-                    self.cell_to_sample
-                        .send(neighbor)
-                        .unwrap();
+                    self.cell_to_sample.send(neighbor).unwrap();
                 }
                 self.inside_cells.insert(save_cell.get_cell(self.grid_size));
                 self.saved_cells.push(save_cell);

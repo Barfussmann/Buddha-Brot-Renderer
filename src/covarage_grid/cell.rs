@@ -68,7 +68,7 @@ impl Cell {
         let mut ipos = (pos / Self::side_length(grid_size)).as_ivec2();
         if pos.x.is_sign_negative() {
             ipos.x -= 1;
-        } 
+        }
         Self::new(ipos)
     }
 }

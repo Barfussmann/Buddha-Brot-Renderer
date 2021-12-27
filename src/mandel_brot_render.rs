@@ -1,5 +1,5 @@
-use super::mandel_iter::*;
 use super::camera::ViewRect;
+use super::mandel_iter::*;
 use glam::DVec2 as Vec2;
 use rayon::prelude::*;
 
@@ -23,7 +23,8 @@ impl MandelbrotRender {
         for x in 0..WIDTH {
             for y in 0..HEIGHT {
                 let index = y * WIDTH + x;
-                let cords = self.view_rect.top_left_corner + Vec2::new(x as f64, y as f64) * delta_pixel;
+                let cords =
+                    self.view_rect.top_left_corner + Vec2::new(x as f64, y as f64) * delta_pixel;
                 self.pixel_cords.0[index] = cords.x;
                 self.pixel_cords.1[index] = cords.y;
             }

@@ -23,17 +23,7 @@ pub fn iterat_points(x: [f64; 4], y: [f64; 4], max_iterations: usize) -> i64x4 {
     iterations
 }
 pub fn iterate_points_dvec2(points: &[DVec2; 4], max_interations: usize) -> [i64; 4] {
-    let x = [
-        points[0].x,
-        points[1].x,
-        points[2].x,
-        points[3].x,
-    ];
-    let y = [
-        points[0].y,
-        points[1].y,
-        points[2].y,
-        points[3].y,
-    ];
+    let x = [points[0].x, points[1].x, points[2].x, points[3].x];
+    let y = [points[0].y, points[1].y, points[2].y, points[3].y];
     iterat_points(x, y, max_interations).to_array()
 }
