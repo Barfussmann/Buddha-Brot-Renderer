@@ -72,9 +72,6 @@ where
             self.mouse_pos / dvec2(WIDTH as f64, HEIGHT as f64) * self.view_rect.view_size;
         self.view_rect.top_left_corner + mouse_offset
     }
-    pub fn get_view_rect(&self) -> ViewRect {
-        self.view_rect
-    }
     pub fn reset_zoom(&mut self) {
         self.view_rect = ViewRect::default();
         self.request_redraw();

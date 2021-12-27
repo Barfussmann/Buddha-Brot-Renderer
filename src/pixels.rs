@@ -1,15 +1,11 @@
 use core::simd::*;
 
 pub struct Pixels {
-    width: usize,
-    height: usize,
     pub pixels: Vec<u32>,
 }
 impl Pixels {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
-            width,
-            height,
             pixels: vec![0; width * height],
         }
     }

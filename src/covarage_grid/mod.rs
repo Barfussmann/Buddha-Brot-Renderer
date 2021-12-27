@@ -8,9 +8,7 @@ mod worker;
 use super::camera;
 // use super::camera::*;
 use super::mandel_iter;
-use super::mandel_iter::*;
 
-use glam::DVec2;
 use sample_cells::*;
 use std::{fs, path::Path, thread, time::Duration};
 
@@ -61,29 +59,6 @@ impl CovarageGrid {
             "./gridsize: {}, limit: {}, samples_per_cells: {}.cells",
             grid_size, limit, samples_per_cell,
         )
-    }
-    pub fn gen_samples(&self, target: &mut Vec<DVec2>) {
-        let rng = &mut rand::thread_rng();
-        let new_samples = self.cells.iter().cycle().flat_map(|cell| {
-            let poss_samples = [
-                cell.gen_point_inside(self.gridsize, rng),
-                cell.gen_point_inside(self.gridsize, rng),
-                cell.gen_point_inside(self.gridsize, rng),
-                cell.gen_point_inside(self.gridsize, rng),
-            ];
-            let iteraion_counts = iterate_points_dvec2(&poss_samples, 100);
-
-            std::iter::zip(iteraion_counts, poss_samples).filter_map(|(iteration_count, point)| {
-                if 30 < iteration_count && iteration_count < 100 {
-                    Some(point)
-                } else {
-                    None
-                }
-            })
-        });
-        for (new_sample, old_sample) in new_samples.zip(target.iter_mut()) {
-            *old_sample = new_sample;
-        }
     }
     pub const fn get_cells(&self) -> &Vec<cell::Cell> {
         &self.cells

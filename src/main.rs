@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_variables)]
+// #![allow(dead_code, unused_variables)]
 #![warn(clippy::nursery)]
 #![feature(test, portable_simd, iter_zip, array_chunks)]
 
