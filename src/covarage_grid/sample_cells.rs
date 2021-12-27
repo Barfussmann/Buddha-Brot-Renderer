@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SampleCells {
-    pub cells: Vec<SampledCell>,
-    pub size: usize,
+    cells: Vec<SampledCell>,
+    size: usize,
 }
 impl SampleCells {
     pub fn new(cells: Vec<SampledCell>, size: usize) -> Self {
