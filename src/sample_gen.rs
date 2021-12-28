@@ -2,7 +2,8 @@
 use super::covarage_grid::cell::Cell;
 use flume::Sender;
 use glam::DVec2;
-use rand::prelude::*;
+
+const TEXTURE_SIZE: usize = 256;
 
 pub struct SampleGen {
     cells: Vec<Cell>,
@@ -20,7 +21,7 @@ impl SampleGen {
         .work();
     }
     fn work(&mut self) {
-        let mut enumerated_image = image::open("./FreeBlueNoiseTextures/Data/256_256/HDR_L_0.png")
+        let mut enumerated_image = image::open(format!("./FreeBlueNoiseTextures/Data/{TEXTURE_SIZE}_{TEXTURE_SIZE}/HDR_L_0.png"))
             .unwrap()
             .into_luma16()
             .into_raw()
@@ -40,9 +41,9 @@ impl SampleGen {
         let mut index = *pixel_order_iter.next().unwrap();
         loop {
             let mut samples = Vec::with_capacity(1024);
-            for _ in 0..512 {
+            for _ in 0..1024 {
                 if let Some(cell) = cell_iter.next() {
-                    let sample = cell.gen_point_from_index_inside(index, 256, self.grid_size);
+                    let sample = cell.gen_point_from_index_inside(index, TEXTURE_SIZE, self.grid_size);
                     samples.push(sample);
                 } else {
                     index = *pixel_order_iter.next().unwrap();
