@@ -26,6 +26,9 @@ impl Histogram {
             self.pixels.add_one(self.view.screen_index(point));
         }
     }
+    pub fn add_index(&mut self, index: usize) {
+        self.pixels.add_one(index);
+    }
     pub fn draw(&mut self) {
         self.window
             .update_with_buffer(&self.pixels.noramalise(), self.width, self.height)
