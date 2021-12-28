@@ -34,7 +34,6 @@ impl Grid {
                 let cell = Cell::from_pos(pos, self.grid_size);
                 if self.cells.contains(&cell) {
                     pixels[x + y * WIDTH] = 255 << 8;
-                    // ToDo mirror around x axsis
                 }
             }
         }
