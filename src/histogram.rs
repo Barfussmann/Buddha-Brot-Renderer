@@ -21,8 +21,6 @@ impl Histogram {
         }
     }
     pub fn add_point(&mut self, point: DVec2) {
-        // println!("{:?}", point);
-        // println!("{:?}", self.view.screen_index(point));
         let index = self.view.screen_index(point);
         if index < self.pixels.pixels.len() {
             self.pixels.add_one(self.view.screen_index(point));
