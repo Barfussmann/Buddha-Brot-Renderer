@@ -37,7 +37,6 @@ impl CovarageGrid {
         let sample_cells: SampleCells = bincode::deserialize(&sampled_cells_data).unwrap();
 
         let cells = sample_cells.to_cells(sample_limit);
-        println!("cells: {}", cells.len());
 
         Self {
             cells,
