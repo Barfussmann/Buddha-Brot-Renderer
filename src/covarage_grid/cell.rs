@@ -71,6 +71,18 @@ impl Cell {
         }
         Self::new(ipos)
     }
+    pub fn gen_point_from_index_inside(&self, index: usize, index_grid_size: usize, global_grid_size: usize) -> DVec2 {
+        let x = index % index_grid_size;
+        let y = index / index_grid_size;
+        let side_length = Self::side_length(global_grid_size);
+        let step_size = side_length / index_grid_size as f64;
+        let offset = dvec2(
+            (x as f64) * step_size,
+            (y as f64) * step_size,
+        );
+        let corner = self.get_corner(global_grid_size);
+        corner + offset
+    }
 }
 
 mod tests {
