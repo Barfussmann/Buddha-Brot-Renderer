@@ -120,7 +120,7 @@ impl Buddha {
                 & i64x4::from_array([0, -1, -1, -1]))
                 | (values_to_replace.to_int().rotate_lanes_right::<2>()
                     & i64x4::from_array([0, 0, -1, -1]))
-                | (values_to_replace.to_int().rotate_lanes_right::<2>()
+                | (values_to_replace.to_int().rotate_lanes_right::<3>()
                     & i64x4::from_array([0, 0, 0, -1]));
             let singel_value_to_replace =
                 values_to_replace & !unsafe { mask64x4::from_int_unchecked(shifted) };
@@ -132,7 +132,7 @@ impl Buddha {
             let iter_on_screen_of_removed_sample = singel_value_to_replace
                 .select(self.iterations_on_screen, i64x4::splat(0))
                 .horizontal_sum();
-            if iter_on_screen_of_removed_sample != 0 {
+            if iter_on_screen_of_removed_sample >= 2 {
                 self.send_interesting_sample(singel_value_to_replace)
             }
 
@@ -282,11 +282,14 @@ impl MandelIter {
         self.z_squared_y = self.z_y * self.z_y;
         self.iteration += u64x4::splat(1);
     }
+    /// only one value can be replaced. The one that is true in value_to_replace.
     #[inline(always)]
     fn replace(&mut self, value_to_replace: mask64x4, new_sample: DVec2) {
         let zero = f64x4::splat(0.);
         let new_c_x = f64x4::splat(new_sample.x);
         let new_c_y = f64x4::splat(new_sample.y);
+
+        assert!(new_sample.x > -3.);
 
         self.c_x = value_to_replace.select(new_c_x, self.c_x);
         self.c_y = value_to_replace.select(new_c_y, self.c_y);
