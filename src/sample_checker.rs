@@ -1,53 +1,40 @@
-use std::{iter::Cycle, slice::Iter};
-
-use super::covarage_grid::*;
 use super::mandel_iter::*;
 use super::{MAX_ITER, MIN_ITER};
 use flume::{Receiver, Sender};
 use glam::DVec2;
 
 pub struct SampleChecker {
-    cell_iter: Cycle<Iter<'static, cell::Cell>>,
-    used_samples: Receiver<Vec<DVec2>>,
-    new_samples: Sender<Vec<DVec2>>,
-    rng: rand::rngs::ThreadRng,
-    grid_size: usize,
+    new_samples: Receiver<Vec<DVec2>>,
+    checked_samples: Sender<Vec<DVec2>>,
 }
 impl SampleChecker {
-    pub fn start_working(
-        cell_iter: Cycle<Iter<'static, cell::Cell>>,
-        used_samples: Receiver<Vec<DVec2>>,
-        new_samples: Sender<Vec<DVec2>>,
-        grid_size: usize,
-    ) {
+    pub fn start_working(new_samples: Receiver<Vec<DVec2>>, checked_samples: Sender<Vec<DVec2>>) {
         Self {
-            cell_iter,
-            used_samples,
             new_samples,
-            rng: rand::thread_rng(),
-            grid_size,
+            checked_samples,
         }
         .work();
     }
     fn work(&mut self) {
-        for mut used_samples in self.used_samples.iter() {
-            while used_samples.len() < 1020 {
-                let cell = self.cell_iter.next().unwrap();
-
-                let poss_samples = [
-                    cell.gen_point_inside(self.grid_size, &mut self.rng),
-                    cell.gen_point_inside(self.grid_size, &mut self.rng),
-                    cell.gen_point_inside(self.grid_size, &mut self.rng),
-                    cell.gen_point_inside(self.grid_size, &mut self.rng),
-                ];
-                let iteration_counts = iterate_points_dvec2(&poss_samples, MAX_ITER);
-                for (sample, iteration_count) in std::iter::zip(poss_samples, iteration_counts) {
+        let mut ckecked_samples = Vec::with_capacity(1024);
+        for new_sampels in self.new_samples.iter() {
+            for new_samples in new_sampels.array_chunks::<4>() {
+                let iteration_counts = iterate_points_dvec2(new_samples, MAX_ITER);
+                for (sample, iteration_count) in std::iter::zip(new_samples, iteration_counts) {
                     if (MIN_ITER as i64) < iteration_count && iteration_count < MAX_ITER as i64 {
-                        used_samples.push(sample);
+                        ckecked_samples.push(*sample);
+                        let y_fliped = DVec2::new(sample.x, -sample.y);
+                        ckecked_samples.push(y_fliped);
                     }
                 }
             }
-            self.new_samples.send(used_samples).unwrap();
+            if self.checked_samples
+                .send(std::mem::replace(
+                    &mut ckecked_samples,
+                    Vec::with_capacity(1024),
+                )).is_err() {
+                    break;
+                }
         }
     }
 }

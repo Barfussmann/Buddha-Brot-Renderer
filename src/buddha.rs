@@ -2,8 +2,9 @@ use super::camera::*;
 use super::covarage_grid::*;
 use super::histogram::Histogram;
 use super::pixels::Pixels;
+use super::sample_checker::SampleChecker;
+// use super::sample_mutator::SampleMutator;
 use super::sample_gen::SampleGen;
-use super::sample_mutator::SampleMutator;
 use core::simd::*;
 use flume::{Receiver, Sender};
 use glam::DVec2;
@@ -18,7 +19,6 @@ pub struct Buddha {
     pixels: Pixels,
     samples: Vec<DVec2>,
     view: View,
-    used_samples: Sender<Vec<DVec2>>,
     new_samples: Receiver<Vec<DVec2>>,
     mutated_samples: Receiver<Vec<DVec2>>,
     interesting_samples: Sender<Vec<DVec2>>,
@@ -35,41 +35,41 @@ impl Buddha {
         covarage_grid: &'static CovarageGrid,
     ) -> Self {
         let zero = f64x4::splat(0.);
-        let (used_samples_tx, used_samples_rx) = flume::unbounded();
-        let (new_samples_tx, new_samples_rx) = flume::unbounded();
 
-        let iter = covarage_grid.get_cells().iter().cycle();
+        let (new_samples_tx, new_samples_rx) = flume::bounded(64);
+
+        std::thread::spawn(move || {
+            SampleGen::start(
+                covarage_grid.get_cells().clone(),
+                covarage_grid.get_grid_size(),
+                new_samples_tx,
+            );
+        });
+
+        let (checked_samples_tx, checked_samples_rx) = flume::bounded(64);
+
         for _ in 0..16 {
-            let used_samples_rx = used_samples_rx.clone();
-            let new_samples_tx = new_samples_tx.clone();
-            let iter = iter.clone();
+            let new_samples_rx = new_samples_rx.clone();
+            let checked_samples_tx = checked_samples_tx.clone();
             std::thread::spawn(move || {
-                SampleGen::start_working(
-                    iter,
-                    used_samples_rx,
-                    new_samples_tx,
-                    covarage_grid.get_grid_size(),
-                )
+                SampleChecker::start_working(new_samples_rx, checked_samples_tx)
             });
-        }
-        for _ in 0..48 {
-            used_samples_tx.send(Vec::with_capacity(1024)).unwrap();
         }
 
         let (mutated_samples_tx, mutated_samples_rx) = flume::unbounded();
         let (interesting_samples_tx, interesting_samples_rx) = flume::unbounded();
 
-        for _ in 0..16 {
-            let mutated_samples_tx = mutated_samples_tx.clone();
-            let interesting_samples_rx = interesting_samples_rx.clone();
-            std::thread::spawn(move || {
-                SampleMutator::start_working(
-                    mutated_samples_tx,
-                    interesting_samples_rx,
-                    covarage_grid.get_grid_size(),
-                )
-            });
-        }
+        // for _ in 0..16 {
+        //     let mutated_samples_tx = mutated_samples_tx.clone();
+        //     let interesting_samples_rx = interesting_samples_rx.clone();
+        //     std::thread::spawn(move || {
+        //         SampleMutator::start_working(
+        //             mutated_samples_tx,
+        //             interesting_samples_rx,
+        //             covarage_grid.get_grid_size(),
+        //         )
+        //     });
+        // }
 
         let mut buddha = Self {
             mandel_iter: MandelIter::new(),
@@ -78,8 +78,7 @@ impl Buddha {
             pixels: Pixels::new(WIDTH, HEIGHT),
             samples: Vec::new(),
             view: View::new(ViewRect::default()),
-            used_samples: used_samples_tx,
-            new_samples: new_samples_rx,
+            new_samples: checked_samples_rx,
             mutated_samples: mutated_samples_rx,
             interesting_samples: interesting_samples_tx,
             current_interesting_samples: Vec::new(),
@@ -126,15 +125,16 @@ impl Buddha {
                 values_to_replace & !unsafe { mask64x4::from_int_unchecked(shifted) };
 
             let new_sample = self.samples.pop().unwrap();
+            self.histogram.add_point(new_sample);
             if self.samples.is_empty() {
                 self.replenish_samples();
             }
             let iter_on_screen_of_removed_sample = singel_value_to_replace
                 .select(self.iterations_on_screen, i64x4::splat(0))
                 .horizontal_sum();
-            if iter_on_screen_of_removed_sample >= 2 {
-                self.send_interesting_sample(singel_value_to_replace)
-            }
+            // if iter_on_screen_of_removed_sample >= 2 {
+            //     self.send_interesting_sample(singel_value_to_replace)
+            // }
 
             self.iterations_on_screen =
                 singel_value_to_replace.select(i64x4::splat(0), self.iterations_on_screen);
@@ -175,7 +175,7 @@ impl Buddha {
         } else {
             let new_samples = self.new_samples.recv().unwrap();
             let used_samples = std::mem::replace(&mut self.samples, new_samples);
-            self.used_samples.send(used_samples).unwrap();
+            // self.used_samples.send(used_samples).unwrap();
             self.using_mutated_samples = false;
         }
     }
@@ -192,10 +192,10 @@ impl Updateable for Buddha {
             self.iterate();
             self.try_replace_samples();
         }
-        println!(
-            "Iteration per ys: {} ",
-            samples as f64 / instant.elapsed().as_micros() as f64
-        );
+        // println!(
+        //     "Iteration per ys: {} ",
+        //     samples as f64 / instant.elapsed().as_micros() as f64
+        // );
     }
     fn draw(&mut self, _view: ViewRect) -> Vec<u32> {
         self.histogram.draw();
