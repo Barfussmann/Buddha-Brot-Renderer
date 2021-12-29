@@ -1,18 +1,19 @@
-// use Image;
 use super::covarage_grid::cell::Cell;
+use super::worker::{PointType, WorkerMessage};
 use flume::Sender;
-use glam::DVec2;
+use std::sync::atomic;
 
 const TEXTURE_SIZE: usize = 256;
+static REQUESTED_SAMPLES: atomic::AtomicU64 = atomic::AtomicU64::new(0);
 
 pub struct SampleGen {
     cells: Vec<Cell>,
     grid_size: usize,
-    new_samples: Sender<Vec<DVec2>>,
+    new_samples: Sender<WorkerMessage>,
 }
 
 impl SampleGen {
-    pub fn start(cells: Vec<Cell>, grid_size: usize, sample_sender: Sender<Vec<DVec2>>) {
+    pub fn start(cells: Vec<Cell>, grid_size: usize, sample_sender: Sender<WorkerMessage>) {
         Self {
             cells,
             grid_size,
@@ -21,14 +22,16 @@ impl SampleGen {
         .work();
     }
     fn work(&mut self) {
-        let mut enumerated_image = image::open(format!("./FreeBlueNoiseTextures/Data/{TEXTURE_SIZE}_{TEXTURE_SIZE}/HDR_L_0.png"))
-            .unwrap()
-            .into_luma16()
-            .into_raw()
-            .iter()
-            .copied()
-            .enumerate()
-            .collect::<Vec<_>>();
+        let mut enumerated_image = image::open(format!(
+            "./FreeBlueNoiseTextures/Data/{TEXTURE_SIZE}_{TEXTURE_SIZE}/HDR_L_0.png"
+        ))
+        .unwrap()
+        .into_luma16()
+        .into_raw()
+        .iter()
+        .copied()
+        .enumerate()
+        .collect::<Vec<_>>();
         enumerated_image.sort_unstable_by_key(|&(_, color)| color);
         let pixel_order = enumerated_image
             .into_iter()
@@ -40,19 +43,31 @@ impl SampleGen {
 
         let mut index = *pixel_order_iter.next().unwrap();
         loop {
-            let mut samples = Vec::with_capacity(1024);
-            for _ in 0..1024 {
-                if let Some(cell) = cell_iter.next() {
-                    let sample = cell.gen_point_from_index_inside(index, TEXTURE_SIZE, self.grid_size);
-                    samples.push(sample);
-                } else {
-                    index = *pixel_order_iter.next().unwrap();
-                    cell_iter = self.cells.iter();
+            std::thread::sleep(std::time::Duration::from_millis(1));
+            let requested_samples = REQUESTED_SAMPLES.swap(0, atomic::Ordering::Relaxed);
+            for _ in 0..requested_samples {
+                let mut samples = Vec::with_capacity(1024);
+                for _ in 0..1024 {
+                    if let Some(cell) = cell_iter.next() {
+                        let sample =
+                            cell.gen_point_from_index_inside(index, TEXTURE_SIZE, self.grid_size);
+                        samples.push(sample);
+                    } else {
+                        index = *pixel_order_iter.next().unwrap();
+                        cell_iter = self.cells.iter();
+                    }
+                }
+                if self
+                    .new_samples
+                    .send(WorkerMessage::CheckPoints(PointType::New(samples)))
+                    .is_err()
+                {
+                    break;
                 }
             }
-            if self.new_samples.send(samples).is_err() {
-                break;
-            }
         }
+    }
+    pub fn request_sample() {
+        REQUESTED_SAMPLES.fetch_add(1, atomic::Ordering::Relaxed);
     }
 }

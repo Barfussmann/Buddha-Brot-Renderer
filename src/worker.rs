@@ -1,43 +1,59 @@
 use flume::{Sender, Receiver};
 use glam::DVec2;
-use super::mandel_iter::iterat_points;
+use super::mandel_iter::iterate_points_dvec2;
+use super::{MAX_ITER, MIN_ITER};
 
-enum Work<'a> {
-    Pixel((&'a [f64], f64, &'a mut [u32])),
+
+pub enum PointType {
+    New(Vec<DVec2>),
+    Mutated(Vec<DVec2>),
 }
 
-struct Worker<'a> {
-    work: Receiver<Work<'a>>,
-    // finished_work
+pub enum WorkerMessage {
+    CheckPoints(PointType),
+
 }
 
-impl<'a> Worker<'a> {
-    fn start(work: Receiver<Work<'a>>) {
+pub struct Worker {
+    work: Receiver<WorkerMessage>,
+    checked_samples: Sender<PointType>,
+}
+
+impl Worker {
+    pub fn start(work: Receiver<WorkerMessage>, checked_samples: Sender<PointType>) {
         Self {
-            work
+            work,
+            checked_samples,
         }.work();
     }
     fn work(&mut self) {
         for work in self.work.iter() {
             match work {
-                Work::Pixel(_) => todo!(),
+                WorkerMessage::CheckPoints(points) => self.check_points(points),
             }
         }
 
     }
-    fn render_pixel((x, y, pixels): (&'a [f64], f64, &'a mut [u32])) {
-        let y = [y; 4];
-        for (x, pixel) in x.array_chunks::<4>().zip(pixels.array_chunks_mut::<4>()) {
-            *pixel = iterations_to_color(iterat_points(*x, y, 256).to_array()); 
+    fn check_points(&self, points: PointType) {
+        let samples = match points {
+            PointType::New(ref samples) => samples,
+            PointType::Mutated(ref samples) => samples,
+        };
+        let mut checked_samples = Vec::with_capacity(samples.len());
+        for samples in samples.array_chunks::<4>() {
+            let iteration_counts = iterate_points_dvec2(samples, MAX_ITER);
+            for (sample, iteration_count) in std::iter::zip(samples, iteration_counts) {
+                if (MIN_ITER as i64) < iteration_count && iteration_count < MAX_ITER as i64 {
+                    checked_samples.push(*sample);
+                    let y_fliped = DVec2::new(sample.x, -sample.y);
+                    checked_samples.push(y_fliped);
+                }
+            }
         }
+        match points {
+            PointType::New(_) => self.checked_samples.send(PointType::New(checked_samples)),
+            PointType::Mutated(_) => self.checked_samples.send(PointType::Mutated(checked_samples)),
+        }.unwrap();
     }
 }
 
-fn iterations_to_color(iterations: [i64; 4]) -> [u32; 4] {
-    let mut colors = [0; 4];
-    for i in 0..4 {
-        let color_value = 255 - ((iterations[i] as f32).sqrt() * 15.) as u32;
-        colors[i] = color_value + (color_value << 8) + (color_value << 16);
-    }
-    colors
-}
