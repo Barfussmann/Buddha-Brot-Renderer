@@ -5,6 +5,7 @@ use std::sync::atomic;
 
 const TEXTURE_SIZE: usize = 256;
 static REQUESTED_SAMPLES: atomic::AtomicU64 = atomic::AtomicU64::new(0);
+static RESET_INDEX: atomic::AtomicBool = atomic::AtomicBool::new(false);
 
 pub struct SampleGen {
     cells: Vec<Cell>,
@@ -33,10 +34,11 @@ impl SampleGen {
         .enumerate()
         .collect::<Vec<_>>();
         enumerated_image.sort_unstable_by_key(|&(_, color)| color);
-        let pixel_order = enumerated_image
+        let mut pixel_order = enumerated_image
             .into_iter()
             .map(|(i, _)| i)
             .collect::<Vec<_>>();
+        pixel_order.reverse();
 
         let mut pixel_order_iter = pixel_order.iter().cycle();
         let mut cell_iter = self.cells.iter();
@@ -53,8 +55,12 @@ impl SampleGen {
                             cell.gen_point_from_index_inside(index, TEXTURE_SIZE, self.grid_size);
                         samples.push(sample);
                     } else {
+                        if RESET_INDEX.swap(false, atomic::Ordering::Relaxed) {
+                            pixel_order_iter = pixel_order.iter().cycle();
+                        }
                         index = *pixel_order_iter.next().unwrap();
                         cell_iter = self.cells.iter();
+                        println!("Next");
                     }
                 }
                 if self
@@ -69,5 +75,8 @@ impl SampleGen {
     }
     pub fn request_sample() {
         REQUESTED_SAMPLES.fetch_add(1, atomic::Ordering::Relaxed);
+    }
+    pub fn reset_rnd() {
+        RESET_INDEX.store(true, atomic::Ordering::Relaxed);
     }
 }

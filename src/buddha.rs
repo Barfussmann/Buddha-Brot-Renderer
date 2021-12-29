@@ -150,7 +150,7 @@ impl Buddha {
                 len.mul_add(angle.cos(), iteresting_sample.x),
                 len.mul_add(angle.sin(), iteresting_sample.y),
             );
-            self.current_mutated_samples.push(mutated_sample);
+            // self.current_mutated_samples.push(mutated_sample);
         }
         if self.current_mutated_samples.len() >= 1024 {
             self.work
@@ -178,6 +178,7 @@ impl Buddha {
     }
     fn set_view_rect(&mut self, view_rect: ViewRect) {
         self.view = View::new(view_rect);
+        SampleGen::reset_rnd();
     }
 }
 
