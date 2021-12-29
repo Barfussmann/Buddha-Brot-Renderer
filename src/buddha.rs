@@ -187,15 +187,15 @@ impl Buddha {
 impl Updateable for Buddha {
     fn update(&mut self) {
         let instant = Instant::now();
-        let samples = 10_000_000;
+        let samples = 1_000_000;
         for _ in 0..samples {
             self.iterate();
             self.try_replace_samples();
         }
-        // println!(
-        //     "Iteration per ys: {} ",
-        //     samples as f64 / instant.elapsed().as_micros() as f64
-        // );
+        println!(
+            "Iteration per ys: {} ",
+            samples as f64 / instant.elapsed().as_micros() as f64
+        );
     }
     fn draw(&mut self, _view: ViewRect) -> Vec<u32> {
         self.histogram.draw();
