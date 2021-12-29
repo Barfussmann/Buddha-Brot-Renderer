@@ -9,9 +9,7 @@ mod histogram;
 mod mandel_brot_render;
 mod mandel_iter;
 mod pixels;
-mod sample_checker;
 mod sample_gen;
-mod sample_mutator;
 mod worker;
 
 use buddha::Buddha;
