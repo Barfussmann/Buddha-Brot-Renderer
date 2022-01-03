@@ -67,7 +67,7 @@ impl Buddha {
             view: View::new(ViewRect::default()),
             current_mutated_samples: Vec::new(),
             using_mutated_samples: false,
-            histogram: Histogram::new(WIDTH, HEIGHT, ViewRect::default()),
+            histogram: Histogram::new(WIDTH, HEIGHT, ViewRect::default(), minifb::Scale::X1),
             checked_samples: checked_samples_rx,
             work: work_tx,
         };
@@ -161,7 +161,7 @@ impl Buddha {
         }
     }
     fn normalise_pixels(&mut self) -> Vec<u32> {
-        self.pixels.noramalise()
+        self.pixels.squre_normalise()
     }
     fn replenish_samples(&mut self) {
         self.samples = match self.checked_samples.recv().unwrap() {
@@ -196,7 +196,7 @@ impl Updateable for Buddha {
         );
     }
     fn draw(&mut self, _view: ViewRect) -> Vec<u32> {
-        self.histogram.draw();
+        self.histogram.draw_linear_normalise();
         self.normalise_pixels()
     }
     fn update_view_rect(&mut self, view_rect: ViewRect) {
