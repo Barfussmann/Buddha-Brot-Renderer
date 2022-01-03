@@ -28,7 +28,7 @@ lazy_static! {
 }
 
 fn main() {
-    // let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
-    // let test = CameraManger::start(false, buddha);
-    blue::Blue::start(512);
+    let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
+    let test = CameraManger::start(false, buddha);
+    // blue::Blue::start(512);
 }
