@@ -2,6 +2,7 @@
 #![warn(clippy::nursery)]
 #![feature(test, portable_simd, iter_zip, array_chunks)]
 
+mod blue;
 mod buddha;
 mod camera;
 mod covarage_grid;
@@ -27,6 +28,7 @@ lazy_static! {
 }
 
 fn main() {
-    let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
-    let test = CameraManger::start(false, buddha);
+    // let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
+    // let test = CameraManger::start(false, buddha);
+    blue::Blue::start(512);
 }

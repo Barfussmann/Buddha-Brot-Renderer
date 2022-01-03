@@ -28,7 +28,7 @@ impl Pixels {
     pub fn set(&mut self, index: usize, value: u32) {
         self.pixels[index] = value;
     }
-    pub fn noramalise(&mut self) -> Vec<u32> {
+    pub fn squre_normalise(&mut self) -> Vec<u32> {
         self.pixels[0] = 0;
         let max = *self.pixels.iter().max().unwrap();
         let mut reduced_max = max;
@@ -48,6 +48,18 @@ impl Pixels {
             .iter()
             .map(|pixel| {
                 let color = (*pixel as f32 / mul).sqrt().clamp(0., 255.) as u32;
+                color | color << 8 | color << 16
+            })
+            .collect()
+    }
+    pub fn linear_normalise(&mut self) -> Vec<u32> {
+        self.pixels[0] = 0;
+        let max = *self.pixels.iter().max().unwrap();
+        let mul = max as f32 / 255.0_f32;
+        self.pixels
+            .iter()
+            .map(|pixel| {
+                let color = (*pixel as f32 / mul).clamp(0., 255.) as u32;
                 color | color << 8 | color << 16
             })
             .collect()
