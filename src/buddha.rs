@@ -86,7 +86,7 @@ impl Buddha {
     }
     fn is_inside(&self) -> mask64x4 {
         let abs = self.mandel_iter.z_squared_x + self.mandel_iter.z_squared_y;
-        abs.lanes_le(f64x4::splat(4.))
+        abs.simd_le(f64x4::splat(4.))
     }
     fn compute_is_in_view_rect(&mut self) -> bool {
         self.view.is_inside(self.mandel_iter.get_z()).any()
@@ -98,7 +98,7 @@ impl Buddha {
     }
     fn try_replace_samples(&mut self) {
         let values_to_replace =
-            !self.is_inside() | self.mandel_iter.iteration.lanes_ge(self.max_iteration);
+            !self.is_inside() | self.mandel_iter.iteration.simd_ge(self.max_iteration);
 
         if values_to_replace.any() {
             let shifted = (values_to_replace.to_int().rotate_lanes_right::<1>()
@@ -117,7 +117,7 @@ impl Buddha {
             }
             let iter_on_screen_of_removed_sample = singel_value_to_replace
                 .select(self.iterations_on_screen, i64x4::splat(0))
-                .horizontal_sum();
+                .reduce_sum();
             if iter_on_screen_of_removed_sample >= 2 {
                 self.mutate_interesting_sample(singel_value_to_replace);
             }
@@ -134,10 +134,10 @@ impl Buddha {
         }
         let x = value
             .select(self.mandel_iter.get_c().0, f64x4::splat(0.))
-            .horizontal_sum();
+            .reduce_sum();
         let y = value
             .select(self.mandel_iter.get_c().1, f64x4::splat(0.))
-            .horizontal_sum();
+            .reduce_sum();
         let iteresting_sample = DVec2::new(x, y);
         self.histogram.add_point(iteresting_sample);
 
@@ -233,8 +233,8 @@ impl View {
     }
     #[inline(always)]
     fn is_inside(&mut self, (x, y): (f64x4, f64x4)) -> mask64x4 {
-        let x_inside = x.lanes_ge(self.x_lower_bound) & x.lanes_le(self.x_upper_bound);
-        let y_inside = y.lanes_ge(self.y_lower_bound) & y.lanes_le(self.y_upper_bound);
+        let x_inside = x.simd_ge(self.x_lower_bound) & x.simd_le(self.x_upper_bound);
+        let y_inside = y.simd_ge(self.y_lower_bound) & y.simd_le(self.y_upper_bound);
         self.in_view = x_inside & y_inside;
         self.in_view
     }
@@ -260,7 +260,7 @@ struct MandelIter {
     iteration: u64x4,
 }
 impl MandelIter {
-    const fn new() -> Self {
+    fn new() -> Self {
         let zero = f64x4::splat(0.);
         Self {
             z_x: zero,

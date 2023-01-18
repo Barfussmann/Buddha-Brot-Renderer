@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_variables)]
 #![warn(clippy::nursery)]
-#![feature(test, portable_simd, iter_zip, array_chunks)]
+#![feature(test, portable_simd, array_chunks)]
 
 mod blue;
 mod buddha;

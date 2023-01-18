@@ -65,7 +65,7 @@ impl Blue {
             // std::thread::sleep(std::time::Duration::from_millis(300));
         }
         self.point_count = samples;
-        'outer2: loop {
+        loop {
             for _ in 0..500 {
                 if self.point_count < (self.size * self.size) as u64 {
                     self.add_min_point();

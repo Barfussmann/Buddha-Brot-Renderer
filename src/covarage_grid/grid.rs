@@ -46,7 +46,6 @@ mod tests {
     use glam::ivec2;
     const GRID_SIZE: usize = 100;
     #[test]
-    #[test]
     fn cell_activ_afte_insertion() {
         let mut grid = Grid::new(GRID_SIZE);
         grid.insert(Cell::new(ivec2(10, 5)));
