@@ -1,34 +1,28 @@
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused)]
 #![warn(clippy::nursery)]
 #![feature(test, portable_simd, array_chunks)]
 
-mod blue;
-mod buddha;
 mod camera;
-mod covarage_grid;
 mod histogram;
+mod iterat_point;
 mod mandel_brot_render;
 mod mandel_iter;
 mod pixels;
-mod sample_gen;
-mod worker;
 
-use buddha::Buddha;
+// use buddha::Buddha;
 use camera::*;
-use covarage_grid::CovarageGrid;
-use lazy_static::*;
+
+use crate::mandel_brot_render::MandelbrotRender;
 
 const SIZE: usize = 1024;
 pub const WIDTH: usize = SIZE;
 pub const HEIGHT: usize = (SIZE as f64 * (2.64 / 3.0)) as usize;
 pub const MIN_ITER: usize = 50;
 pub const MAX_ITER: usize = 100;
-lazy_static! {
-    static ref COVARAGE_GRID: CovarageGrid = CovarageGrid::get_covarag_grid(10_000, 30, 10_000, 50);
-}
 
 fn main() {
-    let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
-    let test = CameraManger::start(false, buddha);
+    let mandelbrot = MandelbrotRender::new();
+    // let buddha = Buddha::new(100, ViewRect::default(), &COVARAGE_GRID);
+    let test = CameraManger::start(false, mandelbrot);
     // blue::Blue::start(512);
 }

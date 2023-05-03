@@ -19,12 +19,17 @@ where
     T: Updateable + 'static,
 {
     pub fn start(mandel_render: bool, generator: T) {
+        let window_options = WindowOptions {
+            scale: minifb::Scale::X1,
+            // scale: minifb::Scale::X4,
+            ..WindowOptions::default()
+        };
         Self {
             view_rect: ViewRect::default(),
             mouse_poss_at_click: None,
             mouse_pos: DVec2::ZERO,
             mandel_background: mandel_render.then(MandelbrotRender::new),
-            window: Window::new("Mandelbrot", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
+            window: Window::new("Mandelbrot", WIDTH, HEIGHT, window_options).unwrap(),
             generator,
         }
         .run();
@@ -122,6 +127,12 @@ impl ViewRect {
     pub fn get_bottom_right_corner(&self) -> DVec2 {
         self.top_left_corner + self.view_size
     }
+    pub fn is_visable(&self, point: DVec2) -> bool {
+        point.x >= self.top_left_corner.x
+            && point.x <= self.get_bottom_right_corner().x
+            && point.y >= self.top_left_corner.y
+            && point.y <= self.get_bottom_right_corner().y
+    }
     pub fn screen_index(&self, point: DVec2) -> usize {
         let screen = (point - self.top_left_corner) * self.get_screen_scale();
         screen.x as usize + (screen.y as usize * WIDTH)
@@ -137,7 +148,7 @@ impl Default for ViewRect {
 }
 
 pub trait Updateable {
-    fn update(&mut self) {}
+    fn update(&mut self);
     fn draw(&mut self, view: ViewRect) -> Vec<u32>;
     fn is_finished(&self) -> bool {
         false
